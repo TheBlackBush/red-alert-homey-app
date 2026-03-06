@@ -45,6 +45,10 @@ const DEFAULT_THROTTLE_BY_TYPE_MS = {
 
 const WS_PING_INTERVAL_MS = 45000;
 const WS_STALE_TIMEOUT_MS = 150000;
+const WS_RECONNECT_BASE_MS = 5000;
+const WS_RECONNECT_MAX_MS = 60000;
+const WS_RECONNECT_FACTOR = 1.6;
+const WS_MAX_STREAK_BEFORE_HARD_RESET = 6;
 
 const AREA_ALIASES = {
   "תל אביב יפו": "תל אביב - דרום העיר ויפו",
@@ -77,6 +81,8 @@ class RedAlertApp extends Homey.App {
     this._diag = {
       wsConnects: 0,
       wsReconnects: 0,
+      wsReconnectScheduled: 0,
+      wsHardResets: 0,
       wsCloses: 0,
       wsErrors: 0,
       wsMessages: 0,
@@ -87,6 +93,10 @@ class RedAlertApp extends Homey.App {
       unknownAreaMisses: 0,
       lastError: null,
     };
+
+    this._wsReconnectAttempt = 0;
+    this._wsDisconnectStreak = 0;
+    this._wsReconnectTimer = null;
     this._loadCitiesDictionary();
     this._loadConfig();
 
@@ -105,9 +115,17 @@ class RedAlertApp extends Homey.App {
 
         if (this._monitoringEnabled) {
           if (!this._ws || this._ws.readyState > 1) this._connect();
-        } else if (this._ws) {
-          this._ws.close();
-          this._connected = false;
+        } else {
+          if (this._ws) {
+            this._ws.close();
+            this._connected = false;
+          }
+          if (this._wsReconnectTimer) {
+            clearTimeout(this._wsReconnectTimer);
+            this._wsReconnectTimer = null;
+          }
+          this._wsReconnectAttempt = 0;
+          this._wsDisconnectStreak = 0;
         }
       }
     });
@@ -279,6 +297,51 @@ class RedAlertApp extends Homey.App {
     }
   }
 
+  _scheduleReconnect(reason = 'close') {
+    if (!this._monitoringEnabled) return;
+    if (this._wsReconnectTimer) return;
+
+    this._wsReconnectAttempt += 1;
+    this._diag.wsReconnectScheduled += 1;
+
+    const backoff = Math.min(
+      WS_RECONNECT_BASE_MS * Math.pow(WS_RECONNECT_FACTOR, Math.max(0, this._wsReconnectAttempt - 1)),
+      WS_RECONNECT_MAX_MS,
+    );
+    const jitter = Math.floor(Math.random() * 2000);
+    const retryMs = Math.floor(backoff + jitter);
+
+    this.log(`[ws] reconnect scheduled in ${retryMs}ms (reason=${reason}, attempt=${this._wsReconnectAttempt})`);
+
+    this._wsReconnectTimer = this.homey.setTimeout(() => {
+      this._wsReconnectTimer = null;
+      this._diag.wsReconnects += 1;
+      this._connect();
+    }, retryMs);
+  }
+
+  _hardResetWs(reason = 'streak') {
+    this._diag.wsHardResets += 1;
+    this.log(`[ws] hard reset websocket (reason=${reason})`);
+
+    try { if (this._ws) this._ws.terminate(); } catch (_) {}
+    this._ws = null;
+    this._connected = false;
+
+    if (this._wsPingTimer) {
+      clearInterval(this._wsPingTimer);
+      this._wsPingTimer = null;
+    }
+
+    if (this._wsReconnectTimer) {
+      clearTimeout(this._wsReconnectTimer);
+      this._wsReconnectTimer = null;
+    }
+
+    this._wsReconnectAttempt = 0;
+    this._scheduleReconnect('hard-reset');
+  }
+
   _wsWatchdog() {
     if (!this._monitoringEnabled) return;
 
@@ -296,7 +359,9 @@ class RedAlertApp extends Homey.App {
     const idleMs = this._lastWsMessageAt ? (now - this._lastWsMessageAt) : Infinity;
     if (idleMs > WS_STALE_TIMEOUT_MS) {
       this.log(`[ws] stale connection detected (${Math.round(idleMs / 1000)}s idle), reconnecting`);
+      this._wsDisconnectStreak += 1;
       try { this._ws.terminate(); } catch (_) {}
+      this._scheduleReconnect('stale-watchdog');
     }
   }
 
@@ -324,6 +389,8 @@ class RedAlertApp extends Homey.App {
     this._ws.on('open', () => {
       this._connected = true;
       this._diag.wsConnects += 1;
+      this._wsDisconnectStreak = 0;
+      this._wsReconnectAttempt = 0;
       this._lastWsMessageAt = Date.now();
       this.log('Connected to Tzeva Adom websocket');
 
@@ -370,13 +437,19 @@ class RedAlertApp extends Homey.App {
     this._ws.on('close', () => {
       this._connected = false;
       this._diag.wsCloses += 1;
-      this._diag.wsReconnects += 1;
+      this._wsDisconnectStreak += 1;
+
       if (this._wsPingTimer) {
         clearInterval(this._wsPingTimer);
         this._wsPingTimer = null;
       }
-      const retryMs = 5000 + Math.floor(Math.random() * 2000);
-      this.homey.setTimeout(() => this._connect(), retryMs);
+
+      if (this._wsDisconnectStreak >= WS_MAX_STREAK_BEFORE_HARD_RESET) {
+        this._hardResetWs('disconnect-streak');
+        return;
+      }
+
+      this._scheduleReconnect('close');
     });
 
     this._ws.on('error', (err) => {
@@ -730,9 +803,17 @@ class RedAlertApp extends Homey.App {
       this._connect();
     }
 
-    if (!this._monitoringEnabled && this._ws) {
-      this._ws.close();
-      this._connected = false;
+    if (!this._monitoringEnabled) {
+      if (this._ws) {
+        this._ws.close();
+        this._connected = false;
+      }
+      if (this._wsReconnectTimer) {
+        clearTimeout(this._wsReconnectTimer);
+        this._wsReconnectTimer = null;
+      }
+      this._wsReconnectAttempt = 0;
+      this._wsDisconnectStreak = 0;
     }
 
     return this._monitoringEnabled;
