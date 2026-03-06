@@ -27,6 +27,10 @@
     "setCities": {
       "method": "POST",
       "path": "/cities"
+    },
+    "setPolicies": {
+      "method": "POST",
+      "path": "/policies"
     }
   }
 }
