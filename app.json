@@ -130,7 +130,7 @@
             }
           },
           {
-            "name": "last_alert_message",
+            "name": "alert_message",
             "type": "string",
             "title": {
               "en": "Alert message",
@@ -219,7 +219,7 @@
             }
           },
           {
-            "name": "last_alert_message",
+            "name": "alert_message",
             "type": "string",
             "title": {
               "en": "Alert message",
@@ -308,7 +308,7 @@
             }
           },
           {
-            "name": "last_alert_message",
+            "name": "alert_message",
             "type": "string",
             "title": {
               "en": "Alert message",
@@ -397,7 +397,7 @@
             }
           },
           {
-            "name": "last_alert_message",
+            "name": "alert_message",
             "type": "string",
             "title": {
               "en": "Alert message",
