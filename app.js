@@ -443,15 +443,29 @@ class RedAlertApp extends Homey.App {
     return matched.map((id) => this._cityIdToName.get(id) || String(id));
   }
 
+  _timeToMinutes(v, fallbackMinutes) {
+    if (typeof v === 'string' && v.includes(':')) {
+      const [hRaw, mRaw] = v.split(':');
+      const h = Number(hRaw);
+      const m = Number(mRaw);
+      if (!Number.isNaN(h) && !Number.isNaN(m)) return (h * 60) + m;
+    }
+
+    const asNum = Number(v);
+    if (!Number.isNaN(asNum)) return Math.max(0, Math.min(23, asNum)) * 60;
+    return fallbackMinutes;
+  }
+
   _isQuietHours() {
     if (!this._quietHours?.enabled) return false;
     const now = new Date();
-    const hour = now.getHours();
-    const start = Number(this._quietHours.start);
-    const end = Number(this._quietHours.end);
-    if (Number.isNaN(start) || Number.isNaN(end)) return false;
-    if (start <= end) return hour >= start && hour <= end;
-    return hour >= start || hour <= end;
+    const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+
+    const start = this._timeToMinutes(this._quietHours.start, 23 * 60);
+    const end = this._timeToMinutes(this._quietHours.end, 6 * 60);
+
+    if (start <= end) return nowMinutes >= start && nowMinutes <= end;
+    return nowMinutes >= start || nowMinutes <= end;
   }
 
   _buildAlertSummary(event) {
@@ -635,8 +649,8 @@ class RedAlertApp extends Homey.App {
     if (quietHours && typeof quietHours === 'object') {
       this._quietHours = {
         enabled: !!quietHours.enabled,
-        start: Number(quietHours.start ?? 23),
-        end: Number(quietHours.end ?? 6),
+        start: quietHours.start ?? '23:00',
+        end: quietHours.end ?? '06:00',
       };
       await this.homey.settings.set('quiet_hours', this._quietHours);
     }
