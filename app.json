@@ -303,6 +303,150 @@
           "he": "הניטור !{{פעיל|לא פעיל}}"
         },
         "id": "is_monitoring_enabled"
+      },
+      {
+        "title": {
+          "en": "Severity equals [[severity]]",
+          "he": "החומרה שווה ל-[[severity]]"
+        },
+        "titleFormatted": {
+          "en": "Severity equals [[severity]]",
+          "he": "החומרה שווה ל-[[severity]]"
+        },
+        "args": [
+          {
+            "name": "severity",
+            "type": "dropdown",
+            "title": {
+              "en": "Severity",
+              "he": "חומרה"
+            },
+            "values": [
+              {
+                "id": "critical",
+                "label": {
+                  "en": "Critical",
+                  "he": "קריטי"
+                }
+              },
+              {
+                "id": "warning",
+                "label": {
+                  "en": "Warning",
+                  "he": "אזהרה"
+                }
+              },
+              {
+                "id": "info",
+                "label": {
+                  "en": "Info",
+                  "he": "מידע"
+                }
+              }
+            ]
+          }
+        ],
+        "id": "matches_severity"
+      },
+      {
+        "title": {
+          "en": "Threat key equals [[threat_key]]",
+          "he": "מפתח האיום שווה ל-[[threat_key]]"
+        },
+        "titleFormatted": {
+          "en": "Threat key equals [[threat_key]]",
+          "he": "מפתח האיום שווה ל-[[threat_key]]"
+        },
+        "args": [
+          {
+            "name": "threat_key",
+            "type": "dropdown",
+            "title": {
+              "en": "Threat key",
+              "he": "מפתח איום"
+            },
+            "values": [
+              {
+                "id": "rockets_missiles",
+                "label": {
+                  "en": "Rockets and missiles",
+                  "he": "ירי רקטות וטילים"
+                }
+              },
+              {
+                "id": "terror_infiltration",
+                "label": {
+                  "en": "Terrorist infiltration",
+                  "he": "חדירת מחבלים"
+                }
+              },
+              {
+                "id": "hostile_aircraft",
+                "label": {
+                  "en": "Hostile aircraft",
+                  "he": "חדירת כלי טיס עוין"
+                }
+              },
+              {
+                "id": "chemical",
+                "label": {
+                  "en": "Chemical",
+                  "he": "אירוע כימי"
+                }
+              },
+              {
+                "id": "earthquake",
+                "label": {
+                  "en": "Earthquake",
+                  "he": "רעידת אדמה"
+                }
+              },
+              {
+                "id": "tsunami",
+                "label": {
+                  "en": "Tsunami",
+                  "he": "צונאמי"
+                }
+              },
+              {
+                "id": "hazmat",
+                "label": {
+                  "en": "Hazmat",
+                  "he": "חומרים מסוכנים"
+                }
+              },
+              {
+                "id": "radiological",
+                "label": {
+                  "en": "Radiological",
+                  "he": "אירוע רדיולוגי"
+                }
+              },
+              {
+                "id": "homefront_alerts",
+                "label": {
+                  "en": "Home Front alerts",
+                  "he": "התרעות פיקוד העורף"
+                }
+              },
+              {
+                "id": "pre_alert",
+                "label": {
+                  "en": "Pre-alert",
+                  "he": "התרעה מוקדמת"
+                }
+              },
+              {
+                "id": "all_clear",
+                "label": {
+                  "en": "All-clear",
+                  "he": "סיום אירוע"
+                }
+              }
+            ]
+          }
+        ],
+        "id": "matches_threat_key"
       }
     ],
     "actions": [

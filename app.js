@@ -48,6 +48,7 @@ class RedAlertApp extends Homey.App {
     this._activeType = null;
     this._connected = false;
     this._lastEvent = null;
+    this._lastFlowEvent = null;
     this._history = [];
     this._dedupe = new Map();
 
@@ -122,6 +123,16 @@ class RedAlertApp extends Homey.App {
 
     this.homey.flow.getConditionCard('is_alert_active')
       .registerRunListener(async () => this._active);
+
+    this.homey.flow.getConditionCard('matches_threat_key')
+      .registerRunListener(async (args) => {
+        return String(this._lastFlowEvent?.threatKey || '') === String(args.threat_key || '');
+      });
+
+    this.homey.flow.getConditionCard('matches_severity')
+      .registerRunListener(async (args) => {
+        return String(this._lastFlowEvent?.severity || '') === String(args.severity || '');
+      });
 
     this.homey.flow.getActionCard('set_monitoring_enabled')
       .registerRunListener(async (args) => {
@@ -306,6 +317,7 @@ class RedAlertApp extends Homey.App {
     this._dedupe.set(dedupeKey, now);
 
     this._lastEvent = event;
+    this._lastFlowEvent = event;
     this._history.unshift(event);
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
 
