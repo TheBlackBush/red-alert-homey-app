@@ -238,12 +238,12 @@
       <label data-i18n="quietTitle">Quiet hours (applies to pre-alert only)</label>
       <div class="grid3">
         <div>
-          <label for="quietStart" data-i18n="quietStart">Start hour (0-23)</label>
-          <input id="quietStart" type="number" min="0" max="23" placeholder="23" />
+          <label for="quietStart" data-i18n="quietStart">Start time (24h)</label>
+          <input id="quietStart" type="time" step="60" value="23:00" />
         </div>
         <div>
-          <label for="quietEnd" data-i18n="quietEnd">End hour (0-23)</label>
-          <input id="quietEnd" type="number" min="0" max="23" placeholder="6" />
+          <label for="quietEnd" data-i18n="quietEnd">End time (24h)</label>
+          <input id="quietEnd" type="time" step="60" value="06:00" />
         </div>
         <div>
           <label>&nbsp;</label>
@@ -318,8 +318,8 @@
         chooseCities: 'בחירת ערים',
         citiesHint: 'בחירת הערים מתבצעת בדיאלוג עם חיפוש.',
         quietTitle: 'שעות שקט (חל רק על התראה מקדימה)',
-        quietStart: 'שעת התחלה (0-23)',
-        quietEnd: 'שעת סיום (0-23)',
+        quietStart: 'שעת התחלה (24h)',
+        quietEnd: 'שעת סיום (24h)',
         quietEnable: 'הפעל שעות שקט',
         throttleTitle: 'השהיה בין אירועים לפי סוג (מילישניות)',
         thPrimary: 'השהיה להתראה ראשית',
@@ -347,8 +347,8 @@
         chooseCities: 'Choose cities',
         citiesHint: 'City selection is done in a searchable dialog.',
         quietTitle: 'Quiet hours (applies to pre-alert only)',
-        quietStart: 'Start hour (0-23)',
-        quietEnd: 'End hour (0-23)',
+        quietStart: 'Start time (24h)',
+        quietEnd: 'End time (24h)',
         quietEnable: 'Enable quiet hours',
         throttleTitle: 'Throttle per event type (milliseconds)',
         thPrimary: 'Primary alert throttle',
@@ -500,9 +500,16 @@
         });
       });
 
-      getSetting(Homey, 'quiet_hours', { enabled: false, start: 23, end: 6 }, (quietHours) => {
-        document.getElementById('quietStart').value = quietHours.start;
-        document.getElementById('quietEnd').value = quietHours.end;
+      getSetting(Homey, 'quiet_hours', { enabled: false, start: '23:00', end: '06:00' }, (quietHours) => {
+        const startVal = typeof quietHours.start === 'string'
+          ? quietHours.start
+          : `${String(Number(quietHours.start ?? 23)).padStart(2, '0')}:00`;
+        const endVal = typeof quietHours.end === 'string'
+          ? quietHours.end
+          : `${String(Number(quietHours.end ?? 6)).padStart(2, '0')}:00`;
+
+        document.getElementById('quietStart').value = startVal;
+        document.getElementById('quietEnd').value = endVal;
         document.getElementById('quietEnabled').checked = !!quietHours.enabled;
       });
 
@@ -538,8 +545,8 @@
           await setSetting(Homey, 'selected_city_ids', selectedCityIds);
           await setSetting(Homey, 'quiet_hours', {
             enabled: document.getElementById('quietEnabled').checked,
-            start: Number(document.getElementById('quietStart').value || 23),
-            end: Number(document.getElementById('quietEnd').value || 6),
+            start: document.getElementById('quietStart').value || '23:00',
+            end: document.getElementById('quietEnd').value || '06:00',
           });
           await setSetting(Homey, 'throttle_by_type_ms', {
             primary: Number(document.getElementById('thPrimary').value || 120000),
