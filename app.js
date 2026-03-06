@@ -53,6 +53,8 @@ class RedAlertApp extends Homey.App {
     this._connected = false;
     this._lastWsMessageAt = 0;
     this._lastWsPingAt = 0;
+    this._lastWsHealthLogAt = 0;
+    this._lastWsEventType = 'none';
     this._lastEvent = null;
     this._lastFlowEvent = null;
     this._history = [];
@@ -234,11 +236,19 @@ class RedAlertApp extends Homey.App {
 
   _wsWatchdog() {
     if (!this._monitoringEnabled) return;
-    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
 
     const now = Date.now();
-    const idleMs = this._lastWsMessageAt ? (now - this._lastWsMessageAt) : Infinity;
+    const readyState = this._ws ? this._ws.readyState : -1;
+    const idleSec = this._lastWsMessageAt ? Math.round((now - this._lastWsMessageAt) / 1000) : -1;
 
+    if (now - this._lastWsHealthLogAt > 120000) {
+      this._lastWsHealthLogAt = now;
+      this.log(`[ws] health state=${readyState} connected=${this._connected} idleSec=${idleSec} lastType=${this._lastWsEventType}`);
+    }
+
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
+
+    const idleMs = this._lastWsMessageAt ? (now - this._lastWsMessageAt) : Infinity;
     if (idleMs > WS_STALE_TIMEOUT_MS) {
       this.log(`[ws] stale connection detected (${Math.round(idleMs / 1000)}s idle), reconnecting`);
       try { this._ws.terminate(); } catch (_) {}
@@ -322,6 +332,7 @@ class RedAlertApp extends Homey.App {
     if (!this._monitoringEnabled || !message?.data) return;
 
     if (message.type === 'ALERT') {
+      this._lastWsEventType = 'ALERT';
       this.log(`[ws] ALERT received: threat=${message?.data?.threat} cities=${Array.isArray(message?.data?.cities) ? message.data.cities.length : 0}`);
       const threatId = Number(message.data.threat);
       const threat = THREAT_TYPES[threatId];
@@ -358,6 +369,7 @@ class RedAlertApp extends Homey.App {
 
     if (message.type === 'SYSTEM_MESSAGE') {
       const instructionType = Number(message.data.instructionType);
+      this._lastWsEventType = `SYSTEM_${instructionType}`;
       this.log(`[ws] SYSTEM_MESSAGE received: instructionType=${instructionType} citiesIds=${Array.isArray(message?.data?.citiesIds) ? message.data.citiesIds.length : 0}`);
       const areaIds = Array.isArray(message.data.citiesIds) ? message.data.citiesIds : [];
       const matched = this._filterAreasByIds(areaIds);
