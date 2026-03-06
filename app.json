@@ -47,6 +47,10 @@
     "cities": {
       "method": "GET",
       "path": "/cities"
+    },
+    "diagnostics": {
+      "method": "GET",
+      "path": "/diagnostics"
     }
   },
   "flow": {
