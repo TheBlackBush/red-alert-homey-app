@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; margin: 20px; max-width: 760px; }
+    .row { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; }
+    input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { padding: 8px 14px; border: 0; border-radius: 8px; cursor: pointer; }
+    .hint { font-size: 12px; opacity: .7; }
+  </style>
+</head>
+<body>
+  <h2>Red Alert Settings</h2>
+  <div class="row">
+    <label><input type="checkbox" id="monitoring" /> Monitoring enabled</label>
+  </div>
+  <div class="row">
+    <label>Selected city IDs (comma-separated)</label>
+    <input id="cities" placeholder="3001, 500114" />
+    <div class="hint">You can also use city names in Hebrew, comma-separated.</div>
+  </div>
+  <div class="row">
+    <label>Quiet hours start/end (for pre-alerts only)</label>
+    <div style="display:flex; gap:10px;">
+      <input id="quietStart" type="number" min="0" max="23" placeholder="23" />
+      <input id="quietEnd" type="number" min="0" max="23" placeholder="6" />
+      <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="quietEnabled" />Enable</label>
+    </div>
+  </div>
+  <div class="row">
+    <label>Throttle by type (ms, JSON)</label>
+    <textarea id="throttle" rows="4">{"primary":120000,"pre-alert":180000,"all-clear":120000,"other":120000,"test":0}</textarea>
+  </div>
+  <button id="save">Save</button>
+  <div id="status" class="hint" style="margin-top:10px;"></div>
+
+  <script>
+    function parseList(v) {
+      return String(v || '').split(',').map(x => x.trim()).filter(Boolean);
+    }
+
+    function onHomeyReady(Homey) {
+      const monitoring = Homey.get('monitoring_enabled');
+      const selectedCityIds = Homey.get('selected_city_ids') || [];
+      const quietHours = Homey.get('quiet_hours') || { enabled: false, start: 23, end: 6 };
+      const throttle = Homey.get('throttle_by_type_ms') || { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000, test: 0 };
+
+      document.getElementById('monitoring').checked = monitoring !== false;
+      document.getElementById('cities').value = selectedCityIds.join(', ');
+      document.getElementById('quietStart').value = quietHours.start;
+      document.getElementById('quietEnd').value = quietHours.end;
+      document.getElementById('quietEnabled').checked = !!quietHours.enabled;
+      document.getElementById('throttle').value = JSON.stringify(throttle);
+
+      document.getElementById('save').addEventListener('click', () => {
+        try {
+          Homey.set('monitoring_enabled', document.getElementById('monitoring').checked);
+          Homey.set('selected_city_ids', parseList(document.getElementById('cities').value));
+          Homey.set('quiet_hours', {
+            enabled: document.getElementById('quietEnabled').checked,
+            start: Number(document.getElementById('quietStart').value || 23),
+            end: Number(document.getElementById('quietEnd').value || 6),
+          });
+          Homey.set('throttle_by_type_ms', JSON.parse(document.getElementById('throttle').value || '{}'));
+          document.getElementById('status').innerText = 'Saved.';
+        } catch (e) {
+          document.getElementById('status').innerText = 'Save failed: ' + e.message;
+        }
+      });
+
+      Homey.ready();
+    }
+  </script>
+</body>
+</html>

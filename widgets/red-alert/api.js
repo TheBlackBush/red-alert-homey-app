@@ -23,4 +23,12 @@ module.exports = {
       throttleByTypeMs: body?.throttleByTypeMs,
     });
   },
+
+  async getThreatTypes({ homey }) {
+    return homey.app.getThreatTypes();
+  },
+
+  async getCities({ homey }) {
+    return homey.app.getCities(500);
+  },
 };
