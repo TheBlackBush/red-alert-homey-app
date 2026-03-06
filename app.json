@@ -90,6 +90,38 @@
               "en": "Severity",
               "he": "חומרה"
             }
+          },
+          {
+            "name": "threat_id",
+            "type": "string",
+            "title": {
+              "en": "Threat ID",
+              "he": "מזהה איום"
+            }
+          },
+          {
+            "name": "threat_key",
+            "type": "string",
+            "title": {
+              "en": "Threat key",
+              "he": "מפתח איום"
+            }
+          },
+          {
+            "name": "threat_name_he",
+            "type": "string",
+            "title": {
+              "en": "Threat (Hebrew)",
+              "he": "איום (עברית)"
+            }
+          },
+          {
+            "name": "threat_name_en",
+            "type": "string",
+            "title": {
+              "en": "Threat (English)",
+              "he": "איום (אנגלית)"
+            }
           }
         ],
         "id": "all_clear_received"
@@ -138,6 +170,38 @@
             "title": {
               "en": "Severity",
               "he": "חומרה"
+            }
+          },
+          {
+            "name": "threat_id",
+            "type": "string",
+            "title": {
+              "en": "Threat ID",
+              "he": "מזהה איום"
+            }
+          },
+          {
+            "name": "threat_key",
+            "type": "string",
+            "title": {
+              "en": "Threat key",
+              "he": "מפתח איום"
+            }
+          },
+          {
+            "name": "threat_name_he",
+            "type": "string",
+            "title": {
+              "en": "Threat (Hebrew)",
+              "he": "איום (עברית)"
+            }
+          },
+          {
+            "name": "threat_name_en",
+            "type": "string",
+            "title": {
+              "en": "Threat (English)",
+              "he": "איום (אנגלית)"
             }
           }
         ],
@@ -188,6 +252,38 @@
               "en": "Severity",
               "he": "חומרה"
             }
+          },
+          {
+            "name": "threat_id",
+            "type": "string",
+            "title": {
+              "en": "Threat ID",
+              "he": "מזהה איום"
+            }
+          },
+          {
+            "name": "threat_key",
+            "type": "string",
+            "title": {
+              "en": "Threat key",
+              "he": "מפתח איום"
+            }
+          },
+          {
+            "name": "threat_name_he",
+            "type": "string",
+            "title": {
+              "en": "Threat (Hebrew)",
+              "he": "איום (עברית)"
+            }
+          },
+          {
+            "name": "threat_name_en",
+            "type": "string",
+            "title": {
+              "en": "Threat (English)",
+              "he": "איום (אנגלית)"
+            }
           }
         ],
         "id": "red_alert_received"
@@ -237,8 +333,8 @@
           "he": "הפעל התראת בדיקה"
         },
         "titleFormatted": {
-          "en": "Trigger test alert \"[[title]]\" for [[area]]",
-          "he": "הפעל התראת בדיקה \"[[title]]\" עבור [[area]]"
+          "en": "Trigger test alert \"[[title]]\" for [[area]] (type [[threat_id]])",
+          "he": "הפעל התראת בדיקה \"[[title]]\" עבור [[area]] (סוג [[threat_id]])"
         },
         "args": [
           {
@@ -264,6 +360,51 @@
               "en": "Tel Aviv",
               "he": "תל אביב"
             }
+          },
+          {
+            "name": "threat_id",
+            "type": "dropdown",
+            "title": {
+              "en": "Threat type",
+              "he": "סוג איום"
+            },
+            "values": [
+              {
+                "id": "0",
+                "label": {
+                  "en": "Rockets and missiles",
+                  "he": "ירי רקטות וטילים"
+                }
+              },
+              {
+                "id": "2",
+                "label": {
+                  "en": "Terrorist infiltration",
+                  "he": "חדירת מחבלים"
+                }
+              },
+              {
+                "id": "5",
+                "label": {
+                  "en": "Hostile aircraft",
+                  "he": "חדירת כלי טיס עוין"
+                }
+              },
+              {
+                "id": "7",
+                "label": {
+                  "en": "Chemical event",
+                  "he": "חשש לאירוע כימי"
+                }
+              },
+              {
+                "id": "3",
+                "label": {
+                  "en": "Earthquake",
+                  "he": "רעידת אדמה"
+                }
+              }
+            ]
           }
         ],
         "id": "test_trigger"
@@ -304,6 +445,14 @@
         "setPolicies": {
           "method": "POST",
           "path": "/policies"
+        },
+        "getThreatTypes": {
+          "method": "GET",
+          "path": "/threat-types"
+        },
+        "getCities": {
+          "method": "GET",
+          "path": "/cities"
         }
       },
       "id": "red-alert"

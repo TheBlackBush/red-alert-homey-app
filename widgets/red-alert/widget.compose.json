@@ -31,6 +31,14 @@
     "setPolicies": {
       "method": "POST",
       "path": "/policies"
+    },
+    "getThreatTypes": {
+      "method": "GET",
+      "path": "/threat-types"
+    },
+    "getCities": {
+      "method": "GET",
+      "path": "/cities"
     }
   }
 }

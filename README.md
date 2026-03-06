@@ -4,6 +4,8 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
 
 ## Features
 - Real-time WebSocket listener (`ws.tzevaadom.co.il`)
+- Threat-type mapping (threat ID/key/hebrew/english) exposed to flows and widget
+- App settings page for monitoring, cities, quiet hours and throttle policies
 - Flow triggers:
   - `red_alert_received`
   - `pre_alert_received`

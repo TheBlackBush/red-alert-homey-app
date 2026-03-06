@@ -44,7 +44,7 @@
       document.getElementById('activeDot').className = 'dot ' + (state.active ? 'bad' : 'ok');
       document.getElementById('toggle').innerText = state.monitoringEnabled ? 'Disable' : 'Enable';
       document.getElementById('last').innerText = state.lastEvent
-        ? `${state.lastEvent.title} · ${state.lastEvent.areas.join(', ')}`
+        ? `${state.lastEvent.title} (${state.lastEvent.threatNameHe || state.lastEvent.threatNameEn || '-'}) · ${state.lastEvent.areas.join(', ')}`
         : 'No events yet';
 
       const history = (state.history || []).slice(0, 5);

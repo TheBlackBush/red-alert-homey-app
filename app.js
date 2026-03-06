@@ -9,17 +9,23 @@ const WS_URL = 'wss://ws.tzevaadom.co.il/socket?platform=WEB';
 const ORIGIN = 'https://www.tzevaadom.co.il';
 const MAX_HISTORY = 50;
 
-const THREAT_ID_TO_CATEGORY = {
-  0: 'primary',
-  2: 'primary',
-  5: 'primary',
-  7: 'primary',
+const THREAT_TYPES = {
+  0: { key: 'rockets_missiles', he: 'ירי רקטות וטילים', en: 'Rockets and missiles', category: 'primary' },
+  1: { key: 'hazmat', he: 'אירוע חומרים מסוכנים', en: 'Hazardous materials', category: 'other' },
+  2: { key: 'terror_infiltration', he: 'חדירת מחבלים', en: 'Terrorist infiltration', category: 'primary' },
+  3: { key: 'earthquake', he: 'רעידת אדמה', en: 'Earthquake', category: 'other' },
+  4: { key: 'tsunami', he: 'חשש לצונאמי', en: 'Tsunami', category: 'other' },
+  5: { key: 'hostile_aircraft', he: 'חדירת כלי טיס עוין', en: 'Hostile aircraft intrusion', category: 'primary' },
+  6: { key: 'radiological', he: 'חשש לאירוע רדיולוגי', en: 'Radiological event', category: 'other' },
+  7: { key: 'chemical', he: 'חשש לאירוע כימי', en: 'Chemical event', category: 'primary' },
+  8: { key: 'homefront_alerts', he: 'התרעות פיקוד העורף', en: 'Home Front alerts', category: 'other' },
 };
 
 const SEVERITY_BY_CATEGORY = {
   primary: 'critical',
   'pre-alert': 'warning',
   'all-clear': 'info',
+  other: 'warning',
   test: 'warning',
 };
 
@@ -32,6 +38,7 @@ const DEFAULT_THROTTLE_BY_TYPE_MS = {
   primary: 120000,
   'pre-alert': 180000,
   'all-clear': 120000,
+  other: 120000,
   test: 0,
 };
 
@@ -52,9 +59,15 @@ class RedAlertApp extends Homey.App {
     this._registerCards();
     this._connect();
 
+    this.homey.settings.on('set', (key) => {
+      if (['monitoring_enabled', 'selected_city_ids', 'quiet_hours', 'throttle_by_type_ms'].includes(key)) {
+        this._loadConfig();
+      }
+    });
+
     this.homey.setInterval(() => this._cleanupDedupe(), 10 * 60 * 1000);
 
-    this.log('Red Alert app initialized (stage 2)');
+    this.log('Red Alert app initialized (stage 3)');
   }
 
   _loadCitiesDictionary() {
@@ -119,13 +132,20 @@ class RedAlertApp extends Homey.App {
 
     this.homey.flow.getActionCard('test_trigger')
       .registerRunListener(async (args) => {
+        const threatId = Number(args.threat_id || 0);
+        const threat = THREAT_TYPES[threatId] || THREAT_TYPES[0];
+
         const event = {
           id: `test-${Date.now()}`,
-          type: 'test',
+          type: threat.category === 'primary' ? 'primary' : 'other',
           title: args.title || 'Test alert',
           category: 'test',
           severity: 'warning',
           areas: [args.area || 'Test Area'],
+          threatId,
+          threatKey: threat.key,
+          threatNameHe: threat.he,
+          threatNameEn: threat.en,
           time: Date.now(),
         };
         await this._emitEvent(event, this._triggerRedAlert);
@@ -169,27 +189,33 @@ class RedAlertApp extends Homey.App {
     if (!this._monitoringEnabled || !message?.data) return;
 
     if (message.type === 'ALERT') {
-      const threat = Number(message.data.threat);
-      const category = THREAT_ID_TO_CATEGORY[threat];
-      if (!category || message.data.isDrill) return;
+      const threatId = Number(message.data.threat);
+      const threat = THREAT_TYPES[threatId];
+      if (!threat || message.data.isDrill) return;
 
       const areasByName = Array.isArray(message.data.cities) ? message.data.cities : [];
       const matched = this._filterAreasByNames(areasByName);
       if (!matched.length) return;
 
+      const eventType = threat.category === 'primary' ? 'primary' : 'other';
+
       const event = {
         id: `ALERT-${message.data.notificationId || Date.now()}`,
-        type: 'primary',
-        title: 'Red Alert',
-        category,
-        severity: SEVERITY_BY_CATEGORY[category],
+        type: eventType,
+        title: threat.en,
+        category: threat.category,
+        severity: SEVERITY_BY_CATEGORY[threat.category],
         areas: matched,
+        threatId,
+        threatKey: threat.key,
+        threatNameHe: threat.he,
+        threatNameEn: threat.en,
         time: Number(message.data.time) * 1000 || Date.now(),
       };
 
       await this._emitEvent(event, this._triggerRedAlert);
       this._active = true;
-      this._activeType = 'primary';
+      this._activeType = eventType;
       return;
     }
 
@@ -199,7 +225,6 @@ class RedAlertApp extends Homey.App {
       const matched = this._filterAreasByIds(areaIds);
       if (!matched.length) return;
 
-      // Priority policy: ignore pre-alert while primary is active.
       if (instructionType === SYSTEM_TYPE.PRE_ALERT && this._activeType === 'primary') return;
 
       if (instructionType === SYSTEM_TYPE.PRE_ALERT) {
@@ -212,6 +237,10 @@ class RedAlertApp extends Homey.App {
           category: 'pre-alert',
           severity: SEVERITY_BY_CATEGORY['pre-alert'],
           areas: matched,
+          threatId: 8,
+          threatKey: 'pre_alert',
+          threatNameHe: 'התרעה מוקדמת',
+          threatNameEn: 'Early warning',
           time: Number(message.data.time) * 1000 || Date.now(),
         };
         await this._emitEvent(event, this._triggerPreAlert);
@@ -226,6 +255,10 @@ class RedAlertApp extends Homey.App {
           category: 'all-clear',
           severity: SEVERITY_BY_CATEGORY['all-clear'],
           areas: matched,
+          threatId: 8,
+          threatKey: 'all_clear',
+          threatNameHe: 'סיום אירוע',
+          threatNameEn: 'All clear',
           time: Number(message.data.time) * 1000 || Date.now(),
         };
         await this._emitEvent(event, this._triggerAllClear);
@@ -282,6 +315,10 @@ class RedAlertApp extends Homey.App {
       areas: event.areas.join(', '),
       timestamp: new Date(event.time).toISOString(),
       severity: event.severity,
+      threat_id: String(event.threatId ?? ''),
+      threat_key: event.threatKey || '',
+      threat_name_he: event.threatNameHe || '',
+      threat_name_en: event.threatNameEn || '',
     });
   }
 
@@ -304,7 +341,27 @@ class RedAlertApp extends Homey.App {
       throttleByTypeMs: this._throttleByTypeMs,
       lastEvent: this._lastEvent,
       history: this._history.slice(0, 10),
+      threatTypes: this.getThreatTypes(),
     };
+  }
+
+  getThreatTypes() {
+    return Object.entries(THREAT_TYPES).map(([id, t]) => ({
+      id: Number(id),
+      key: t.key,
+      he: t.he,
+      en: t.en,
+      category: t.category,
+    }));
+  }
+
+  getCities(limit = 500) {
+    const entries = [];
+    for (const [name, id] of this._cityNameToId.entries()) {
+      entries.push({ id, name });
+      if (entries.length >= limit) break;
+    }
+    return entries;
   }
 
   async setMonitoringEnabled(enabled) {
