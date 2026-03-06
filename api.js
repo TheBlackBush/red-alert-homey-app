@@ -6,4 +6,8 @@ module.exports = {
       cities: homey.app.getCities(5000),
     };
   },
+
+  async diagnostics({ homey }) {
+    return homey.app.getDiagnostics();
+  },
 };

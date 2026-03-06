@@ -63,6 +63,20 @@ class RedAlertApp extends Homey.App {
     this._cityNameToId = new Map();
     this._cityIdToName = new Map();
     this._cityIdToMeta = new Map();
+    this._normalizedCityToId = new Map();
+
+    this._diag = {
+      wsConnects: 0,
+      wsReconnects: 0,
+      wsCloses: 0,
+      wsErrors: 0,
+      wsMessages: 0,
+      wsIgnoredFrames: 0,
+      flowTriggersFired: 0,
+      flowTriggersFailed: 0,
+      dedupeDrops: 0,
+      lastError: null,
+    };
     this._loadCitiesDictionary();
     this._loadConfig();
 
@@ -94,6 +108,15 @@ class RedAlertApp extends Homey.App {
     this.log('Red Alert app initialized (stage 3)');
   }
 
+  _normalizeAreaName(name) {
+    return String(name || '')
+      .trim()
+      .replace(/[׳']/g, '')
+      .replace(/["”״]/g, '')
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+  }
+
   _loadCitiesDictionary() {
     try {
       const p = path.join(__dirname, 'data', 'cities.json');
@@ -109,6 +132,9 @@ class RedAlertApp extends Homey.App {
           this._cityNameToId.set(String(name), id);
           this._cityIdToName.set(id, he);
           this._cityIdToMeta.set(id, { he, en });
+          this._normalizedCityToId.set(this._normalizeAreaName(name), id);
+          this._normalizedCityToId.set(this._normalizeAreaName(he), id);
+          this._normalizedCityToId.set(this._normalizeAreaName(en), id);
         }
       }
 
@@ -282,6 +308,7 @@ class RedAlertApp extends Homey.App {
 
     this._ws.on('open', () => {
       this._connected = true;
+      this._diag.wsConnects += 1;
       this._lastWsMessageAt = Date.now();
       this.log('Connected to Tzeva Adom websocket');
 
@@ -303,8 +330,12 @@ class RedAlertApp extends Homey.App {
     this._ws.on('message', async (raw) => {
       try {
         const text = Buffer.isBuffer(raw) ? raw.toString('utf8') : String(raw || '');
-        if (!text || !text.trim()) return;
+        if (!text || !text.trim()) {
+          this._diag.wsIgnoredFrames += 1;
+          return;
+        }
 
+        this._diag.wsMessages += 1;
         this._lastWsMessageAt = Date.now();
         const message = JSON.parse(text);
         await this._handleMessage(message);
@@ -312,15 +343,19 @@ class RedAlertApp extends Homey.App {
         // WS occasionally emits partial/empty frames; keep listening quietly.
         const msg = String(err?.message || '');
         if (msg.includes('Unexpected end of JSON input') || msg.includes('Unexpected token')) {
+          this._diag.wsIgnoredFrames += 1;
           this.log('[ws] ignored non-JSON/partial frame');
           return;
         }
+        this._diag.lastError = msg;
         this.error('Failed parsing websocket message', err);
       }
     });
 
     this._ws.on('close', () => {
       this._connected = false;
+      this._diag.wsCloses += 1;
+      this._diag.wsReconnects += 1;
       if (this._wsPingTimer) {
         clearInterval(this._wsPingTimer);
         this._wsPingTimer = null;
@@ -329,7 +364,11 @@ class RedAlertApp extends Homey.App {
       this.homey.setTimeout(() => this._connect(), retryMs);
     });
 
-    this._ws.on('error', (err) => this.error('Websocket error', err));
+    this._ws.on('error', (err) => {
+      this._diag.wsErrors += 1;
+      this._diag.lastError = String(err?.message || err);
+      this.error('Websocket error', err);
+    });
   }
 
   async _handleMessage(message) {
@@ -429,7 +468,16 @@ class RedAlertApp extends Homey.App {
   _filterAreasByNames(areas) {
     if (!this._selectedCityIds.length) return areas;
     const selected = new Set(this._selectedCityIds);
-    return areas.filter((name) => selected.has(this._cityNameToId.get(String(name).trim())));
+
+    return areas.filter((name) => {
+      const raw = String(name || '').trim();
+      const direct = this._cityNameToId.get(raw);
+      if (selected.has(direct)) return true;
+
+      const normalized = this._normalizeAreaName(raw);
+      const normalizedId = this._normalizedCityToId.get(normalized);
+      return selected.has(normalizedId);
+    });
   }
 
   _filterAreasByIds(areaIds) {
@@ -533,10 +581,24 @@ class RedAlertApp extends Homey.App {
   async _emitEvent(event, card) {
     const now = Date.now();
     const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
+
+    const areaKey = Array.isArray(event.areas)
+      ? [...event.areas].map((a) => this._normalizeAreaName(a)).sort().join('|')
+      : 'none';
+    const bucket = Math.floor((event.time || now) / 60000);
+
     const dedupeKey = `${event.type}:${event.id}`;
-    const last = this._dedupe.get(dedupeKey) || 0;
-    if (now - last < throttleMs) return;
+    const dedupeSignature = `${event.type}:${event.threatId ?? 'na'}:${areaKey}:${bucket}`;
+
+    const lastById = this._dedupe.get(dedupeKey) || 0;
+    const lastBySig = this._dedupe.get(dedupeSignature) || 0;
+    if ((now - lastById < throttleMs) || (now - lastBySig < throttleMs)) {
+      this._diag.dedupeDrops += 1;
+      return;
+    }
+
     this._dedupe.set(dedupeKey, now);
+    this._dedupe.set(dedupeSignature, now);
 
     this._lastEvent = event;
     this._lastFlowEvent = event;
@@ -562,8 +624,11 @@ class RedAlertApp extends Homey.App {
 
     try {
       await card.trigger(tokens);
+      this._diag.flowTriggersFired += 1;
       this.log(`[flow] trigger fired: ${event.type} | ${tokens.threat_key} | ${tokens.areas}`);
     } catch (err) {
+      this._diag.flowTriggersFailed += 1;
+      this._diag.lastError = String(err?.message || err);
       this.error(`[flow] trigger failed: ${event.type}`, err);
     }
   }
@@ -573,6 +638,25 @@ class RedAlertApp extends Homey.App {
     for (const [key, ts] of this._dedupe.entries()) {
       if (ts < cutoff) this._dedupe.delete(key);
     }
+  }
+
+  getDiagnostics() {
+    return {
+      ws: {
+        connected: this._connected,
+        readyState: this._ws ? this._ws.readyState : -1,
+        lastMessageAt: this._lastWsMessageAt || null,
+        lastPingAt: this._lastWsPingAt || null,
+        lastEventType: this._lastWsEventType,
+      },
+      selectedCityIdsCount: this._selectedCityIds.length,
+      stats: { ...this._diag },
+      lastEventId: this._lastEvent?.id || null,
+      lastEventType: this._lastEvent?.type || null,
+      quietHours: this._quietHours,
+      throttleByTypeMs: this._throttleByTypeMs,
+      now: Date.now(),
+    };
   }
 
   getPublicState() {
@@ -593,6 +677,7 @@ class RedAlertApp extends Homey.App {
       messageEn: this._buildAlertMessage(this._lastEvent, 'short', 'en'),
       linkOref: this._buildAlertLink(this._lastEvent, 'oref'),
       linkTzevaadom: this._buildAlertLink(this._lastEvent, 'tzevaadom'),
+      diagnostics: this.getDiagnostics(),
     };
   }
 
