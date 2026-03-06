@@ -9,8 +9,8 @@
       --card-bg: #f8fafc;
       --card-border: #e2e8f0;
       --muted: #64748b;
-      --accent: #2563eb;
-      --accent-2: #1d4ed8;
+      --brand-blue: #23aae1;
+      --brand-gray: #414143;
     }
 
     body {
@@ -83,25 +83,25 @@
       transform: none;
     }
 
-    /* Match palgate-homey-app button style */
+    /* Exact palgate-homey-app colors */
     .btn-primary {
-      background: #23aae1;
-      color: #fff;
-      border: 0;
-      box-shadow: 0 2px 8px rgba(35, 170, 225, .28);
+      background: var(--brand-blue) !important;
+      color: #fff !important;
+      border: 0 !important;
+      box-shadow: none;
     }
 
-    .btn-primary:hover { background: #1f9fd3; }
+    .btn-primary:hover { background: var(--brand-blue) !important; }
 
     .btn-secondary {
-      background: #eef4f8;
-      color: #414143;
-      border: 1px solid #d6e3ee;
+      background: #eef4f8 !important;
+      color: var(--brand-gray) !important;
+      border: 1px solid #d6e3ee !important;
     }
 
     .btn-secondary:hover {
-      background: #e7f0f6;
-      border-color: #c7d8e5;
+      background: #eef4f8 !important;
+      border: 1px solid #d6e3ee !important;
     }
 
     .pill-wrap {
