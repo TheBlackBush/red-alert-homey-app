@@ -62,8 +62,20 @@ class RedAlertApp extends Homey.App {
     this._connect();
 
     this.homey.settings.on('set', (key) => {
-      if (['monitoring_enabled', 'selected_city_ids', 'quiet_hours', 'throttle_by_type_ms'].includes(key)) {
-        this._loadConfig();
+      if (!['monitoring_enabled', 'selected_city_ids', 'quiet_hours', 'throttle_by_type_ms'].includes(key)) return;
+
+      const prevMonitoring = this._monitoringEnabled;
+      this._loadConfig();
+
+      if (key === 'monitoring_enabled' && prevMonitoring !== this._monitoringEnabled) {
+        this.log(`[settings] monitoring_enabled changed: ${prevMonitoring} -> ${this._monitoringEnabled}`);
+
+        if (this._monitoringEnabled) {
+          if (!this._ws || this._ws.readyState > 1) this._connect();
+        } else if (this._ws) {
+          this._ws.close();
+          this._connected = false;
+        }
       }
     });
 
@@ -218,8 +230,12 @@ class RedAlertApp extends Homey.App {
   }
 
   _connect() {
-    if (!this._monitoringEnabled) return;
+    if (!this._monitoringEnabled) {
+      this.log('Monitoring disabled, websocket connect skipped');
+      return;
+    }
 
+    this.log('Opening Tzeva Adom websocket...');
     this._ws = new WebSocket(WS_URL, {
       headers: {
         Origin: ORIGIN,
@@ -253,13 +269,17 @@ class RedAlertApp extends Homey.App {
     if (!this._monitoringEnabled || !message?.data) return;
 
     if (message.type === 'ALERT') {
+      this.log(`[ws] ALERT received: threat=${message?.data?.threat} cities=${Array.isArray(message?.data?.cities) ? message.data.cities.length : 0}`);
       const threatId = Number(message.data.threat);
       const threat = THREAT_TYPES[threatId];
       if (!threat || message.data.isDrill) return;
 
       const areasByName = Array.isArray(message.data.cities) ? message.data.cities : [];
       const matched = this._filterAreasByNames(areasByName);
-      if (!matched.length) return;
+      if (!matched.length) {
+        this.log('[ws] ALERT ignored: no matched cities for current selection');
+        return;
+      }
 
       const eventType = threat.category === 'primary' ? 'primary' : 'other';
 
@@ -285,9 +305,13 @@ class RedAlertApp extends Homey.App {
 
     if (message.type === 'SYSTEM_MESSAGE') {
       const instructionType = Number(message.data.instructionType);
+      this.log(`[ws] SYSTEM_MESSAGE received: instructionType=${instructionType} citiesIds=${Array.isArray(message?.data?.citiesIds) ? message.data.citiesIds.length : 0}`);
       const areaIds = Array.isArray(message.data.citiesIds) ? message.data.citiesIds : [];
       const matched = this._filterAreasByIds(areaIds);
-      if (!matched.length) return;
+      if (!matched.length) {
+        this.log('[ws] SYSTEM_MESSAGE ignored: no matched cities for current selection');
+        return;
+      }
 
       if (instructionType === SYSTEM_TYPE.PRE_ALERT && this._activeType === 'primary') return;
 
@@ -440,7 +464,7 @@ class RedAlertApp extends Homey.App {
     await this._updateMessageToken(event, 'short', 'he');
     await this._updateLinkToken(event, 'oref');
 
-    await card.trigger({
+    const tokens = {
       title: event.title,
       category: event.category,
       areas: event.areas.join(', '),
@@ -450,7 +474,14 @@ class RedAlertApp extends Homey.App {
       threat_key: event.threatKey || '',
       threat_name_he: event.threatNameHe || '',
       threat_name_en: event.threatNameEn || '',
-    });
+    };
+
+    try {
+      await card.trigger(tokens);
+      this.log(`[flow] trigger fired: ${event.type} | ${tokens.threat_key} | ${tokens.areas}`);
+    } catch (err) {
+      this.error(`[flow] trigger failed: ${event.type}`, err);
+    }
   }
 
   _cleanupDedupe() {
