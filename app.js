@@ -210,26 +210,17 @@ class RedAlertApp extends Homey.App {
   async _registerTokens() {
     this._lastAlertSummaryToken = await this.homey.flow.createToken('last_alert_summary', {
       type: 'string',
-      title: {
-        en: 'Last alert summary',
-        he: 'סיכום התראה אחרונה',
-      },
+      title: 'Last alert summary',
     });
 
     this._lastAlertMessageToken = await this.homey.flow.createToken('last_alert_message', {
       type: 'string',
-      title: {
-        en: 'Last alert message',
-        he: 'הודעת התראה אחרונה',
-      },
+      title: 'Last alert message',
     });
 
     this._lastAlertLinkToken = await this.homey.flow.createToken('last_alert_link', {
       type: 'string',
-      title: {
-        en: 'Last alert link',
-        he: 'קישור התראה אחרון',
-      },
+      title: 'Last alert link',
     });
 
     try {
