@@ -452,6 +452,43 @@
     "actions": [
       {
         "title": {
+          "en": "Build alert link",
+          "he": "בנה קישור התראה"
+        },
+        "titleFormatted": {
+          "en": "Build alert link from [[source]]",
+          "he": "בנה קישור התראה ממקור [[source]]"
+        },
+        "args": [
+          {
+            "name": "source",
+            "type": "dropdown",
+            "title": {
+              "en": "Source",
+              "he": "מקור"
+            },
+            "values": [
+              {
+                "id": "oref",
+                "label": {
+                  "en": "Home Front Command",
+                  "he": "פיקוד העורף"
+                }
+              },
+              {
+                "id": "tzevaadom",
+                "label": {
+                  "en": "Tzeva Adom",
+                  "he": "צבע אדום"
+                }
+              }
+            ]
+          }
+        ],
+        "id": "build_alert_link"
+      },
+      {
+        "title": {
           "en": "Build alert message template",
           "he": "בנה תבנית הודעת התראה"
         },

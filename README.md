@@ -18,9 +18,11 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
   - `test_trigger`
   - `refresh_summary_token`
   - `build_message_template` (short/full, he/en)
+  - `build_alert_link` (oref/tzevaadom)
 - Flow tokens:
   - `last_alert_summary`
   - `last_alert_message`
+  - `last_alert_link`
 - Dashboard widget for status and quick toggle
 
 ## Notes
