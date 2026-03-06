@@ -178,6 +178,13 @@ class RedAlertApp extends Homey.App {
         await this._updateMessageToken(this._lastEvent, mode, lang);
         return true;
       });
+
+    this.homey.flow.getActionCard('build_alert_link')
+      .registerRunListener(async (args) => {
+        const source = String(args.source || 'oref');
+        await this._updateLinkToken(this._lastEvent, source);
+        return true;
+      });
   }
 
   _registerTokens() {
@@ -197,8 +204,17 @@ class RedAlertApp extends Homey.App {
       },
     });
 
+    this._lastAlertLinkToken = this.homey.flow.createToken('last_alert_link', {
+      type: 'string',
+      title: {
+        en: 'Last alert link',
+        he: 'קישור התראה אחרון',
+      },
+    });
+
     this._updateSummaryToken(this._lastEvent).catch((err) => this.error('Failed to init summary token', err));
     this._updateMessageToken(this._lastEvent, 'short', 'he').catch((err) => this.error('Failed to init message token', err));
+    this._updateLinkToken(this._lastEvent, 'oref').catch((err) => this.error('Failed to init link token', err));
   }
 
   _connect() {
@@ -389,6 +405,24 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertMessageToken.setValue(message);
   }
 
+  _buildAlertLink(event, source = 'oref') {
+    const city = Array.isArray(event?.areas) && event.areas.length ? event.areas[0] : '';
+    if (source === 'tzevaadom') {
+      return city
+        ? `https://www.tzevaadom.co.il/en/cities/${encodeURIComponent(city)}`
+        : 'https://www.tzevaadom.co.il/';
+    }
+
+    // official source default
+    return 'https://www.oref.org.il/eng';
+  }
+
+  async _updateLinkToken(event, source = 'oref') {
+    if (!this._lastAlertLinkToken) return;
+    const link = this._buildAlertLink(event, source);
+    await this._lastAlertLinkToken.setValue(link);
+  }
+
   async _emitEvent(event, card) {
     const now = Date.now();
     const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
@@ -404,6 +438,7 @@ class RedAlertApp extends Homey.App {
 
     await this._updateSummaryToken(event);
     await this._updateMessageToken(event, 'short', 'he');
+    await this._updateLinkToken(event, 'oref');
 
     await card.trigger({
       title: event.title,
@@ -441,6 +476,8 @@ class RedAlertApp extends Homey.App {
       summary: this._buildAlertSummary(this._lastEvent),
       messageHe: this._buildAlertMessage(this._lastEvent, 'short', 'he'),
       messageEn: this._buildAlertMessage(this._lastEvent, 'short', 'en'),
+      linkOref: this._buildAlertLink(this._lastEvent, 'oref'),
+      linkTzevaadom: this._buildAlertLink(this._lastEvent, 'tzevaadom'),
     };
   }
 
