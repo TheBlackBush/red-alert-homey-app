@@ -49,6 +49,7 @@ const WS_RECONNECT_BASE_MS = 5000;
 const WS_RECONNECT_MAX_MS = 60000;
 const WS_RECONNECT_FACTOR = 1.6;
 const WS_MAX_STREAK_BEFORE_HARD_RESET = 6;
+const NATIONWIDE_CITY_ID = 10000000;
 
 const AREA_ALIASES = {
   "תל אביב יפו": "תל אביב - דרום העיר ויפו",
@@ -57,6 +58,7 @@ const AREA_ALIASES = {
   "באר שבע": "באר שבע",
   "ראשון לציון": "ראשון לציון - מערב",
   "מודיעין": "מודיעין מכבים רעות",
+  "רחבי הארץ": "__NATIONWIDE__",
 };
 
 class RedAlertApp extends Homey.App {
@@ -91,6 +93,7 @@ class RedAlertApp extends Homey.App {
       flowTriggersFailed: 0,
       dedupeDrops: 0,
       unknownAreaMisses: 0,
+      nationwideMatches: 0,
       lastError: null,
     };
 
@@ -167,6 +170,10 @@ class RedAlertApp extends Homey.App {
       }
 
       for (const [alias, target] of Object.entries(AREA_ALIASES)) {
+        if (target === '__NATIONWIDE__') {
+          this._normalizedCityToId.set(this._normalizeAreaName(alias), NATIONWIDE_CITY_ID);
+          continue;
+        }
         const targetId = this._cityNameToId.get(target);
         if (targetId) this._normalizedCityToId.set(this._normalizeAreaName(alias), targetId);
       }
@@ -554,8 +561,25 @@ class RedAlertApp extends Homey.App {
   }
 
   _filterAreasByNames(areas) {
-    if (!this._selectedCityIds.length) return areas;
+    const hasNationwideName = (areas || []).some((name) => {
+      const normalized = this._normalizeAreaName(name);
+      return normalized === this._normalizeAreaName('רחבי הארץ') || this._normalizedCityToId.get(normalized) === NATIONWIDE_CITY_ID;
+    });
+
+    if (!this._selectedCityIds.length) {
+      if (hasNationwideName) {
+        this._diag.nationwideMatches += 1;
+        return ['Nationwide'];
+      }
+      return areas;
+    }
+
     const selected = new Set(this._selectedCityIds);
+
+    if (hasNationwideName) {
+      this._diag.nationwideMatches += 1;
+      return this._selectedCityIds.map((id) => this._cityIdToName.get(id) || String(id));
+    }
 
     return areas.filter((name) => {
       const raw = String(name || '').trim();
@@ -576,8 +600,19 @@ class RedAlertApp extends Homey.App {
 
   _filterAreasByIds(areaIds) {
     const ids = areaIds.map((x) => Number(x)).filter((n) => !Number.isNaN(n));
+    const nationwide = ids.includes(NATIONWIDE_CITY_ID);
+
     if (!this._selectedCityIds.length) {
+      if (nationwide) {
+        this._diag.nationwideMatches += 1;
+        return ['Nationwide'];
+      }
       return ids.map((id) => this._cityIdToName.get(id) || String(id));
+    }
+
+    if (nationwide) {
+      this._diag.nationwideMatches += 1;
+      return this._selectedCityIds.map((id) => this._cityIdToName.get(id) || String(id));
     }
 
     const selected = new Set(this._selectedCityIds);
