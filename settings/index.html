@@ -27,28 +27,37 @@
 
     .lang-tabs {
       display: inline-flex;
-      gap: 6px;
-      border: 1px solid var(--card-border);
-      border-radius: 999px;
-      padding: 4px;
-      background: #fff;
+      gap: 8px;
+      border: 1px solid #d6e3ee;
+      border-radius: 12px;
+      padding: 6px;
+      background: #f7fbfe;
       margin-top: 10px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
     }
 
     .lang-tab {
-      border: 0;
-      border-radius: 999px;
-      padding: 6px 12px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      padding: 7px 14px;
       font-size: 13px;
       font-weight: 700;
       color: var(--brand-gray);
       background: transparent;
       cursor: pointer;
+      transition: all .18s ease;
+    }
+
+    .lang-tab:hover {
+      background: #eef6fb;
+      border-color: #d6e3ee;
     }
 
     .lang-tab.active {
       background: var(--brand-blue);
       color: #fff;
+      border-color: var(--brand-blue);
+      box-shadow: 0 2px 8px rgba(35,170,225,.28);
     }
 
     .card {
@@ -375,6 +384,9 @@
 
       document.getElementById('citySearch').placeholder = lang === 'he' ? 'הקלד שם עיר...' : 'Type city name...';
       renderPills();
+      if (document.getElementById('citiesDialog').open) {
+        renderDialogList(document.getElementById('citySearch').value || '');
+      }
     }
 
     function getSetting(Homey, key, fallback, cb) {
@@ -396,7 +408,7 @@
       const names = selectedCityIds
         .map(id => allCities.find(c => Number(c.id) === Number(id)))
         .filter(Boolean)
-        .map(c => c.name);
+        .map(c => currentLang === 'en' ? (c.en || c.name || c.he) : (c.he || c.name || c.en));
 
       if (!names.length) {
         const empty = document.createElement('span');
@@ -420,7 +432,16 @@
       list.innerHTML = '';
 
       allCities
-        .filter(c => !q || String(c.name).toLowerCase().includes(q))
+        .filter(c => {
+          const nHe = String(c.he || c.name || '').toLowerCase();
+          const nEn = String(c.en || '').toLowerCase();
+          return !q || nHe.includes(q) || nEn.includes(q);
+        })
+        .sort((a, b) => {
+          const an = currentLang === 'en' ? (a.en || a.name || a.he) : (a.he || a.name || a.en);
+          const bn = currentLang === 'en' ? (b.en || b.name || b.he) : (b.he || b.name || b.en);
+          return String(an).localeCompare(String(bn), currentLang === 'en' ? 'en' : 'he');
+        })
         .forEach(c => {
           const row = document.createElement('label');
           row.className = 'city-item';
@@ -435,7 +456,7 @@
           });
 
           const text = document.createElement('span');
-          text.textContent = c.name;
+          text.textContent = currentLang === 'en' ? (c.en || c.name || c.he) : (c.he || c.name || c.en);
 
           row.appendChild(cb);
           row.appendChild(text);
@@ -455,7 +476,9 @@
     }
 
     function onHomeyReady(Homey) {
-      applyLanguage('he');
+      getSetting(Homey, 'settings_lang', 'he', (lang) => {
+        applyLanguage(lang === 'en' ? 'en' : 'he');
+      });
 
       document.getElementById('langHe').addEventListener('click', () => applyLanguage('he'));
       document.getElementById('langEn').addEventListener('click', () => applyLanguage('en'));
@@ -525,6 +548,7 @@
             other: Number(document.getElementById('thOther').value || 120000),
             test: Number(document.getElementById('thTest').value || 0),
           });
+          await setSetting(Homey, 'settings_lang', currentLang);
           document.getElementById('status').textContent = t('saved');
         } catch (e) {
           document.getElementById('status').textContent = t('saveFailed') + e.message;
