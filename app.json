@@ -137,8 +137,24 @@
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message",
-              "he": "הודעת התראה"
+              "en": "Alert message (HE)",
+              "he": "הודעת התראה (עברית)"
+            }
+          },
+          {
+            "name": "alert_message_en",
+            "type": "string",
+            "title": {
+              "en": "Alert message (EN)",
+              "he": "הודעת התראה (אנגלית)"
+            }
+          },
+          {
+            "name": "alert_link",
+            "type": "string",
+            "title": {
+              "en": "Alert link",
+              "he": "קישור התראה"
             }
           }
         ],
@@ -226,8 +242,24 @@
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message",
-              "he": "הודעת התראה"
+              "en": "Alert message (HE)",
+              "he": "הודעת התראה (עברית)"
+            }
+          },
+          {
+            "name": "alert_message_en",
+            "type": "string",
+            "title": {
+              "en": "Alert message (EN)",
+              "he": "הודעת התראה (אנגלית)"
+            }
+          },
+          {
+            "name": "alert_link",
+            "type": "string",
+            "title": {
+              "en": "Alert link",
+              "he": "קישור התראה"
             }
           }
         ],
@@ -315,8 +347,24 @@
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message",
-              "he": "הודעת התראה"
+              "en": "Alert message (HE)",
+              "he": "הודעת התראה (עברית)"
+            }
+          },
+          {
+            "name": "alert_message_en",
+            "type": "string",
+            "title": {
+              "en": "Alert message (EN)",
+              "he": "הודעת התראה (אנגלית)"
+            }
+          },
+          {
+            "name": "alert_link",
+            "type": "string",
+            "title": {
+              "en": "Alert link",
+              "he": "קישור התראה"
             }
           }
         ],
@@ -404,8 +452,24 @@
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message",
-              "he": "הודעת התראה"
+              "en": "Alert message (HE)",
+              "he": "הודעת התראה (עברית)"
+            }
+          },
+          {
+            "name": "alert_message_en",
+            "type": "string",
+            "title": {
+              "en": "Alert message (EN)",
+              "he": "הודעת התראה (אנגלית)"
+            }
+          },
+          {
+            "name": "alert_link",
+            "type": "string",
+            "title": {
+              "en": "Alert link",
+              "he": "קישור התראה"
             }
           }
         ],

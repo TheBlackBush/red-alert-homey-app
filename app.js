@@ -749,6 +749,8 @@ class RedAlertApp extends Homey.App {
       threat_name_he: event.threatNameHe || '',
       threat_name_en: event.threatNameEn || '',
       alert_message: this._buildAlertMessage(event, 'short', 'he'),
+      alert_message_en: this._buildAlertMessage(event, 'short', 'en'),
+      alert_link: this._buildAlertLink(event, 'oref'),
     };
 
     try {
