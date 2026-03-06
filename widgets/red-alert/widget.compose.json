@@ -1,0 +1,32 @@
+{
+  "name": {
+    "en": "Red Alert Status",
+    "he": "סטטוס צבע אדום"
+  },
+  "settings": [
+    {
+      "id": "compact",
+      "type": "checkbox",
+      "title": {
+        "en": "Compact mode",
+        "he": "תצוגה קומפקטית"
+      },
+      "value": false
+    }
+  ],
+  "height": 180,
+  "api": {
+    "getState": {
+      "method": "GET",
+      "path": "/state"
+    },
+    "setMonitoring": {
+      "method": "POST",
+      "path": "/monitoring"
+    },
+    "setCities": {
+      "method": "POST",
+      "path": "/cities"
+    }
+  }
+}
