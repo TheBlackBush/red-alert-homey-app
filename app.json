@@ -293,6 +293,87 @@
           }
         ],
         "id": "red_alert_received"
+      },
+      {
+        "title": {
+          "en": "Test alert received",
+          "he": "התקבלה התראת בדיקה"
+        },
+        "tokens": [
+          {
+            "name": "title",
+            "type": "string",
+            "title": {
+              "en": "Title",
+              "he": "כותרת"
+            }
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "title": {
+              "en": "Category",
+              "he": "קטגוריה"
+            }
+          },
+          {
+            "name": "areas",
+            "type": "string",
+            "title": {
+              "en": "Areas",
+              "he": "אזורים"
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "title": {
+              "en": "Timestamp",
+              "he": "זמן"
+            }
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "title": {
+              "en": "Severity",
+              "he": "חומרה"
+            }
+          },
+          {
+            "name": "threat_id",
+            "type": "string",
+            "title": {
+              "en": "Threat ID",
+              "he": "מזהה איום"
+            }
+          },
+          {
+            "name": "threat_key",
+            "type": "string",
+            "title": {
+              "en": "Threat key",
+              "he": "מפתח איום"
+            }
+          },
+          {
+            "name": "threat_name_he",
+            "type": "string",
+            "title": {
+              "en": "Threat (Hebrew)",
+              "he": "איום (עברית)"
+            }
+          },
+          {
+            "name": "threat_name_en",
+            "type": "string",
+            "title": {
+              "en": "Threat (English)",
+              "he": "איום (אנגלית)"
+            }
+          }
+        ],
+        "id": "test_alert_received"
       }
     ],
     "conditions": [
