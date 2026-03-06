@@ -58,7 +58,7 @@ class RedAlertApp extends Homey.App {
     this._loadConfig();
 
     this._registerCards();
-    this._registerTokens();
+    await this._registerTokens();
     this._connect();
 
     this.homey.settings.on('set', (key) => {
@@ -130,6 +130,7 @@ class RedAlertApp extends Homey.App {
     this._triggerRedAlert = this.homey.flow.getTriggerCard('red_alert_received');
     this._triggerPreAlert = this.homey.flow.getTriggerCard('pre_alert_received');
     this._triggerAllClear = this.homey.flow.getTriggerCard('all_clear_received');
+    this._triggerTestAlert = this.homey.flow.getTriggerCard('test_alert_received');
 
     this.homey.flow.getConditionCard('is_monitoring_enabled')
       .registerRunListener(async () => this._monitoringEnabled);
@@ -172,7 +173,7 @@ class RedAlertApp extends Homey.App {
           threatNameEn: threat.en,
           time: Date.now(),
         };
-        await this._emitEvent(event, this._triggerRedAlert);
+        await this._emitEvent(event, this._triggerTestAlert || this._triggerRedAlert);
         return true;
       });
 
@@ -199,8 +200,8 @@ class RedAlertApp extends Homey.App {
       });
   }
 
-  _registerTokens() {
-    this._lastAlertSummaryToken = this.homey.flow.createToken('last_alert_summary', {
+  async _registerTokens() {
+    this._lastAlertSummaryToken = await this.homey.flow.createToken('last_alert_summary', {
       type: 'string',
       title: {
         en: 'Last alert summary',
@@ -208,7 +209,7 @@ class RedAlertApp extends Homey.App {
       },
     });
 
-    this._lastAlertMessageToken = this.homey.flow.createToken('last_alert_message', {
+    this._lastAlertMessageToken = await this.homey.flow.createToken('last_alert_message', {
       type: 'string',
       title: {
         en: 'Last alert message',
@@ -216,7 +217,7 @@ class RedAlertApp extends Homey.App {
       },
     });
 
-    this._lastAlertLinkToken = this.homey.flow.createToken('last_alert_link', {
+    this._lastAlertLinkToken = await this.homey.flow.createToken('last_alert_link', {
       type: 'string',
       title: {
         en: 'Last alert link',
@@ -224,9 +225,13 @@ class RedAlertApp extends Homey.App {
       },
     });
 
-    this._updateSummaryToken(this._lastEvent).catch((err) => this.error('Failed to init summary token', err));
-    this._updateMessageToken(this._lastEvent, 'short', 'he').catch((err) => this.error('Failed to init message token', err));
-    this._updateLinkToken(this._lastEvent, 'oref').catch((err) => this.error('Failed to init link token', err));
+    try {
+      await this._updateSummaryToken(this._lastEvent);
+      await this._updateMessageToken(this._lastEvent, 'short', 'he');
+      await this._updateLinkToken(this._lastEvent, 'oref');
+    } catch (err) {
+      this.error('Failed to init flow tokens', err);
+    }
   }
 
   _connect() {
