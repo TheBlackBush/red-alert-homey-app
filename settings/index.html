@@ -239,11 +239,11 @@
       <div class="grid3">
         <div>
           <label for="quietStart" data-i18n="quietStart">Start time (24h)</label>
-          <input id="quietStart" type="time" step="60" value="23:00" />
+          <input id="quietStart" type="text" inputmode="numeric" pattern="^([01]\d|2[0-3]):[0-5]\d$" placeholder="23:00" value="23:00" />
         </div>
         <div>
           <label for="quietEnd" data-i18n="quietEnd">End time (24h)</label>
-          <input id="quietEnd" type="time" step="60" value="06:00" />
+          <input id="quietEnd" type="text" inputmode="numeric" pattern="^([01]\d|2[0-3]):[0-5]\d$" placeholder="06:00" value="06:00" />
         </div>
         <div>
           <label>&nbsp;</label>
@@ -371,6 +371,16 @@
     };
 
     function t(key) { return I18N[currentLang][key] || key; }
+
+    function normalizeTime(v, fallback) {
+      const s = String(v || '').trim();
+      const m = s.match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return fallback;
+      const hh = Number(m[1]);
+      const mm = Number(m[2]);
+      if (Number.isNaN(hh) || Number.isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return fallback;
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    }
 
     function applyLanguage(lang) {
       currentLang = lang;
@@ -543,10 +553,15 @@
         try {
           await setSetting(Homey, 'monitoring_enabled', document.getElementById('monitoring').checked);
           await setSetting(Homey, 'selected_city_ids', selectedCityIds);
+          const quietStart = normalizeTime(document.getElementById('quietStart').value, '23:00');
+          const quietEnd = normalizeTime(document.getElementById('quietEnd').value, '06:00');
+          document.getElementById('quietStart').value = quietStart;
+          document.getElementById('quietEnd').value = quietEnd;
+
           await setSetting(Homey, 'quiet_hours', {
             enabled: document.getElementById('quietEnabled').checked,
-            start: document.getElementById('quietStart').value || '23:00',
-            end: document.getElementById('quietEnd').value || '06:00',
+            start: quietStart,
+            end: quietEnd,
           });
           await setSetting(Homey, 'throttle_by_type_ms', {
             primary: Number(document.getElementById('thPrimary').value || 120000),
