@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const WS_URL = 'wss://ws.tzevaadom.co.il/socket?platform=ANDROID';
+const WS_BASE_URL = 'wss://ws.tzevaadom.co.il/socket';
 const ORIGIN = 'https://www.tzevaadom.co.il';
 const MAX_HISTORY = 50;
 
@@ -49,6 +49,7 @@ const WS_RECONNECT_BASE_MS = 5000;
 const WS_RECONNECT_MAX_MS = 60000;
 const WS_RECONNECT_FACTOR = 1.6;
 const WS_MAX_STREAK_BEFORE_HARD_RESET = 6;
+const WS_PLATFORMS = ['WEB', 'ANDROID'];
 const NATIONWIDE_CITY_ID = 10000000;
 
 const AREA_ALIASES = {
@@ -85,6 +86,7 @@ class RedAlertApp extends Homey.App {
       wsReconnects: 0,
       wsReconnectScheduled: 0,
       wsHardResets: 0,
+      wsPlatformSwitches: 0,
       wsCloses: 0,
       wsErrors: 0,
       wsMessages: 0,
@@ -129,6 +131,8 @@ class RedAlertApp extends Homey.App {
           }
           this._wsReconnectAttempt = 0;
           this._wsDisconnectStreak = 0;
+          this._wsPlatform = this._wsPreferredPlatform;
+          this._wsFallbackActive = false;
         }
       }
     });
@@ -203,6 +207,14 @@ class RedAlertApp extends Homey.App {
       ...DEFAULT_THROTTLE_BY_TYPE_MS,
       ...(this.homey.settings.get('throttle_by_type_ms') || {}),
     };
+
+    const preferred = String(this.homey.settings.get('ws_platform_preferred') || 'WEB').toUpperCase();
+    this._wsPreferredPlatform = WS_PLATFORMS.includes(preferred) ? preferred : 'WEB';
+    this._wsAutoFallback = this.homey.settings.get('ws_auto_fallback') !== false;
+    if (!this._wsPlatform || !WS_PLATFORMS.includes(this._wsPlatform)) {
+      this._wsPlatform = this._wsPreferredPlatform;
+    }
+    this._wsFallbackActive = this._wsPlatform !== this._wsPreferredPlatform;
   }
 
   _registerCards() {
@@ -310,6 +322,7 @@ class RedAlertApp extends Homey.App {
 
     this._wsReconnectAttempt += 1;
     this._diag.wsReconnectScheduled += 1;
+    this._maybeSwitchPlatform(reason);
 
     const backoff = Math.min(
       WS_RECONNECT_BASE_MS * Math.pow(WS_RECONNECT_FACTOR, Math.max(0, this._wsReconnectAttempt - 1)),
@@ -318,7 +331,7 @@ class RedAlertApp extends Homey.App {
     const jitter = Math.floor(Math.random() * 2000);
     const retryMs = Math.floor(backoff + jitter);
 
-    this.log(`[ws] reconnect scheduled in ${retryMs}ms (reason=${reason}, attempt=${this._wsReconnectAttempt})`);
+    this.log(`[ws] reconnect scheduled in ${retryMs}ms (reason=${reason}, attempt=${this._wsReconnectAttempt}, platform=${this._wsPlatform})`);
 
     this._wsReconnectTimer = this.homey.setTimeout(() => {
       this._wsReconnectTimer = null;
@@ -372,6 +385,26 @@ class RedAlertApp extends Homey.App {
     }
   }
 
+  _wsUrl(platform) {
+    return `${WS_BASE_URL}?platform=${platform}`;
+  }
+
+  _alternatePlatform(platform) {
+    return platform === 'WEB' ? 'ANDROID' : 'WEB';
+  }
+
+  _maybeSwitchPlatform(reason = 'auto') {
+    if (!this._wsAutoFallback) return false;
+    if (this._wsPlatform !== this._wsPreferredPlatform) return false;
+    if (this._wsReconnectAttempt < 3) return false;
+
+    this._wsPlatform = this._alternatePlatform(this._wsPlatform);
+    this._wsFallbackActive = true;
+    this._diag.wsPlatformSwitches += 1;
+    this.log(`[ws] auto-switched platform to ${this._wsPlatform} (reason=${reason})`);
+    return true;
+  }
+
   _connect() {
     if (!this._monitoringEnabled) {
       this.log('Monitoring disabled, websocket connect skipped');
@@ -382,8 +415,9 @@ class RedAlertApp extends Homey.App {
       return;
     }
 
-    this.log('Opening Tzeva Adom websocket...');
-    this._ws = new WebSocket(WS_URL, {
+    const wsUrl = this._wsUrl(this._wsPlatform);
+    this.log(`Opening Tzeva Adom websocket (platform=${this._wsPlatform})...`);
+    this._ws = new WebSocket(wsUrl, {
       handshakeTimeout: 15000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36',
@@ -399,7 +433,7 @@ class RedAlertApp extends Homey.App {
       this._wsDisconnectStreak = 0;
       this._wsReconnectAttempt = 0;
       this._lastWsMessageAt = Date.now();
-      this.log('Connected to Tzeva Adom websocket');
+      this.log(`Connected to Tzeva Adom websocket (platform=${this._wsPlatform})`);
 
       if (this._wsPingTimer) clearInterval(this._wsPingTimer);
       this._wsPingTimer = this.homey.setInterval(() => {
@@ -776,6 +810,10 @@ class RedAlertApp extends Homey.App {
       ws: {
         connected: this._connected,
         readyState: this._ws ? this._ws.readyState : -1,
+        platform: this._wsPlatform,
+        preferredPlatform: this._wsPreferredPlatform,
+        autoFallback: this._wsAutoFallback,
+        fallbackActive: this._wsFallbackActive,
         lastMessageAt: this._lastWsMessageAt || null,
         lastPingAt: this._lastWsPingAt || null,
         lastEventType: this._lastWsEventType,
@@ -851,6 +889,8 @@ class RedAlertApp extends Homey.App {
       }
       this._wsReconnectAttempt = 0;
       this._wsDisconnectStreak = 0;
+      this._wsPlatform = this._wsPreferredPlatform;
+      this._wsFallbackActive = false;
     }
 
     return this._monitoringEnabled;
