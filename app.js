@@ -167,6 +167,15 @@ class RedAlertApp extends Homey.App {
     this.homey.flow.getActionCard('refresh_summary_token')
       .registerRunListener(async () => {
         await this._updateSummaryToken(this._lastEvent);
+        await this._updateMessageToken(this._lastEvent, 'short', 'he');
+        return true;
+      });
+
+    this.homey.flow.getActionCard('build_message_template')
+      .registerRunListener(async (args) => {
+        const mode = String(args.mode || 'short');
+        const lang = String(args.lang || 'he');
+        await this._updateMessageToken(this._lastEvent, mode, lang);
         return true;
       });
   }
@@ -180,7 +189,16 @@ class RedAlertApp extends Homey.App {
       },
     });
 
+    this._lastAlertMessageToken = this.homey.flow.createToken('last_alert_message', {
+      type: 'string',
+      title: {
+        en: 'Last alert message',
+        he: 'הודעת התראה אחרונה',
+      },
+    });
+
     this._updateSummaryToken(this._lastEvent).catch((err) => this.error('Failed to init summary token', err));
+    this._updateMessageToken(this._lastEvent, 'short', 'he').catch((err) => this.error('Failed to init message token', err));
   }
 
   _connect() {
@@ -341,6 +359,36 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertSummaryToken.setValue(summary);
   }
 
+  _buildAlertMessage(event, mode = 'short', lang = 'he') {
+    if (!event) {
+      return lang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
+    }
+
+    const ts = new Date(event.time || Date.now()).toLocaleString(lang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
+    const threat = lang === 'he'
+      ? (event.threatNameHe || event.threatNameEn || event.title || '-')
+      : (event.threatNameEn || event.threatNameHe || event.title || '-');
+    const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
+
+    if (mode === 'full') {
+      if (lang === 'he') {
+        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nחומרה: ${event.severity || '-'}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
+      }
+      return `🚨 Alert: ${threat}\nAreas: ${areas}\nSeverity: ${event.severity || '-'}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
+    }
+
+    if (lang === 'he') {
+      return `🚨 ${threat} | ${areas} | ${event.severity || '-'} | ${ts}`;
+    }
+    return `🚨 ${threat} | ${areas} | ${event.severity || '-'} | ${ts}`;
+  }
+
+  async _updateMessageToken(event, mode = 'short', lang = 'he') {
+    if (!this._lastAlertMessageToken) return;
+    const message = this._buildAlertMessage(event, mode, lang);
+    await this._lastAlertMessageToken.setValue(message);
+  }
+
   async _emitEvent(event, card) {
     const now = Date.now();
     const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
@@ -355,6 +403,7 @@ class RedAlertApp extends Homey.App {
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
 
     await this._updateSummaryToken(event);
+    await this._updateMessageToken(event, 'short', 'he');
 
     await card.trigger({
       title: event.title,
@@ -390,6 +439,8 @@ class RedAlertApp extends Homey.App {
       history: this._history.slice(0, 10),
       threatTypes: this.getThreatTypes(),
       summary: this._buildAlertSummary(this._lastEvent),
+      messageHe: this._buildAlertMessage(this._lastEvent, 'short', 'he'),
+      messageEn: this._buildAlertMessage(this._lastEvent, 'short', 'en'),
     };
   }
 

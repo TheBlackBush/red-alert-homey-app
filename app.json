@@ -452,6 +452,67 @@
     "actions": [
       {
         "title": {
+          "en": "Build alert message template",
+          "he": "בנה תבנית הודעת התראה"
+        },
+        "titleFormatted": {
+          "en": "Build [[mode]] message in [[lang]]",
+          "he": "בנה הודעת [[mode]] בשפה [[lang]]"
+        },
+        "args": [
+          {
+            "name": "mode",
+            "type": "dropdown",
+            "title": {
+              "en": "Mode",
+              "he": "מצב"
+            },
+            "values": [
+              {
+                "id": "short",
+                "label": {
+                  "en": "Short",
+                  "he": "קצר"
+                }
+              },
+              {
+                "id": "full",
+                "label": {
+                  "en": "Full",
+                  "he": "מלא"
+                }
+              }
+            ]
+          },
+          {
+            "name": "lang",
+            "type": "dropdown",
+            "title": {
+              "en": "Language",
+              "he": "שפה"
+            },
+            "values": [
+              {
+                "id": "he",
+                "label": {
+                  "en": "Hebrew",
+                  "he": "עברית"
+                }
+              },
+              {
+                "id": "en",
+                "label": {
+                  "en": "English",
+                  "he": "אנגלית"
+                }
+              }
+            ]
+          }
+        ],
+        "id": "build_message_template"
+      },
+      {
+        "title": {
           "en": "Refresh last alert summary token",
           "he": "רענן טוקן סיכום התראה אחרונה"
         },
