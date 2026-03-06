@@ -46,6 +46,15 @@ const DEFAULT_THROTTLE_BY_TYPE_MS = {
 const WS_PING_INTERVAL_MS = 45000;
 const WS_STALE_TIMEOUT_MS = 150000;
 
+const AREA_ALIASES = {
+  "תל אביב יפו": "תל אביב - דרום העיר ויפו",
+  "תל אביב": "תל אביב - מרכז העיר",
+  "ירושלים": "ירושלים - מערב",
+  "באר שבע": "באר שבע",
+  "ראשון לציון": "ראשון לציון - מערב",
+  "מודיעין": "מודיעין מכבים רעות",
+};
+
 class RedAlertApp extends Homey.App {
   async onInit() {
     this._active = false;
@@ -75,6 +84,7 @@ class RedAlertApp extends Homey.App {
       flowTriggersFired: 0,
       flowTriggersFailed: 0,
       dedupeDrops: 0,
+      unknownAreaMisses: 0,
       lastError: null,
     };
     this._loadCitiesDictionary();
@@ -136,6 +146,11 @@ class RedAlertApp extends Homey.App {
           this._normalizedCityToId.set(this._normalizeAreaName(he), id);
           this._normalizedCityToId.set(this._normalizeAreaName(en), id);
         }
+      }
+
+      for (const [alias, target] of Object.entries(AREA_ALIASES)) {
+        const targetId = this._cityNameToId.get(target);
+        if (targetId) this._normalizedCityToId.set(this._normalizeAreaName(alias), targetId);
       }
 
       this.log(`Loaded ${this._cityNameToId.size} cities from dictionary`);
@@ -476,7 +491,13 @@ class RedAlertApp extends Homey.App {
 
       const normalized = this._normalizeAreaName(raw);
       const normalizedId = this._normalizedCityToId.get(normalized);
-      return selected.has(normalizedId);
+      const matched = selected.has(normalizedId);
+
+      if (!matched && normalizedId === undefined) {
+        this._diag.unknownAreaMisses += 1;
+      }
+
+      return matched;
     });
   }
 
@@ -650,6 +671,7 @@ class RedAlertApp extends Homey.App {
         lastEventType: this._lastWsEventType,
       },
       selectedCityIdsCount: this._selectedCityIds.length,
+      normalizationIndexSize: this._normalizedCityToId.size,
       stats: { ...this._diag },
       lastEventId: this._lastEvent?.id || null,
       lastEventType: this._lastEvent?.type || null,
