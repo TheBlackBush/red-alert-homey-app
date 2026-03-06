@@ -4,8 +4,9 @@ const Homey = require('homey');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
-const WS_URL = 'wss://ws.tzevaadom.co.il/socket?platform=WEB';
+const WS_URL = 'wss://ws.tzevaadom.co.il/socket?platform=ANDROID';
 const ORIGIN = 'https://www.tzevaadom.co.il';
 const MAX_HISTORY = 50;
 
@@ -42,11 +43,16 @@ const DEFAULT_THROTTLE_BY_TYPE_MS = {
   test: 0,
 };
 
+const WS_PING_INTERVAL_MS = 45000;
+const WS_STALE_TIMEOUT_MS = 150000;
+
 class RedAlertApp extends Homey.App {
   async onInit() {
     this._active = false;
     this._activeType = null;
     this._connected = false;
+    this._lastWsMessageAt = 0;
+    this._lastWsPingAt = 0;
     this._lastEvent = null;
     this._lastFlowEvent = null;
     this._history = [];
@@ -80,6 +86,7 @@ class RedAlertApp extends Homey.App {
     });
 
     this.homey.setInterval(() => this._cleanupDedupe(), 10 * 60 * 1000);
+    this.homey.setInterval(() => this._wsWatchdog(), 30000);
 
     this.log('Red Alert app initialized (stage 3)');
   }
@@ -234,23 +241,58 @@ class RedAlertApp extends Homey.App {
     }
   }
 
+  _wsWatchdog() {
+    if (!this._monitoringEnabled) return;
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
+
+    const now = Date.now();
+    const idleMs = this._lastWsMessageAt ? (now - this._lastWsMessageAt) : Infinity;
+
+    if (idleMs > WS_STALE_TIMEOUT_MS) {
+      this.log(`[ws] stale connection detected (${Math.round(idleMs / 1000)}s idle), reconnecting`);
+      try { this._ws.terminate(); } catch (_) {}
+    }
+  }
+
   _connect() {
     if (!this._monitoringEnabled) {
       this.log('Monitoring disabled, websocket connect skipped');
       return;
     }
 
+    if (this._ws && (this._ws.readyState === WebSocket.OPEN || this._ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+
     this.log('Opening Tzeva Adom websocket...');
     this._ws = new WebSocket(WS_URL, {
+      handshakeTimeout: 15000,
       headers: {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36',
         Origin: ORIGIN,
         Referer: ORIGIN,
+        tzofar: crypto.randomBytes(16).toString('hex'),
       },
     });
 
     this._ws.on('open', () => {
       this._connected = true;
+      this._lastWsMessageAt = Date.now();
       this.log('Connected to Tzeva Adom websocket');
+
+      if (this._wsPingTimer) clearInterval(this._wsPingTimer);
+      this._wsPingTimer = this.homey.setInterval(() => {
+        try {
+          if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+            this._lastWsPingAt = Date.now();
+            this._ws.ping();
+          }
+        } catch (_) {}
+      }, WS_PING_INTERVAL_MS);
+    });
+
+    this._ws.on('pong', () => {
+      this._lastWsMessageAt = Date.now();
     });
 
     this._ws.on('message', async (raw) => {
@@ -258,6 +300,7 @@ class RedAlertApp extends Homey.App {
         const text = Buffer.isBuffer(raw) ? raw.toString('utf8') : String(raw || '');
         if (!text || !text.trim()) return;
 
+        this._lastWsMessageAt = Date.now();
         const message = JSON.parse(text);
         await this._handleMessage(message);
       } catch (err) {
@@ -273,7 +316,12 @@ class RedAlertApp extends Homey.App {
 
     this._ws.on('close', () => {
       this._connected = false;
-      this.homey.setTimeout(() => this._connect(), 5000);
+      if (this._wsPingTimer) {
+        clearInterval(this._wsPingTimer);
+        this._wsPingTimer = null;
+      }
+      const retryMs = 5000 + Math.floor(Math.random() * 2000);
+      this.homey.setTimeout(() => this._connect(), retryMs);
     });
 
     this._ws.on('error', (err) => this.error('Websocket error', err));
