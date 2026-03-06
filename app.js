@@ -58,6 +58,7 @@ class RedAlertApp extends Homey.App {
     this._loadConfig();
 
     this._registerCards();
+    this._registerTokens();
     this._connect();
 
     this.homey.settings.on('set', (key) => {
@@ -162,6 +163,24 @@ class RedAlertApp extends Homey.App {
         await this._emitEvent(event, this._triggerRedAlert);
         return true;
       });
+
+    this.homey.flow.getActionCard('refresh_summary_token')
+      .registerRunListener(async () => {
+        await this._updateSummaryToken(this._lastEvent);
+        return true;
+      });
+  }
+
+  _registerTokens() {
+    this._lastAlertSummaryToken = this.homey.flow.createToken('last_alert_summary', {
+      type: 'string',
+      title: {
+        en: 'Last alert summary',
+        he: 'סיכום התראה אחרונה',
+      },
+    });
+
+    this._updateSummaryToken(this._lastEvent).catch((err) => this.error('Failed to init summary token', err));
   }
 
   _connect() {
@@ -308,6 +327,20 @@ class RedAlertApp extends Homey.App {
     return hour >= start || hour <= end;
   }
 
+  _buildAlertSummary(event) {
+    if (!event) return 'No alerts yet';
+    const ts = new Date(event.time || Date.now()).toLocaleString('he-IL', { hour12: false });
+    const threat = event.threatNameHe || event.threatNameEn || event.title || '-';
+    const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
+    return `[${ts}] ${threat} | severity=${event.severity || '-'} | areas=${areas}`;
+  }
+
+  async _updateSummaryToken(event) {
+    if (!this._lastAlertSummaryToken) return;
+    const summary = this._buildAlertSummary(event);
+    await this._lastAlertSummaryToken.setValue(summary);
+  }
+
   async _emitEvent(event, card) {
     const now = Date.now();
     const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
@@ -320,6 +353,8 @@ class RedAlertApp extends Homey.App {
     this._lastFlowEvent = event;
     this._history.unshift(event);
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
+
+    await this._updateSummaryToken(event);
 
     await card.trigger({
       title: event.title,
@@ -354,6 +389,7 @@ class RedAlertApp extends Homey.App {
       lastEvent: this._lastEvent,
       history: this._history.slice(0, 10),
       threatTypes: this.getThreatTypes(),
+      summary: this._buildAlertSummary(this._lastEvent),
     };
   }
 
