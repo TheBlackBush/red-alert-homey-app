@@ -1,0 +1,284 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.idanbush.redalert",
+  "version": "0.1.0",
+  "compatibility": ">=12.3.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Red Alert Israel",
+    "he": "צבע אדום ישראל"
+  },
+  "description": {
+    "en": "Civil defense alert automations for Israel",
+    "he": "אוטומציות להתראות פיקוד העורף בישראל"
+  },
+  "category": "security",
+  "tags": {
+    "en": [
+      "red alert",
+      "israel",
+      "safety",
+      "oref",
+      "tzofar"
+    ],
+    "he": [
+      "צבע אדום",
+      "פיקוד העורף",
+      "התראה",
+      "ישראל"
+    ]
+  },
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "brandColor": "#c92a2a",
+  "author": {
+    "name": "Idan Bush"
+  },
+  "homepage": "https://github.com/BuSHari",
+  "source": "https://github.com/BuSHari/red-alert-homey-app",
+  "support": "https://github.com/BuSHari/red-alert-homey-app/issues",
+  "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "All-clear notification received",
+          "he": "התקבלה הודעת סיום אירוע"
+        },
+        "tokens": [
+          {
+            "name": "title",
+            "type": "string",
+            "title": {
+              "en": "Title",
+              "he": "כותרת"
+            }
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "title": {
+              "en": "Category",
+              "he": "קטגוריה"
+            }
+          },
+          {
+            "name": "areas",
+            "type": "string",
+            "title": {
+              "en": "Areas",
+              "he": "אזורים"
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "title": {
+              "en": "Timestamp",
+              "he": "זמן"
+            }
+          }
+        ],
+        "id": "all_clear_received"
+      },
+      {
+        "title": {
+          "en": "Early warning received",
+          "he": "התקבלה התרעת מקדימה"
+        },
+        "tokens": [
+          {
+            "name": "title",
+            "type": "string",
+            "title": {
+              "en": "Title",
+              "he": "כותרת"
+            }
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "title": {
+              "en": "Category",
+              "he": "קטגוריה"
+            }
+          },
+          {
+            "name": "areas",
+            "type": "string",
+            "title": {
+              "en": "Areas",
+              "he": "אזורים"
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "title": {
+              "en": "Timestamp",
+              "he": "זמן"
+            }
+          }
+        ],
+        "id": "pre_alert_received"
+      },
+      {
+        "title": {
+          "en": "Red alert received",
+          "he": "התקבלה התראת צבע אדום"
+        },
+        "tokens": [
+          {
+            "name": "title",
+            "type": "string",
+            "title": {
+              "en": "Title",
+              "he": "כותרת"
+            }
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "title": {
+              "en": "Category",
+              "he": "קטגוריה"
+            }
+          },
+          {
+            "name": "areas",
+            "type": "string",
+            "title": {
+              "en": "Areas",
+              "he": "אזורים"
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "title": {
+              "en": "Timestamp",
+              "he": "זמן"
+            }
+          }
+        ],
+        "id": "red_alert_received"
+      }
+    ],
+    "conditions": [
+      {
+        "title": {
+          "en": "Alert !{{is|isn't}} currently active",
+          "he": "יש !{{התראה פעילה|אין התראה פעילה}} כרגע"
+        },
+        "id": "is_alert_active"
+      },
+      {
+        "title": {
+          "en": "Monitoring !{{is|isn't}} enabled",
+          "he": "הניטור !{{פעיל|לא פעיל}}"
+        },
+        "id": "is_monitoring_enabled"
+      }
+    ],
+    "actions": [
+      {
+        "title": {
+          "en": "Set monitoring",
+          "he": "הגדר ניטור"
+        },
+        "titleFormatted": {
+          "en": "Set monitoring to [[enabled]]",
+          "he": "הגדר ניטור ל-[[enabled]]"
+        },
+        "args": [
+          {
+            "name": "enabled",
+            "type": "checkbox",
+            "title": {
+              "en": "Enabled",
+              "he": "פעיל"
+            }
+          }
+        ],
+        "id": "set_monitoring_enabled"
+      },
+      {
+        "title": {
+          "en": "Trigger test alert",
+          "he": "הפעל התראת בדיקה"
+        },
+        "titleFormatted": {
+          "en": "Trigger test alert \"[[title]]\" for [[area]]",
+          "he": "הפעל התראת בדיקה \"[[title]]\" עבור [[area]]"
+        },
+        "args": [
+          {
+            "name": "title",
+            "type": "text",
+            "title": {
+              "en": "Title",
+              "he": "כותרת"
+            },
+            "placeholder": {
+              "en": "Test alert",
+              "he": "התראת בדיקה"
+            }
+          },
+          {
+            "name": "area",
+            "type": "text",
+            "title": {
+              "en": "Area",
+              "he": "אזור"
+            },
+            "placeholder": {
+              "en": "Tel Aviv",
+              "he": "תל אביב"
+            }
+          }
+        ],
+        "id": "test_trigger"
+      }
+    ]
+  },
+  "widgets": {
+    "red-alert": {
+      "name": {
+        "en": "Red Alert Status",
+        "he": "סטטוס צבע אדום"
+      },
+      "settings": [
+        {
+          "id": "compact",
+          "type": "checkbox",
+          "title": {
+            "en": "Compact mode",
+            "he": "תצוגה קומפקטית"
+          },
+          "value": false
+        }
+      ],
+      "height": 180,
+      "api": {
+        "getState": {
+          "method": "GET",
+          "path": "/state"
+        },
+        "setMonitoring": {
+          "method": "POST",
+          "path": "/monitoring"
+        },
+        "setCities": {
+          "method": "POST",
+          "path": "/cities"
+        }
+      },
+      "id": "red-alert"
+    }
+  }
+}

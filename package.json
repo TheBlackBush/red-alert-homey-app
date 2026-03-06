@@ -1,0 +1,20 @@
+{
+  "name": "com.idanbush.redalert",
+  "version": "0.1.0",
+  "description": "Homey Red Alert monitoring app for Israel (flows + widgets)",
+  "main": "app.js",
+  "scripts": {
+    "lint": "eslint --ext .js --ignore-path .gitignore .",
+    "validate": "homey app validate --level=publish"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/homey": "npm:homey-apps-sdk-v3-types@^0.3.12",
+    "@types/node": "^20.14.1",
+    "eslint": "^7.32.0",
+    "eslint-config-athom": "^3.1.1",
+    "homey": "^3.0.0"
+  }
+}
