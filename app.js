@@ -255,9 +255,18 @@ class RedAlertApp extends Homey.App {
 
     this._ws.on('message', async (raw) => {
       try {
-        const message = JSON.parse(raw.toString());
+        const text = Buffer.isBuffer(raw) ? raw.toString('utf8') : String(raw || '');
+        if (!text || !text.trim()) return;
+
+        const message = JSON.parse(text);
         await this._handleMessage(message);
       } catch (err) {
+        // WS occasionally emits partial/empty frames; keep listening quietly.
+        const msg = String(err?.message || '');
+        if (msg.includes('Unexpected end of JSON input') || msg.includes('Unexpected token')) {
+          this.log('[ws] ignored non-JSON/partial frame');
+          return;
+        }
         this.error('Failed parsing websocket message', err);
       }
     });
