@@ -5,55 +5,247 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
   <style>
-    body { font-family: sans-serif; margin: 20px; max-width: 860px; }
+    :root {
+      --card-bg: #f8fafc;
+      --card-border: #e2e8f0;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --accent-2: #1d4ed8;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 20px;
+      max-width: 920px;
+      color: #0f172a;
+      background: #ffffff;
+    }
+
+    .header { margin-bottom: 16px; }
+    .title { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
+    .subtitle { color: var(--muted); margin: 0; font-size: 14px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
     .row { margin-bottom: 14px; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; }
-    input, select { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { padding: 8px 14px; border: 0; border-radius: 8px; cursor: pointer; }
-    .hint { font-size: 12px; opacity: .75; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .grid3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .row:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    input[type='text'], input[type='number'] {
+      width: 100%;
+      padding: 10px 11px;
+      box-sizing: border-box;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-2); }
+
+    .btn-secondary {
+      background: #fff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+    }
+
+    .pill-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      min-height: 28px;
+    }
+
+    .pill {
+      background: #e2e8f0;
+      color: #0f172a;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .footer-actions { display: flex; align-items: center; gap: 10px; }
+    #status { font-size: 13px; color: var(--muted); }
+
+    dialog {
+      width: min(680px, 96vw);
+      border: 0;
+      border-radius: 14px;
+      padding: 0;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
+    }
+
+    dialog::backdrop { background: rgba(15, 23, 42, .35); }
+
+    .dialog-head {
+      padding: 14px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dialog-body { padding: 14px; }
+    .city-list {
+      max-height: 360px;
+      overflow: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    .city-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 4px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+
+    .city-item:last-child { border-bottom: 0; }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+    }
   </style>
 </head>
 <body>
-  <h2>Red Alert Settings</h2>
-
-  <div class="row">
-    <label><input type="checkbox" id="monitoring" /> Monitoring enabled</label>
+  <div class="header">
+    <h2 class="title">Red Alert Settings</h2>
+    <p class="subtitle">Homey-style configuration for cities, quiet hours and throttling.</p>
   </div>
 
-  <div class="row">
-    <label for="citySearch">Cities (by name)</label>
-    <input id="citySearch" placeholder="Search city name..." />
-    <select id="cities" multiple size="12"></select>
-    <div class="hint">בחר עיר אחת או יותר לפי שם (Ctrl/Cmd לבחירה מרובה).</div>
-  </div>
+  <div class="card">
+    <div class="row">
+      <label><input type="checkbox" id="monitoring" /> Monitoring enabled</label>
+    </div>
 
-  <div class="row">
-    <label>Quiet hours (for pre-alert only)</label>
-    <div class="grid3">
-      <input id="quietStart" type="number" min="0" max="23" placeholder="Start hour" />
-      <input id="quietEnd" type="number" min="0" max="23" placeholder="End hour" />
-      <label style="display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" id="quietEnabled" />Enable</label>
+    <div class="row">
+      <label>Cities</label>
+      <button id="openCities" class="btn btn-secondary" type="button">Choose cities</button>
+      <div class="pill-wrap" id="cityPills"></div>
+      <div class="hint">בחירת ערים מתבצעת בדיאלוג עם חיפוש פנימי.</div>
     </div>
   </div>
 
-  <div class="row">
-    <label>Throttle per event type (milliseconds)</label>
-    <div class="grid">
-      <input id="thPrimary" type="number" min="0" step="1000" placeholder="Primary" />
-      <input id="thPreAlert" type="number" min="0" step="1000" placeholder="Pre-alert" />
-      <input id="thAllClear" type="number" min="0" step="1000" placeholder="All-clear" />
-      <input id="thOther" type="number" min="0" step="1000" placeholder="Other" />
-      <input id="thTest" type="number" min="0" step="1000" placeholder="Test" />
+  <div class="card">
+    <div class="row">
+      <label>Quiet hours (applies to pre-alert only)</label>
+      <div class="grid3">
+        <div>
+          <label for="quietStart">Start hour (0-23)</label>
+          <input id="quietStart" type="number" min="0" max="23" placeholder="23" />
+        </div>
+        <div>
+          <label for="quietEnd">End hour (0-23)</label>
+          <input id="quietEnd" type="number" min="0" max="23" placeholder="6" />
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" id="quietEnabled" /> Enable quiet hours</label>
+        </div>
+      </div>
     </div>
   </div>
 
-  <button id="save">Save</button>
-  <div id="status" class="hint" style="margin-top:10px;"></div>
+  <div class="card">
+    <div class="row">
+      <label>Throttle per event type (milliseconds)</label>
+      <div class="grid2">
+        <div>
+          <label for="thPrimary">Primary alert throttle</label>
+          <input id="thPrimary" type="number" min="0" step="1000" />
+        </div>
+        <div>
+          <label for="thPreAlert">Pre-alert throttle</label>
+          <input id="thPreAlert" type="number" min="0" step="1000" />
+        </div>
+        <div>
+          <label for="thAllClear">All-clear throttle</label>
+          <input id="thAllClear" type="number" min="0" step="1000" />
+        </div>
+        <div>
+          <label for="thOther">Other threat throttle</label>
+          <input id="thOther" type="number" min="0" step="1000" />
+        </div>
+        <div>
+          <label for="thTest">Test trigger throttle</label>
+          <input id="thTest" type="number" min="0" step="1000" />
+        </div>
+      </div>
+      <div class="hint">0 = no throttle. Recommended defaults are already pre-filled.</div>
+    </div>
+  </div>
+
+  <div class="footer-actions">
+    <button id="save" class="btn btn-primary">Save</button>
+    <div id="status"></div>
+  </div>
+
+  <dialog id="citiesDialog">
+    <div class="dialog-head">
+      <strong>Choose Cities</strong>
+      <button type="button" class="btn btn-secondary" id="closeDialogTop">Close</button>
+    </div>
+    <div class="dialog-body">
+      <label for="citySearch">Search city</label>
+      <input id="citySearch" type="text" placeholder="Type city name..." />
+      <div class="city-list" id="cityList"></div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-secondary" id="clearCities">Clear all</button>
+      <button type="button" class="btn btn-primary" id="applyCities">Apply</button>
+    </div>
+  </dialog>
 
   <script>
     let allCities = [];
+    let selectedCityIds = [];
+    let draftCityIds = [];
 
     function getSetting(Homey, key, fallback, cb) {
       Homey.get(key, (err, value) => {
@@ -68,26 +260,68 @@
       });
     }
 
-    function renderCities(filterText = '', selectedIds = []) {
-      const select = document.getElementById('cities');
-      const q = String(filterText || '').toLowerCase();
-      select.innerHTML = '';
+    function renderPills() {
+      const wrap = document.getElementById('cityPills');
+      wrap.innerHTML = '';
+      const names = selectedCityIds
+        .map(id => allCities.find(c => Number(c.id) === Number(id)))
+        .filter(Boolean)
+        .map(c => c.name);
+
+      if (!names.length) {
+        const empty = document.createElement('span');
+        empty.className = 'hint';
+        empty.textContent = 'No cities selected (all cities will match).';
+        wrap.appendChild(empty);
+        return;
+      }
+
+      names.forEach(name => {
+        const s = document.createElement('span');
+        s.className = 'pill';
+        s.textContent = name;
+        wrap.appendChild(s);
+      });
+    }
+
+    function renderDialogList(filter = '') {
+      const list = document.getElementById('cityList');
+      const q = String(filter || '').toLowerCase();
+      list.innerHTML = '';
 
       allCities
         .filter(c => !q || String(c.name).toLowerCase().includes(q))
         .forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = String(c.id);
-          opt.textContent = c.name;
-          if (selectedIds.includes(Number(c.id))) opt.selected = true;
-          select.appendChild(opt);
+          const row = document.createElement('label');
+          row.className = 'city-item';
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = draftCityIds.includes(Number(c.id));
+          cb.addEventListener('change', () => {
+            const id = Number(c.id);
+            if (cb.checked && !draftCityIds.includes(id)) draftCityIds.push(id);
+            if (!cb.checked) draftCityIds = draftCityIds.filter(x => x !== id);
+          });
+
+          const text = document.createElement('span');
+          text.textContent = c.name;
+
+          row.appendChild(cb);
+          row.appendChild(text);
+          list.appendChild(row);
         });
     }
 
-    function getSelectedCityIds() {
-      return Array.from(document.getElementById('cities').selectedOptions)
-        .map(o => Number(o.value))
-        .filter(n => !Number.isNaN(n));
+    function openDialog() {
+      draftCityIds = [...selectedCityIds];
+      document.getElementById('citySearch').value = '';
+      renderDialogList('');
+      document.getElementById('citiesDialog').showModal();
+    }
+
+    function closeDialog() {
+      document.getElementById('citiesDialog').close();
     }
 
     function onHomeyReady(Homey) {
@@ -95,18 +329,15 @@
         document.getElementById('monitoring').checked = monitoring !== false;
       });
 
-      let initialSelected = [];
-      getSetting(Homey, 'selected_city_ids', [], (selectedCityIds) => {
-        initialSelected = Array.isArray(selectedCityIds)
-          ? selectedCityIds.map(x => Number(x)).filter(n => !Number.isNaN(n))
-          : [];
+      getSetting(Homey, 'selected_city_ids', [], (ids) => {
+        selectedCityIds = Array.isArray(ids) ? ids.map(Number).filter(n => !Number.isNaN(n)) : [];
 
         Homey.api('GET', '/cities', null, (err, result) => {
           if (!err && result && Array.isArray(result.cities)) {
             allCities = result.cities.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
-            renderCities('', initialSelected);
+            renderPills();
           } else {
-            document.getElementById('status').innerText = 'Could not load cities list.';
+            document.getElementById('status').textContent = 'Could not load cities list.';
           }
         });
       });
@@ -125,15 +356,28 @@
         document.getElementById('thTest').value = Number(t.test ?? 0);
       });
 
+      document.getElementById('openCities').addEventListener('click', openDialog);
+      document.getElementById('closeDialogTop').addEventListener('click', closeDialog);
+
       document.getElementById('citySearch').addEventListener('input', (e) => {
-        const selected = getSelectedCityIds();
-        renderCities(e.target.value, selected);
+        renderDialogList(e.target.value);
+      });
+
+      document.getElementById('clearCities').addEventListener('click', () => {
+        draftCityIds = [];
+        renderDialogList(document.getElementById('citySearch').value);
+      });
+
+      document.getElementById('applyCities').addEventListener('click', () => {
+        selectedCityIds = [...draftCityIds];
+        renderPills();
+        closeDialog();
       });
 
       document.getElementById('save').addEventListener('click', async () => {
         try {
           await setSetting(Homey, 'monitoring_enabled', document.getElementById('monitoring').checked);
-          await setSetting(Homey, 'selected_city_ids', getSelectedCityIds());
+          await setSetting(Homey, 'selected_city_ids', selectedCityIds);
           await setSetting(Homey, 'quiet_hours', {
             enabled: document.getElementById('quietEnabled').checked,
             start: Number(document.getElementById('quietStart').value || 23),
@@ -146,9 +390,9 @@
             other: Number(document.getElementById('thOther').value || 120000),
             test: Number(document.getElementById('thTest').value || 0),
           });
-          document.getElementById('status').innerText = 'Saved.';
+          document.getElementById('status').textContent = 'Saved.';
         } catch (e) {
-          document.getElementById('status').innerText = 'Save failed: ' + e.message;
+          document.getElementById('status').textContent = 'Save failed: ' + e.message;
         }
       });
 
