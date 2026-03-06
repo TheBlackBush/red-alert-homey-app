@@ -61,47 +61,47 @@
 
     .btn {
       appearance: none;
-      border: 1px solid #8ec5ff;
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 10px 14px;
       font-size: 14px;
       line-height: 1.2;
       cursor: pointer;
       font-weight: 700;
-      color: #0b3a75;
-      background: linear-gradient(180deg, #dff0ff 0%, #beddff 100%);
-      transition: all .18s ease;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+      transition: all .16s ease;
     }
 
     .btn:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(103, 179, 255, .35);
+      box-shadow: 0 0 0 3px rgba(35, 170, 225, .28);
     }
 
-    .btn:hover {
-      background: linear-gradient(180deg, #d2eaff 0%, #add5ff 100%);
-      border-color: #7cb9fa;
-      box-shadow: 0 6px 14px rgba(86, 162, 241, .22);
-    }
-
-    .btn:active {
-      transform: translateY(1px) scale(.995);
-      box-shadow: 0 1px 1px rgba(15, 23, 42, .08);
-    }
+    .btn:active { transform: translateY(1px); }
 
     .btn:disabled {
-      opacity: .55;
+      opacity: .6;
       cursor: not-allowed;
       transform: none;
     }
 
-    /* Keep Homey class names but use unified pastel-blue style */
-    .btn-primary,
+    /* Match palgate-homey-app button style */
+    .btn-primary {
+      background: #23aae1;
+      color: #fff;
+      border: 0;
+      box-shadow: 0 2px 8px rgba(35, 170, 225, .28);
+    }
+
+    .btn-primary:hover { background: #1f9fd3; }
+
     .btn-secondary {
-      color: #0b3a75;
-      background: linear-gradient(180deg, #dff0ff 0%, #beddff 100%);
-      border-color: #8ec5ff;
+      background: #eef4f8;
+      color: #414143;
+      border: 1px solid #d6e3ee;
+    }
+
+    .btn-secondary:hover {
+      background: #e7f0f6;
+      border-color: #c7d8e5;
     }
 
     .pill-wrap {
