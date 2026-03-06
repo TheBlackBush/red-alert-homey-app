@@ -5,59 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
   <style>
-    body { font-family: sans-serif; margin: 20px; max-width: 760px; }
-    .row { margin-bottom: 12px; }
+    body { font-family: sans-serif; margin: 20px; max-width: 860px; }
+    .row { margin-bottom: 14px; }
     label { display: block; margin-bottom: 6px; font-weight: 600; }
-    input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+    input, select { width: 100%; padding: 8px; box-sizing: border-box; }
     button { padding: 8px 14px; border: 0; border-radius: 8px; cursor: pointer; }
-    .hint { font-size: 12px; opacity: .7; }
+    .hint { font-size: 12px; opacity: .75; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
   </style>
 </head>
 <body>
   <h2>Red Alert Settings</h2>
+
   <div class="row">
     <label><input type="checkbox" id="monitoring" /> Monitoring enabled</label>
   </div>
+
   <div class="row">
-    <label>Selected city IDs (comma-separated)</label>
-    <input id="cities" placeholder="3001, 500114" />
-    <div class="hint">You can also use city names in Hebrew, comma-separated.</div>
+    <label for="citySearch">Cities (by name)</label>
+    <input id="citySearch" placeholder="Search city name..." />
+    <select id="cities" multiple size="12"></select>
+    <div class="hint">בחר עיר אחת או יותר לפי שם (Ctrl/Cmd לבחירה מרובה).</div>
   </div>
+
   <div class="row">
-    <label>Quiet hours start/end (for pre-alerts only)</label>
-    <div style="display:flex; gap:10px;">
-      <input id="quietStart" type="number" min="0" max="23" placeholder="23" />
-      <input id="quietEnd" type="number" min="0" max="23" placeholder="6" />
-      <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="quietEnabled" />Enable</label>
+    <label>Quiet hours (for pre-alert only)</label>
+    <div class="grid3">
+      <input id="quietStart" type="number" min="0" max="23" placeholder="Start hour" />
+      <input id="quietEnd" type="number" min="0" max="23" placeholder="End hour" />
+      <label style="display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" id="quietEnabled" />Enable</label>
     </div>
   </div>
+
   <div class="row">
-    <label>Throttle by type (ms, JSON)</label>
-    <textarea id="throttle" rows="4">{"primary":120000,"pre-alert":180000,"all-clear":120000,"other":120000,"test":0}</textarea>
+    <label>Throttle per event type (milliseconds)</label>
+    <div class="grid">
+      <input id="thPrimary" type="number" min="0" step="1000" placeholder="Primary" />
+      <input id="thPreAlert" type="number" min="0" step="1000" placeholder="Pre-alert" />
+      <input id="thAllClear" type="number" min="0" step="1000" placeholder="All-clear" />
+      <input id="thOther" type="number" min="0" step="1000" placeholder="Other" />
+      <input id="thTest" type="number" min="0" step="1000" placeholder="Test" />
+    </div>
   </div>
+
   <button id="save">Save</button>
   <div id="status" class="hint" style="margin-top:10px;"></div>
 
   <script>
-    function parseList(v) {
-      return String(v || '').split(',').map(x => x.trim()).filter(Boolean);
-    }
+    let allCities = [];
 
     function getSetting(Homey, key, fallback, cb) {
       Homey.get(key, (err, value) => {
-        if (err) return cb(fallback);
-        if (value === null || value === undefined) return cb(fallback);
+        if (err || value === null || value === undefined) return cb(fallback);
         cb(value);
       });
     }
 
     function setSetting(Homey, key, value) {
       return new Promise((resolve, reject) => {
-        Homey.set(key, value, (err) => {
-          if (err) return reject(err);
-          resolve();
-        });
+        Homey.set(key, value, (err) => err ? reject(err) : resolve());
       });
+    }
+
+    function renderCities(filterText = '', selectedIds = []) {
+      const select = document.getElementById('cities');
+      const q = String(filterText || '').toLowerCase();
+      select.innerHTML = '';
+
+      allCities
+        .filter(c => !q || String(c.name).toLowerCase().includes(q))
+        .forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = String(c.id);
+          opt.textContent = c.name;
+          if (selectedIds.includes(Number(c.id))) opt.selected = true;
+          select.appendChild(opt);
+        });
+    }
+
+    function getSelectedCityIds() {
+      return Array.from(document.getElementById('cities').selectedOptions)
+        .map(o => Number(o.value))
+        .filter(n => !Number.isNaN(n));
     }
 
     function onHomeyReady(Homey) {
@@ -65,8 +95,20 @@
         document.getElementById('monitoring').checked = monitoring !== false;
       });
 
+      let initialSelected = [];
       getSetting(Homey, 'selected_city_ids', [], (selectedCityIds) => {
-        document.getElementById('cities').value = Array.isArray(selectedCityIds) ? selectedCityIds.join(', ') : '';
+        initialSelected = Array.isArray(selectedCityIds)
+          ? selectedCityIds.map(x => Number(x)).filter(n => !Number.isNaN(n))
+          : [];
+
+        Homey.api('GET', '/cities', null, (err, result) => {
+          if (!err && result && Array.isArray(result.cities)) {
+            allCities = result.cities.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
+            renderCities('', initialSelected);
+          } else {
+            document.getElementById('status').innerText = 'Could not load cities list.';
+          }
+        });
       });
 
       getSetting(Homey, 'quiet_hours', { enabled: false, start: 23, end: 6 }, (quietHours) => {
@@ -75,20 +117,35 @@
         document.getElementById('quietEnabled').checked = !!quietHours.enabled;
       });
 
-      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000, test: 0 }, (throttle) => {
-        document.getElementById('throttle').value = JSON.stringify(throttle);
+      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000, test: 0 }, (t) => {
+        document.getElementById('thPrimary').value = Number(t.primary ?? 120000);
+        document.getElementById('thPreAlert').value = Number(t['pre-alert'] ?? 180000);
+        document.getElementById('thAllClear').value = Number(t['all-clear'] ?? 120000);
+        document.getElementById('thOther').value = Number(t.other ?? 120000);
+        document.getElementById('thTest').value = Number(t.test ?? 0);
+      });
+
+      document.getElementById('citySearch').addEventListener('input', (e) => {
+        const selected = getSelectedCityIds();
+        renderCities(e.target.value, selected);
       });
 
       document.getElementById('save').addEventListener('click', async () => {
         try {
           await setSetting(Homey, 'monitoring_enabled', document.getElementById('monitoring').checked);
-          await setSetting(Homey, 'selected_city_ids', parseList(document.getElementById('cities').value));
+          await setSetting(Homey, 'selected_city_ids', getSelectedCityIds());
           await setSetting(Homey, 'quiet_hours', {
             enabled: document.getElementById('quietEnabled').checked,
             start: Number(document.getElementById('quietStart').value || 23),
             end: Number(document.getElementById('quietEnd').value || 6),
           });
-          await setSetting(Homey, 'throttle_by_type_ms', JSON.parse(document.getElementById('throttle').value || '{}'));
+          await setSetting(Homey, 'throttle_by_type_ms', {
+            primary: Number(document.getElementById('thPrimary').value || 120000),
+            'pre-alert': Number(document.getElementById('thPreAlert').value || 180000),
+            'all-clear': Number(document.getElementById('thAllClear').value || 120000),
+            other: Number(document.getElementById('thOther').value || 120000),
+            test: Number(document.getElementById('thTest').value || 0),
+          });
           document.getElementById('status').innerText = 'Saved.';
         } catch (e) {
           document.getElementById('status').innerText = 'Save failed: ' + e.message;
