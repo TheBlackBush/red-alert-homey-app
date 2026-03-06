@@ -25,32 +25,6 @@
     .title { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
     .subtitle { color: var(--muted); margin: 0; font-size: 14px; }
 
-    .lang-tabs {
-      display: inline-flex;
-      gap: 6px;
-      border: 1px solid var(--card-border);
-      border-radius: 999px;
-      padding: 4px;
-      background: #fff;
-      margin-top: 10px;
-    }
-
-    .lang-tab {
-      border: 0;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--brand-gray);
-      background: transparent;
-      cursor: pointer;
-    }
-
-    .lang-tab.active {
-      background: var(--brand-blue);
-      color: #fff;
-    }
-
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -109,6 +83,7 @@
       transform: none;
     }
 
+    /* Exact palgate-homey-app colors */
     .btn-primary {
       background: var(--brand-blue) !important;
       color: #fff !important;
@@ -203,42 +178,38 @@
 </head>
 <body>
   <div class="header">
-    <h2 class="title" data-i18n="title">Red Alert Settings</h2>
-    <p class="subtitle" data-i18n="subtitle">Homey-style configuration for cities, quiet hours and throttling.</p>
-    <div class="lang-tabs" role="tablist" aria-label="Language selector">
-      <button id="langHe" class="lang-tab active" type="button">עברית</button>
-      <button id="langEn" class="lang-tab" type="button">English</button>
-    </div>
+    <h2 class="title">Red Alert Settings</h2>
+    <p class="subtitle">Homey-style configuration for cities, quiet hours and throttling.</p>
   </div>
 
   <div class="card">
     <div class="row">
-      <label><input type="checkbox" id="monitoring" /> <span data-i18n="monitoring">Monitoring enabled</span></label>
+      <label><input type="checkbox" id="monitoring" /> Monitoring enabled</label>
     </div>
 
     <div class="row">
-      <label data-i18n="cities">Cities</label>
-      <button id="openCities" class="btn btn-secondary" type="button" data-i18n="chooseCities">Choose cities</button>
+      <label>Cities</label>
+      <button id="openCities" class="btn btn-secondary" type="button">Choose cities</button>
       <div class="pill-wrap" id="cityPills"></div>
-      <div class="hint" data-i18n="citiesHint">City selection is done in a searchable dialog.</div>
+      <div class="hint">בחירת ערים מתבצעת בדיאלוג עם חיפוש פנימי.</div>
     </div>
   </div>
 
   <div class="card">
     <div class="row">
-      <label data-i18n="quietTitle">Quiet hours (applies to pre-alert only)</label>
+      <label>Quiet hours (applies to pre-alert only)</label>
       <div class="grid3">
         <div>
-          <label for="quietStart" data-i18n="quietStart">Start hour (0-23)</label>
+          <label for="quietStart">Start hour (0-23)</label>
           <input id="quietStart" type="number" min="0" max="23" placeholder="23" />
         </div>
         <div>
-          <label for="quietEnd" data-i18n="quietEnd">End hour (0-23)</label>
+          <label for="quietEnd">End hour (0-23)</label>
           <input id="quietEnd" type="number" min="0" max="23" placeholder="6" />
         </div>
         <div>
           <label>&nbsp;</label>
-          <label style="display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" id="quietEnabled" /> <span data-i18n="quietEnable">Enable quiet hours</span></label>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" id="quietEnabled" /> Enable quiet hours</label>
         </div>
       </div>
     </div>
@@ -246,51 +217,51 @@
 
   <div class="card">
     <div class="row">
-      <label data-i18n="throttleTitle">Throttle per event type (milliseconds)</label>
+      <label>Throttle per event type (milliseconds)</label>
       <div class="grid2">
         <div>
-          <label for="thPrimary" data-i18n="thPrimary">Primary alert throttle</label>
+          <label for="thPrimary">Primary alert throttle</label>
           <input id="thPrimary" type="number" min="0" step="1000" />
         </div>
         <div>
-          <label for="thPreAlert" data-i18n="thPreAlert">Pre-alert throttle</label>
+          <label for="thPreAlert">Pre-alert throttle</label>
           <input id="thPreAlert" type="number" min="0" step="1000" />
         </div>
         <div>
-          <label for="thAllClear" data-i18n="thAllClear">All-clear throttle</label>
+          <label for="thAllClear">All-clear throttle</label>
           <input id="thAllClear" type="number" min="0" step="1000" />
         </div>
         <div>
-          <label for="thOther" data-i18n="thOther">Other threat throttle</label>
+          <label for="thOther">Other threat throttle</label>
           <input id="thOther" type="number" min="0" step="1000" />
         </div>
         <div>
-          <label for="thTest" data-i18n="thTest">Test trigger throttle</label>
+          <label for="thTest">Test trigger throttle</label>
           <input id="thTest" type="number" min="0" step="1000" />
         </div>
       </div>
-      <div class="hint" data-i18n="throttleHint">0 = no throttle. Recommended defaults are pre-filled.</div>
+      <div class="hint">0 = no throttle. Recommended defaults are already pre-filled.</div>
     </div>
   </div>
 
   <div class="footer-actions">
-    <button id="save" class="btn btn-primary" data-i18n="save">Save</button>
+    <button id="save" class="btn btn-primary">Save</button>
     <div id="status"></div>
   </div>
 
   <dialog id="citiesDialog">
     <div class="dialog-head">
-      <strong data-i18n="dialogTitle">Choose Cities</strong>
-      <button type="button" class="btn btn-secondary" id="closeDialogTop" data-i18n="close">Close</button>
+      <strong>Choose Cities</strong>
+      <button type="button" class="btn btn-secondary" id="closeDialogTop">Close</button>
     </div>
     <div class="dialog-body">
-      <label for="citySearch" data-i18n="searchCity">Search city</label>
+      <label for="citySearch">Search city</label>
       <input id="citySearch" type="text" placeholder="Type city name..." />
       <div class="city-list" id="cityList"></div>
     </div>
     <div class="dialog-actions">
-      <button type="button" class="btn btn-secondary" id="clearCities" data-i18n="clearAll">Clear all</button>
-      <button type="button" class="btn btn-primary" id="applyCities" data-i18n="apply">Apply</button>
+      <button type="button" class="btn btn-secondary" id="clearCities">Clear all</button>
+      <button type="button" class="btn btn-primary" id="applyCities">Apply</button>
     </div>
   </dialog>
 
@@ -298,84 +269,6 @@
     let allCities = [];
     let selectedCityIds = [];
     let draftCityIds = [];
-    let currentLang = 'he';
-
-    const I18N = {
-      he: {
-        title: 'הגדרות צבע אדום',
-        subtitle: 'הגדרה בסגנון Homey עבור ערים, שעות שקט ו-throttle.',
-        monitoring: 'ניטור פעיל',
-        cities: 'ערים',
-        chooseCities: 'בחירת ערים',
-        citiesHint: 'בחירת הערים מתבצעת בדיאלוג עם חיפוש.',
-        quietTitle: 'שעות שקט (חל רק על התראה מקדימה)',
-        quietStart: 'שעת התחלה (0-23)',
-        quietEnd: 'שעת סיום (0-23)',
-        quietEnable: 'הפעל שעות שקט',
-        throttleTitle: 'השהיה בין אירועים לפי סוג (מילישניות)',
-        thPrimary: 'השהיה להתראה ראשית',
-        thPreAlert: 'השהיה להתראה מקדימה',
-        thAllClear: 'השהיה לסיום אירוע',
-        thOther: 'השהיה לסוגי איום אחרים',
-        thTest: 'השהיה לטריגר בדיקה',
-        throttleHint: '0 = ללא השהיה. ברירות מחדל כבר מוזנות.',
-        save: 'שמור',
-        dialogTitle: 'בחירת ערים',
-        close: 'סגור',
-        searchCity: 'חיפוש עיר',
-        clearAll: 'נקה הכל',
-        apply: 'החל',
-        noCities: 'לא נבחרו ערים (יתאים לכל הערים).',
-        couldNotLoad: 'לא ניתן לטעון רשימת ערים.',
-        saved: 'נשמר בהצלחה.',
-        saveFailed: 'שמירה נכשלה: '
-      },
-      en: {
-        title: 'Red Alert Settings',
-        subtitle: 'Homey-style configuration for cities, quiet hours and throttling.',
-        monitoring: 'Monitoring enabled',
-        cities: 'Cities',
-        chooseCities: 'Choose cities',
-        citiesHint: 'City selection is done in a searchable dialog.',
-        quietTitle: 'Quiet hours (applies to pre-alert only)',
-        quietStart: 'Start hour (0-23)',
-        quietEnd: 'End hour (0-23)',
-        quietEnable: 'Enable quiet hours',
-        throttleTitle: 'Throttle per event type (milliseconds)',
-        thPrimary: 'Primary alert throttle',
-        thPreAlert: 'Pre-alert throttle',
-        thAllClear: 'All-clear throttle',
-        thOther: 'Other threat throttle',
-        thTest: 'Test trigger throttle',
-        throttleHint: '0 = no throttle. Recommended defaults are pre-filled.',
-        save: 'Save',
-        dialogTitle: 'Choose Cities',
-        close: 'Close',
-        searchCity: 'Search city',
-        clearAll: 'Clear all',
-        apply: 'Apply',
-        noCities: 'No cities selected (all cities will match).',
-        couldNotLoad: 'Could not load cities list.',
-        saved: 'Saved.',
-        saveFailed: 'Save failed: '
-      }
-    };
-
-    function t(key) { return I18N[currentLang][key] || key; }
-
-    function applyLanguage(lang) {
-      currentLang = lang;
-      document.getElementById('langHe').classList.toggle('active', lang === 'he');
-      document.getElementById('langEn').classList.toggle('active', lang === 'en');
-
-      document.querySelectorAll('[data-i18n]').forEach((el) => {
-        const k = el.getAttribute('data-i18n');
-        el.textContent = t(k);
-      });
-
-      document.getElementById('citySearch').placeholder = lang === 'he' ? 'הקלד שם עיר...' : 'Type city name...';
-      renderPills();
-    }
 
     function getSetting(Homey, key, fallback, cb) {
       Homey.get(key, (err, value) => {
@@ -401,7 +294,7 @@
       if (!names.length) {
         const empty = document.createElement('span');
         empty.className = 'hint';
-        empty.textContent = t('noCities');
+        empty.textContent = 'No cities selected (all cities will match).';
         wrap.appendChild(empty);
         return;
       }
@@ -455,11 +348,6 @@
     }
 
     function onHomeyReady(Homey) {
-      applyLanguage('he');
-
-      document.getElementById('langHe').addEventListener('click', () => applyLanguage('he'));
-      document.getElementById('langEn').addEventListener('click', () => applyLanguage('en'));
-
       getSetting(Homey, 'monitoring_enabled', true, (monitoring) => {
         document.getElementById('monitoring').checked = monitoring !== false;
       });
@@ -472,7 +360,7 @@
             allCities = result.cities.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
             renderPills();
           } else {
-            document.getElementById('status').textContent = t('couldNotLoad');
+            document.getElementById('status').textContent = 'Could not load cities list.';
           }
         });
       });
@@ -483,12 +371,12 @@
         document.getElementById('quietEnabled').checked = !!quietHours.enabled;
       });
 
-      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000, test: 0 }, (tval) => {
-        document.getElementById('thPrimary').value = Number(tval.primary ?? 120000);
-        document.getElementById('thPreAlert').value = Number(tval['pre-alert'] ?? 180000);
-        document.getElementById('thAllClear').value = Number(tval['all-clear'] ?? 120000);
-        document.getElementById('thOther').value = Number(tval.other ?? 120000);
-        document.getElementById('thTest').value = Number(tval.test ?? 0);
+      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000, test: 0 }, (t) => {
+        document.getElementById('thPrimary').value = Number(t.primary ?? 120000);
+        document.getElementById('thPreAlert').value = Number(t['pre-alert'] ?? 180000);
+        document.getElementById('thAllClear').value = Number(t['all-clear'] ?? 120000);
+        document.getElementById('thOther').value = Number(t.other ?? 120000);
+        document.getElementById('thTest').value = Number(t.test ?? 0);
       });
 
       document.getElementById('openCities').addEventListener('click', openDialog);
@@ -525,9 +413,9 @@
             other: Number(document.getElementById('thOther').value || 120000),
             test: Number(document.getElementById('thTest').value || 0),
           });
-          document.getElementById('status').textContent = t('saved');
+          document.getElementById('status').textContent = 'Saved.';
         } catch (e) {
-          document.getElementById('status').textContent = t('saveFailed') + e.message;
+          document.getElementById('status').textContent = 'Save failed: ' + e.message;
         }
       });
 
