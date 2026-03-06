@@ -536,7 +536,7 @@ class RedAlertApp extends Homey.App {
       threat_key: event.threatKey || '',
       threat_name_he: event.threatNameHe || '',
       threat_name_en: event.threatNameEn || '',
-      last_alert_message: this._buildAlertMessage(event, 'short', 'he'),
+      alert_message: this._buildAlertMessage(event, 'short', 'he'),
     };
 
     try {
