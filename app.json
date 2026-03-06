@@ -43,6 +43,12 @@
   "homepage": "https://github.com/BuSHari",
   "source": "https://github.com/BuSHari/red-alert-homey-app",
   "support": "https://github.com/BuSHari/red-alert-homey-app/issues",
+  "api": {
+    "cities": {
+      "method": "GET",
+      "path": "/cities"
+    }
+  },
   "flow": {
     "triggers": [
       {
