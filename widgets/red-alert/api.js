@@ -13,7 +13,14 @@ module.exports = {
 
   async setCities({ homey, body }) {
     const cities = Array.isArray(body?.cities) ? body.cities : [];
-    const selectedCities = await homey.app.setCities(cities);
-    return { selectedCities };
+    const selectedCityIds = await homey.app.setCities(cities);
+    return { selectedCityIds };
+  },
+
+  async setPolicies({ homey, body }) {
+    return homey.app.setPolicies({
+      quietHours: body?.quietHours,
+      throttleByTypeMs: body?.throttleByTypeMs,
+    });
   },
 };

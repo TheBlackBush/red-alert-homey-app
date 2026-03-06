@@ -2,11 +2,12 @@
 
 const Homey = require('homey');
 const WebSocket = require('ws');
+const fs = require('fs');
+const path = require('path');
 
 const WS_URL = 'wss://ws.tzevaadom.co.il/socket?platform=WEB';
 const ORIGIN = 'https://www.tzevaadom.co.il';
-const ALERT_DEDUPE_MS = 120000;
-const MAX_HISTORY = 30;
+const MAX_HISTORY = 50;
 
 const THREAT_ID_TO_CATEGORY = {
   0: 'primary',
@@ -15,32 +16,87 @@ const THREAT_ID_TO_CATEGORY = {
   7: 'primary',
 };
 
+const SEVERITY_BY_CATEGORY = {
+  primary: 'critical',
+  'pre-alert': 'warning',
+  'all-clear': 'info',
+  test: 'warning',
+};
+
 const SYSTEM_TYPE = {
   PRE_ALERT: 0,
   END_ALERT: 1,
 };
 
+const DEFAULT_THROTTLE_BY_TYPE_MS = {
+  primary: 120000,
+  'pre-alert': 180000,
+  'all-clear': 120000,
+  test: 0,
+};
+
 class RedAlertApp extends Homey.App {
   async onInit() {
     this._active = false;
+    this._activeType = null;
     this._connected = false;
     this._lastEvent = null;
     this._history = [];
     this._dedupe = new Map();
 
+    this._cityNameToId = new Map();
+    this._cityIdToName = new Map();
+    this._loadCitiesDictionary();
     this._loadConfig();
+
     this._registerCards();
     this._connect();
 
     this.homey.setInterval(() => this._cleanupDedupe(), 10 * 60 * 1000);
 
-    this.log('Red Alert app initialized');
+    this.log('Red Alert app initialized (stage 2)');
+  }
+
+  _loadCitiesDictionary() {
+    try {
+      const p = path.join(__dirname, 'data', 'cities.json');
+      const raw = fs.readFileSync(p, 'utf8');
+      const payload = JSON.parse(raw);
+      const cities = payload?.cities || {};
+
+      for (const [name, meta] of Object.entries(cities)) {
+        const id = Number(meta?.id);
+        if (!Number.isNaN(id)) {
+          this._cityNameToId.set(String(name), id);
+          this._cityIdToName.set(id, String(name));
+        }
+      }
+
+      this.log(`Loaded ${this._cityNameToId.size} cities from dictionary`);
+    } catch (err) {
+      this.error('Failed loading cities dictionary', err);
+    }
   }
 
   _loadConfig() {
-    const cities = this.homey.settings.get('cities') || [];
-    this._cities = Array.isArray(cities) ? cities.filter(Boolean) : [];
     this._monitoringEnabled = this.homey.settings.get('monitoring_enabled') !== false;
+
+    const legacyCities = this.homey.settings.get('cities') || [];
+    const selectedCityIds = this.homey.settings.get('selected_city_ids');
+
+    if (Array.isArray(selectedCityIds) && selectedCityIds.length) {
+      this._selectedCityIds = selectedCityIds.map((x) => Number(x)).filter((n) => !Number.isNaN(n));
+    } else {
+      this._selectedCityIds = (Array.isArray(legacyCities) ? legacyCities : [])
+        .map((name) => this._cityNameToId.get(String(name).trim()))
+        .filter((n) => Number.isFinite(n));
+    }
+
+    this._quietHours = this.homey.settings.get('quiet_hours') || { enabled: false, start: 23, end: 6 };
+    this._throttleByTypeMs = {
+      ...DEFAULT_THROTTLE_BY_TYPE_MS,
+      ...(this.homey.settings.get('throttle_by_type_ms') || {}),
+    };
   }
 
   _registerCards() {
@@ -68,6 +124,7 @@ class RedAlertApp extends Homey.App {
           type: 'test',
           title: args.title || 'Test alert',
           category: 'test',
+          severity: 'warning',
           areas: [args.area || 'Test Area'],
           time: Date.now(),
         };
@@ -116,8 +173,8 @@ class RedAlertApp extends Homey.App {
       const category = THREAT_ID_TO_CATEGORY[threat];
       if (!category || message.data.isDrill) return;
 
-      const areas = Array.isArray(message.data.cities) ? message.data.cities : [];
-      const matched = this._filterAreas(areas);
+      const areasByName = Array.isArray(message.data.cities) ? message.data.cities : [];
+      const matched = this._filterAreasByNames(areasByName);
       if (!matched.length) return;
 
       const event = {
@@ -125,28 +182,35 @@ class RedAlertApp extends Homey.App {
         type: 'primary',
         title: 'Red Alert',
         category,
+        severity: SEVERITY_BY_CATEGORY[category],
         areas: matched,
         time: Number(message.data.time) * 1000 || Date.now(),
       };
 
       await this._emitEvent(event, this._triggerRedAlert);
       this._active = true;
+      this._activeType = 'primary';
       return;
     }
 
     if (message.type === 'SYSTEM_MESSAGE') {
       const instructionType = Number(message.data.instructionType);
       const areaIds = Array.isArray(message.data.citiesIds) ? message.data.citiesIds : [];
-      const areas = areaIds.map((id) => String(id));
-      const matched = this._filterAreas(areas, true);
+      const matched = this._filterAreasByIds(areaIds);
       if (!matched.length) return;
 
+      // Priority policy: ignore pre-alert while primary is active.
+      if (instructionType === SYSTEM_TYPE.PRE_ALERT && this._activeType === 'primary') return;
+
       if (instructionType === SYSTEM_TYPE.PRE_ALERT) {
+        if (this._isQuietHours()) return;
+
         const event = {
           id: `PRE-${message.data.notificationId || Date.now()}`,
           type: 'pre-alert',
           title: message.data.titleHe || 'Early warning',
           category: 'pre-alert',
+          severity: SEVERITY_BY_CATEGORY['pre-alert'],
           areas: matched,
           time: Number(message.data.time) * 1000 || Date.now(),
         };
@@ -160,32 +224,53 @@ class RedAlertApp extends Homey.App {
           type: 'all-clear',
           title: message.data.titleHe || 'All clear',
           category: 'all-clear',
+          severity: SEVERITY_BY_CATEGORY['all-clear'],
           areas: matched,
           time: Number(message.data.time) * 1000 || Date.now(),
         };
         await this._emitEvent(event, this._triggerAllClear);
+
         this._active = false;
+        this._activeType = null;
       }
     }
   }
 
-  _filterAreas(areas, compareAsStringIds = false) {
-    if (!this._cities.length) return areas;
+  _filterAreasByNames(areas) {
+    if (!this._selectedCityIds.length) return areas;
+    const selected = new Set(this._selectedCityIds);
+    return areas.filter((name) => selected.has(this._cityNameToId.get(String(name).trim())));
+  }
 
-    if (compareAsStringIds) {
-      const selected = new Set(this._cities.map((x) => String(x).trim()));
-      return areas.filter((a) => selected.has(String(a)));
+  _filterAreasByIds(areaIds) {
+    const ids = areaIds.map((x) => Number(x)).filter((n) => !Number.isNaN(n));
+    if (!this._selectedCityIds.length) {
+      return ids.map((id) => this._cityIdToName.get(id) || String(id));
     }
 
-    const selected = new Set(this._cities.map((x) => String(x).trim()));
-    return areas.filter((a) => selected.has(String(a).trim()));
+    const selected = new Set(this._selectedCityIds);
+    const matched = ids.filter((id) => selected.has(id));
+    return matched.map((id) => this._cityIdToName.get(id) || String(id));
+  }
+
+  _isQuietHours() {
+    if (!this._quietHours?.enabled) return false;
+    const now = new Date();
+    const hour = now.getHours();
+    const start = Number(this._quietHours.start);
+    const end = Number(this._quietHours.end);
+    if (Number.isNaN(start) || Number.isNaN(end)) return false;
+    if (start <= end) return hour >= start && hour <= end;
+    return hour >= start || hour <= end;
   }
 
   async _emitEvent(event, card) {
     const now = Date.now();
-    const last = this._dedupe.get(event.id) || 0;
-    if (now - last < ALERT_DEDUPE_MS) return;
-    this._dedupe.set(event.id, now);
+    const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
+    const dedupeKey = `${event.type}:${event.id}`;
+    const last = this._dedupe.get(dedupeKey) || 0;
+    if (now - last < throttleMs) return;
+    this._dedupe.set(dedupeKey, now);
 
     this._lastEvent = event;
     this._history.unshift(event);
@@ -196,11 +281,12 @@ class RedAlertApp extends Homey.App {
       category: event.category,
       areas: event.areas.join(', '),
       timestamp: new Date(event.time).toISOString(),
+      severity: event.severity,
     });
   }
 
   _cleanupDedupe() {
-    const cutoff = Date.now() - ALERT_DEDUPE_MS;
+    const cutoff = Date.now() - 10 * 60 * 1000;
     for (const [key, ts] of this._dedupe.entries()) {
       if (ts < cutoff) this._dedupe.delete(key);
     }
@@ -211,9 +297,13 @@ class RedAlertApp extends Homey.App {
       monitoringEnabled: this._monitoringEnabled,
       connected: this._connected,
       active: this._active,
-      selectedCities: this._cities,
+      activeType: this._activeType,
+      selectedCityIds: this._selectedCityIds,
+      selectedCities: this._selectedCityIds.map((id) => this._cityIdToName.get(id) || String(id)),
+      quietHours: this._quietHours,
+      throttleByTypeMs: this._throttleByTypeMs,
       lastEvent: this._lastEvent,
-      history: this._history,
+      history: this._history.slice(0, 10),
     };
   }
 
@@ -234,9 +324,41 @@ class RedAlertApp extends Homey.App {
   }
 
   async setCities(cities) {
-    this._cities = Array.isArray(cities) ? cities.map((x) => String(x).trim()).filter(Boolean) : [];
-    await this.homey.settings.set('cities', this._cities);
-    return this._cities;
+    const normalized = Array.isArray(cities) ? cities.map((x) => String(x).trim()).filter(Boolean) : [];
+
+    const ids = normalized.map((v) => {
+      const numeric = Number(v);
+      if (!Number.isNaN(numeric)) return numeric;
+      return this._cityNameToId.get(v);
+    }).filter((x) => Number.isFinite(x));
+
+    this._selectedCityIds = Array.from(new Set(ids));
+    await this.homey.settings.set('selected_city_ids', this._selectedCityIds);
+    return this._selectedCityIds;
+  }
+
+  async setPolicies({ quietHours, throttleByTypeMs }) {
+    if (quietHours && typeof quietHours === 'object') {
+      this._quietHours = {
+        enabled: !!quietHours.enabled,
+        start: Number(quietHours.start ?? 23),
+        end: Number(quietHours.end ?? 6),
+      };
+      await this.homey.settings.set('quiet_hours', this._quietHours);
+    }
+
+    if (throttleByTypeMs && typeof throttleByTypeMs === 'object') {
+      this._throttleByTypeMs = {
+        ...this._throttleByTypeMs,
+        ...throttleByTypeMs,
+      };
+      await this.homey.settings.set('throttle_by_type_ms', this._throttleByTypeMs);
+    }
+
+    return {
+      quietHours: this._quietHours,
+      throttleByTypeMs: this._throttleByTypeMs,
+    };
   }
 }
 

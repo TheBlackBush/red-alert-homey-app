@@ -82,6 +82,14 @@
               "en": "Timestamp",
               "he": "זמן"
             }
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "title": {
+              "en": "Severity",
+              "he": "חומרה"
+            }
           }
         ],
         "id": "all_clear_received"
@@ -123,6 +131,14 @@
               "en": "Timestamp",
               "he": "זמן"
             }
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "title": {
+              "en": "Severity",
+              "he": "חומרה"
+            }
           }
         ],
         "id": "pre_alert_received"
@@ -163,6 +179,14 @@
             "title": {
               "en": "Timestamp",
               "he": "זמן"
+            }
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "title": {
+              "en": "Severity",
+              "he": "חומרה"
             }
           }
         ],
@@ -276,6 +300,10 @@
         "setCities": {
           "method": "POST",
           "path": "/cities"
+        },
+        "setPolicies": {
+          "method": "POST",
+          "path": "/policies"
         }
       },
       "id": "red-alert"
