@@ -62,6 +62,7 @@ class RedAlertApp extends Homey.App {
 
     this._cityNameToId = new Map();
     this._cityIdToName = new Map();
+    this._cityIdToMeta = new Map();
     this._loadCitiesDictionary();
     this._loadConfig();
 
@@ -103,8 +104,11 @@ class RedAlertApp extends Homey.App {
       for (const [name, meta] of Object.entries(cities)) {
         const id = Number(meta?.id);
         if (!Number.isNaN(id)) {
+          const he = String(meta?.he || name || '');
+          const en = String(meta?.en || he || '');
           this._cityNameToId.set(String(name), id);
-          this._cityIdToName.set(id, String(name));
+          this._cityIdToName.set(id, he);
+          this._cityIdToMeta.set(id, { he, en });
         }
       }
 
@@ -590,8 +594,8 @@ class RedAlertApp extends Homey.App {
 
   getCities(limit = 500) {
     const entries = [];
-    for (const [name, id] of this._cityNameToId.entries()) {
-      entries.push({ id, name });
+    for (const [id, meta] of this._cityIdToMeta.entries()) {
+      entries.push({ id, he: meta.he, en: meta.en, name: meta.he });
       if (entries.length >= limit) break;
     }
     return entries;
