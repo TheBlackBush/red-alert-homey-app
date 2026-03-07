@@ -150,6 +150,11 @@
   </div>
 
   <div class="row homey-text-small-light">
+    <span>Ingest source</span>
+    <span id="ingestSource" class="meta">-</span>
+  </div>
+
+  <div class="row homey-text-small-light">
     <span>Event type</span>
     <span id="eventType" class="meta">-</span>
   </div>
@@ -208,8 +213,13 @@
 
       document.getElementById('active').innerText = state.active ? 'Yes' : 'No';
       document.getElementById('activeDot').className = `dot ${state.active ? 'bad' : 'ok'}`;
+
+      const source = state.ingestSource || 'idle';
+      const sourceLabel = source === 'ws' ? 'WebSocket' : (source === 'fallback' ? 'OREF Fallback' : 'Idle');
+      document.getElementById('ingestSource').innerText = sourceLabel;
+
       document.getElementById('eventType').innerText = state.lastEvent?.type || '-';
-      document.getElementById('lastUpdate').innerText = formatTime(state.lastEvent?.time || state.diagnostics?.ws?.lastMessageAt);
+      document.getElementById('lastUpdate').innerText = formatTime(state.lastEvent?.time || state.diagnostics?.ws?.lastMessageAt || state.diagnostics?.ws?.lastFallbackSourceAt);
 
       const toggle = document.getElementById('toggle');
       toggle.checked = !!state.monitoringEnabled;
