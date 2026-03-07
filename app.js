@@ -30,12 +30,10 @@ const SEVERITY_BY_CATEGORY = {
   test: 'warning',
 };
 
-const CATEGORY_LABELS = {
-  primary: { he: 'התראה ראשית', en: 'Primary' },
-  'pre-alert': { he: 'התרעה מקדימה', en: 'Pre-alert' },
-  'all-clear': { he: 'סיום אירוע', en: 'All-clear' },
-  other: { he: 'אחר', en: 'Other' },
-  test: { he: 'בדיקה', en: 'Test' },
+const SEVERITY_LABELS = {
+  critical: { he: 'קריטית', en: 'Critical' },
+  warning: { he: 'אזהרה', en: 'Warning' },
+  info: { he: 'מידע', en: 'Info' },
 };
 
 const SYSTEM_TYPE = {
@@ -711,20 +709,20 @@ class RedAlertApp extends Homey.App {
       ? (event.threatNameHe || event.threatNameEn || event.title || '-')
       : (event.threatNameEn || event.threatNameHe || event.title || '-');
     const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
-    const categoryKey = event.category || 'other';
-    const categoryLabel = CATEGORY_LABELS[categoryKey] || { he: categoryKey, en: categoryKey };
+    const severityKey = event.severity || '-';
+    const severityLabel = SEVERITY_LABELS[severityKey] || { he: severityKey, en: severityKey };
 
     if (mode === 'full') {
       if (lang === 'he') {
-        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nקטגוריה: ${categoryLabel.he}\nחומרה: ${event.severity || '-'}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
+        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nחומרה: ${severityLabel.he}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
       }
-      return `🚨 Alert: ${threat}\nAreas: ${areas}\nCategory: ${categoryLabel.en}\nSeverity: ${event.severity || '-'}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
+      return `🚨 Alert: ${threat}\nAreas: ${areas}\nSeverity: ${severityLabel.en}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
     }
 
     if (lang === 'he') {
-      return `🚨 ${threat} | ${areas} | ${categoryLabel.he} | ${event.severity || '-'} | ${ts}`;
+      return `🚨 ${threat} | ${areas} | ${severityLabel.he} | ${ts}`;
     }
-    return `🚨 ${threat} | ${areas} | ${categoryLabel.en} | ${event.severity || '-'} | ${ts}`;
+    return `🚨 ${threat} | ${areas} | ${severityLabel.en} | ${ts}`;
   }
 
   async _updateMessageToken(event, mode = 'short', lang = 'he') {
