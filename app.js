@@ -57,6 +57,10 @@ const WS_RECONNECT_FACTOR = 1.6;
 const WS_MAX_STREAK_BEFORE_HARD_RESET = 6;
 const WS_PLATFORMS = ['WEB', 'ANDROID'];
 const NATIONWIDE_CITY_ID = 10000000;
+const NATIONWIDE_ALIASES = ['רחבי הארץ', 'ברחבי הארץ', 'כל הארץ', 'nationwide'];
+const DEDUPE_MIN_WINDOW_MS = 60000;
+const OREF_ALERTS_URL = 'https://www.oref.org.il/warningMessages/alert/Alerts.json';
+const OREF_FALLBACK_POLL_MS = 15000;
 
 const AREA_ALIASES = {
   "תל אביב יפו": "תל אביב - דרום העיר ויפו",
@@ -99,6 +103,8 @@ class RedAlertApp extends Homey.App {
       wsErrors: 0,
       wsMessages: 0,
       wsIgnoredFrames: 0,
+      fallbackPollRuns: 0,
+      fallbackPollHits: 0,
       flowTriggersFired: 0,
       flowTriggersFailed: 0,
       dedupeDrops: 0,
@@ -111,6 +117,8 @@ class RedAlertApp extends Homey.App {
     this._wsReconnectAttempt = 0;
     this._wsDisconnectStreak = 0;
     this._wsReconnectTimer = null;
+    this._lastFallbackPollAt = 0;
+    this._lastFallbackSourceAt = 0;
     this._loadCitiesDictionary();
     this._loadAreaMetadata();
     this._loadConfig();
@@ -353,7 +361,7 @@ class RedAlertApp extends Homey.App {
 
     try {
       await this._updateSummaryToken(this._lastEvent);
-      await this._updateMessageToken(this._lastEvent, 'short', 'he');
+      await this._updateMessageToken(this._lastEvent, 'short');
       await this._updateLinkToken(this._lastEvent, 'oref');
     } catch (err) {
       this.error('Failed to init flow tokens', err);
@@ -406,7 +414,7 @@ class RedAlertApp extends Homey.App {
     this._scheduleReconnect('hard-reset');
   }
 
-  _wsWatchdog() {
+  async _wsWatchdog() {
     if (!this._monitoringEnabled) return;
 
     const now = Date.now();
@@ -418,6 +426,14 @@ class RedAlertApp extends Homey.App {
       this.log(`[ws] health state=${readyState} connected=${this._connected} idleSec=${idleSec} lastType=${this._lastWsEventType}`);
     }
 
+    const shouldFallbackPoll = (!this._ws || this._ws.readyState !== WebSocket.OPEN) ||
+      (this._lastWsMessageAt && (now - this._lastWsMessageAt > WS_STALE_TIMEOUT_MS));
+
+    if (shouldFallbackPoll && now - this._lastFallbackPollAt > OREF_FALLBACK_POLL_MS) {
+      this._lastFallbackPollAt = now;
+      await this._runFallbackPoll();
+    }
+
     if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
 
     const idleMs = this._lastWsMessageAt ? (now - this._lastWsMessageAt) : Infinity;
@@ -426,6 +442,73 @@ class RedAlertApp extends Homey.App {
       this._wsDisconnectStreak += 1;
       try { this._ws.terminate(); } catch (_) {}
       this._scheduleReconnect('stale-watchdog');
+    }
+  }
+
+  _extractAreasFromOrefRecord(record) {
+    const data = record?.data;
+    if (Array.isArray(data)) return data.map((x) => String(x));
+    if (typeof data === 'string') {
+      return data.split(',').map((x) => String(x).trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  async _runFallbackPoll() {
+    this._diag.fallbackPollRuns += 1;
+    try {
+      const res = await fetch(OREF_ALERTS_URL, {
+        headers: {
+          'user-agent': 'Mozilla/5.0',
+          accept: 'application/json,text/plain,*/*',
+        },
+      });
+      if (!res.ok) return;
+
+      const text = (await res.text()).replace(/\u0000/g, '').trim();
+      if (!text) return;
+
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch (_) {
+        return;
+      }
+
+      const records = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
+      if (!records.length) return;
+
+      for (const rec of records) {
+        const threatId = Number(rec?.cat || rec?.threat || 0);
+        const threat = THREAT_TYPES[threatId] || THREAT_TYPES[0];
+        const areasByName = this._extractAreasFromOrefRecord(rec);
+        const matched = this._filterAreasByNames(areasByName);
+        if (!matched.length) continue;
+
+        const eventType = threat.category === 'primary' ? 'primary' : 'other';
+        const event = {
+          id: `OREF-${rec?.id || rec?.alertId || Date.now()}-${threatId}`,
+          type: eventType,
+          title: rec?.title || rec?.titleHe || threat.en,
+          category: threat.category,
+          severity: SEVERITY_BY_CATEGORY[threat.category],
+          areas: matched,
+          threatId,
+          threatKey: threat.key,
+          threatNameHe: threat.he,
+          threatNameEn: threat.en,
+          time: Date.now(),
+        };
+
+        await this._emitEvent(event, this._triggerRedAlert);
+        this._active = true;
+        this._activeType = eventType;
+        this._diag.fallbackPollHits += 1;
+      }
+
+      this._lastFallbackSourceAt = Date.now();
+    } catch (err) {
+      this._diag.lastError = String(err?.message || err);
     }
   }
 
@@ -641,7 +724,7 @@ class RedAlertApp extends Homey.App {
   _filterAreasByNames(areas) {
     const hasNationwideName = (areas || []).some((name) => {
       const normalized = this._normalizeAreaName(name);
-      return normalized === this._normalizeAreaName('רחבי הארץ') || this._normalizedCityToId.get(normalized) === NATIONWIDE_CITY_ID;
+      return NATIONWIDE_ALIASES.some((x) => normalized === this._normalizeAreaName(x)) || this._normalizedCityToId.get(normalized) === NATIONWIDE_CITY_ID;
     });
 
     if (!this._selectedCityIds.length) {
@@ -858,6 +941,7 @@ class RedAlertApp extends Homey.App {
   async _emitEvent(event, card) {
     const now = Date.now();
     const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
+    const dedupeWindowMs = Math.max(DEDUPE_MIN_WINDOW_MS, throttleMs);
 
     const areaKey = Array.isArray(event.areas)
       ? [...event.areas].map((a) => this._normalizeAreaName(a)).sort().join('|')
@@ -869,7 +953,7 @@ class RedAlertApp extends Homey.App {
 
     const lastById = this._dedupe.get(dedupeKey) || 0;
     const lastBySig = this._dedupe.get(dedupeSignature) || 0;
-    if ((now - lastById < throttleMs) || (now - lastBySig < throttleMs)) {
+    if ((now - lastById < dedupeWindowMs) || (now - lastBySig < dedupeWindowMs)) {
       this._diag.dedupeDrops += 1;
       return;
     }
@@ -938,6 +1022,8 @@ class RedAlertApp extends Homey.App {
         lastMessageAt: this._lastWsMessageAt || null,
         lastPingAt: this._lastWsPingAt || null,
         lastEventType: this._lastWsEventType,
+        lastFallbackPollAt: this._lastFallbackPollAt || null,
+        lastFallbackSourceAt: this._lastFallbackSourceAt || null,
       },
       selectedCityIdsCount: this._selectedCityIds.length,
       normalizationIndexSize: this._normalizedCityToId.size,
