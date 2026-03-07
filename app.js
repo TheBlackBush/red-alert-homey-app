@@ -714,12 +714,29 @@ class RedAlertApp extends Homey.App {
     return effectiveLang === 'en' ? mapped.en : mapped.he;
   }
 
+  _getLocalizedAreas(event, lang) {
+    const effectiveLang = this._getEffectiveLanguage(lang);
+    const rawAreas = Array.isArray(event?.areas) ? event.areas : [];
+
+    return rawAreas.map((name) => {
+      const raw = String(name || '').trim();
+      const normalizedId = this._normalizedCityToId.get(this._normalizeAreaName(raw));
+      if (Number.isFinite(normalizedId)) {
+        const meta = this._cityIdToMeta.get(normalizedId);
+        if (meta) {
+          return effectiveLang === 'en' ? (meta.en || meta.he || raw) : (meta.he || meta.en || raw);
+        }
+      }
+      return raw;
+    });
+  }
+
   _buildAlertSummary(event, lang) {
     const effectiveLang = this._getEffectiveLanguage(lang);
     if (!event) return effectiveLang === 'he' ? 'אין התראות עדיין' : 'No alerts yet';
     const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
     const threat = this._getThreatDisplayName(event, effectiveLang);
-    const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
+    const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
     return `[${ts}] ${threat} | severity=${event.severity || '-'} | areas=${areas}`;
   }
 
@@ -737,7 +754,7 @@ class RedAlertApp extends Homey.App {
 
     const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
     const threat = this._getThreatDisplayName(event, effectiveLang);
-    const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
+    const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
     const severityKey = event.severity || '-';
     const severityLabel = SEVERITY_LABELS[severityKey] || { he: severityKey, en: severityKey };
     const severityText = effectiveLang === 'he' ? severityLabel.he : severityLabel.en;
@@ -808,10 +825,11 @@ class RedAlertApp extends Homey.App {
     await this._updateLinkToken(event, 'oref');
 
     const lang = this._getEffectiveLanguage();
+    const localizedAreas = this._getLocalizedAreas(event, lang);
     const tokens = {
-      title: event.title,
+      title: this._getThreatDisplayName(event, lang),
       category: this._getCategoryDisplay(event, lang),
-      areas: event.areas.join(', '),
+      areas: localizedAreas.join(', '),
       timestamp: new Date(event.time).toISOString(),
       severity: lang === 'he'
         ? ((SEVERITY_LABELS[event.severity || '-'] || { he: event.severity || '-' }).he)
