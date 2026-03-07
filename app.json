@@ -118,35 +118,19 @@
             }
           },
           {
-            "name": "threat_name_he",
+            "name": "threat_name",
             "type": "string",
             "title": {
-              "en": "Threat (Hebrew)",
-              "he": "איום (עברית)"
-            }
-          },
-          {
-            "name": "threat_name_en",
-            "type": "string",
-            "title": {
-              "en": "Threat (English)",
-              "he": "איום (אנגלית)"
+              "en": "Threat name",
+              "he": "שם איום"
             }
           },
           {
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message (HE)",
-              "he": "הודעת התראה (עברית)"
-            }
-          },
-          {
-            "name": "alert_message_en",
-            "type": "string",
-            "title": {
-              "en": "Alert message (EN)",
-              "he": "הודעת התראה (אנגלית)"
+              "en": "Alert message",
+              "he": "הודעת התראה"
             }
           },
           {
@@ -223,35 +207,19 @@
             }
           },
           {
-            "name": "threat_name_he",
+            "name": "threat_name",
             "type": "string",
             "title": {
-              "en": "Threat (Hebrew)",
-              "he": "איום (עברית)"
-            }
-          },
-          {
-            "name": "threat_name_en",
-            "type": "string",
-            "title": {
-              "en": "Threat (English)",
-              "he": "איום (אנגלית)"
+              "en": "Threat name",
+              "he": "שם איום"
             }
           },
           {
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message (HE)",
-              "he": "הודעת התראה (עברית)"
-            }
-          },
-          {
-            "name": "alert_message_en",
-            "type": "string",
-            "title": {
-              "en": "Alert message (EN)",
-              "he": "הודעת התראה (אנגלית)"
+              "en": "Alert message",
+              "he": "הודעת התראה"
             }
           },
           {
@@ -328,35 +296,19 @@
             }
           },
           {
-            "name": "threat_name_he",
+            "name": "threat_name",
             "type": "string",
             "title": {
-              "en": "Threat (Hebrew)",
-              "he": "איום (עברית)"
-            }
-          },
-          {
-            "name": "threat_name_en",
-            "type": "string",
-            "title": {
-              "en": "Threat (English)",
-              "he": "איום (אנגלית)"
+              "en": "Threat name",
+              "he": "שם איום"
             }
           },
           {
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message (HE)",
-              "he": "הודעת התראה (עברית)"
-            }
-          },
-          {
-            "name": "alert_message_en",
-            "type": "string",
-            "title": {
-              "en": "Alert message (EN)",
-              "he": "הודעת התראה (אנגלית)"
+              "en": "Alert message",
+              "he": "הודעת התראה"
             }
           },
           {
@@ -433,35 +385,19 @@
             }
           },
           {
-            "name": "threat_name_he",
+            "name": "threat_name",
             "type": "string",
             "title": {
-              "en": "Threat (Hebrew)",
-              "he": "איום (עברית)"
-            }
-          },
-          {
-            "name": "threat_name_en",
-            "type": "string",
-            "title": {
-              "en": "Threat (English)",
-              "he": "איום (אנגלית)"
+              "en": "Threat name",
+              "he": "שם איום"
             }
           },
           {
             "name": "alert_message",
             "type": "string",
             "title": {
-              "en": "Alert message (HE)",
-              "he": "הודעת התראה (עברית)"
-            }
-          },
-          {
-            "name": "alert_message_en",
-            "type": "string",
-            "title": {
-              "en": "Alert message (EN)",
-              "he": "הודעת התראה (אנגלית)"
+              "en": "Alert message",
+              "he": "הודעת התראה"
             }
           },
           {
@@ -680,8 +616,8 @@
           "he": "בנה תבנית הודעת התראה"
         },
         "titleFormatted": {
-          "en": "Build [[mode]] message in [[lang]]",
-          "he": "בנה הודעת [[mode]] בשפה [[lang]]"
+          "en": "Build [[mode]] message",
+          "he": "בנה הודעת [[mode]]"
         },
         "args": [
           {
@@ -704,30 +640,6 @@
                 "label": {
                   "en": "Full",
                   "he": "מלא"
-                }
-              }
-            ]
-          },
-          {
-            "name": "lang",
-            "type": "dropdown",
-            "title": {
-              "en": "Language",
-              "he": "שפה"
-            },
-            "values": [
-              {
-                "id": "he",
-                "label": {
-                  "en": "Hebrew",
-                  "he": "עברית"
-                }
-              },
-              {
-                "id": "en",
-                "label": {
-                  "en": "English",
-                  "he": "אנגלית"
                 }
               }
             ]
