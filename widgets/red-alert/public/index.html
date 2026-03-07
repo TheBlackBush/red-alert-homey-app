@@ -58,13 +58,50 @@
       border-color: color-mix(in srgb, var(--homey-color-red) 40%, transparent);
     }
 
-    .homey-button-primary {
-      white-space: nowrap;
-      font-size: var(--homey-font-size-small);
-      line-height: var(--homey-line-height-small);
-      min-height: 32px;
-      padding: 0 var(--homey-su-3);
+    .toggle-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--homey-su-2);
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 26px;
       border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--homey-text-color) 25%, transparent);
+      background: color-mix(in srgb, var(--homey-text-color) 16%, transparent);
+      transition: all .2s ease;
+      appearance: none;
+      outline: none;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--homey-color-mono-000);
+      transition: transform .2s ease;
+    }
+
+    .toggle:checked {
+      background: var(--homey-color-green);
+      border-color: color-mix(in srgb, var(--homey-color-green) 60%, transparent);
+    }
+
+    .toggle:checked::after {
+      transform: translateX(18px);
+    }
+
+    .toggle:disabled {
+      opacity: .6;
+      cursor: not-allowed;
     }
 
     .last,
@@ -94,7 +131,10 @@
 <body class="homey-widget">
   <div class="header-row">
     <div class="homey-text-medium" id="title">Red Alert</div>
-    <button id="toggle" class="homey-button-primary">Toggle</button>
+    <label class="toggle-wrap" aria-label="Monitoring toggle">
+      <span id="toggleLabel" class="homey-text-small-light">Off</span>
+      <input id="toggle" class="toggle" type="checkbox" role="switch" aria-label="Monitoring" />
+    </label>
   </div>
 
   <div id="banner" class="banner homey-text-small"></div>
@@ -171,7 +211,10 @@
       document.getElementById('eventType').innerText = state.lastEvent?.type || '-';
       document.getElementById('lastUpdate').innerText = formatTime(state.lastEvent?.time || state.diagnostics?.ws?.lastMessageAt);
 
-      document.getElementById('toggle').innerText = state.monitoringEnabled ? 'Disable' : 'Enable';
+      const toggle = document.getElementById('toggle');
+      toggle.checked = !!state.monitoringEnabled;
+      document.getElementById('toggleLabel').innerText = state.monitoringEnabled ? 'On' : 'Off';
+
       document.getElementById('last').innerText = state.lastEvent
         ? (state.lastEvent.message || `${state.lastEvent.title} · ${(state.lastEvent.areas || []).join(', ')}`)
         : 'No events yet';
@@ -190,20 +233,22 @@
     }
 
     async function toggleMonitoring(Homey) {
-      const btn = document.getElementById('toggle');
-      btn.disabled = true;
-      const previousText = btn.innerText;
-      btn.innerText = 'Saving…';
+      const toggle = document.getElementById('toggle');
+      const label = document.getElementById('toggleLabel');
+      const previousChecked = !!(lastState && lastState.monitoringEnabled);
+
+      toggle.disabled = true;
+      label.innerText = 'Saving…';
 
       try {
-        const current = lastState || await Homey.api('GET', '/state');
-        await Homey.api('POST', '/monitoring', { enabled: !current.monitoringEnabled });
+        await Homey.api('POST', '/monitoring', { enabled: !!toggle.checked });
         await refresh(Homey);
       } catch (e) {
+        toggle.checked = previousChecked;
+        label.innerText = previousChecked ? 'On' : 'Off';
         setBanner('bad', 'Failed to update monitoring state.');
-        btn.innerText = previousText;
       } finally {
-        btn.disabled = false;
+        toggle.disabled = false;
       }
     }
 
@@ -216,7 +261,7 @@
       }
 
       refresh(Homey);
-      document.getElementById('toggle').addEventListener('click', () => toggleMonitoring(Homey));
+      document.getElementById('toggle').addEventListener('change', () => toggleMonitoring(Homey));
       setInterval(() => refresh(Homey), 10000);
     }
   </script>
