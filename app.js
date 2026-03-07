@@ -1141,6 +1141,17 @@ class RedAlertApp extends Homey.App {
 
   getPublicState() {
     const lang = this._getEffectiveLanguage();
+    const now = Date.now();
+    const lastWsAt = Number(this._lastWsMessageAt || 0);
+    const lastFallbackAt = Number(this._lastFallbackSourceAt || 0);
+
+    let ingestSource = 'idle';
+    if (this._connected && lastWsAt && (now - lastWsAt) < WS_STALE_TIMEOUT_MS) {
+      ingestSource = 'ws';
+    } else if (lastFallbackAt && (now - lastFallbackAt) < (OREF_FALLBACK_POLL_MS * 3)) {
+      ingestSource = 'fallback';
+    }
+
     const toDisplayEvent = (event) => {
       if (!event) return null;
       return {
@@ -1153,6 +1164,7 @@ class RedAlertApp extends Homey.App {
 
     return {
       language: lang,
+      ingestSource,
       monitoringEnabled: this._monitoringEnabled,
       connected: this._connected,
       active: this._active,
