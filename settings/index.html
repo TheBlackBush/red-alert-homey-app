@@ -37,7 +37,7 @@
     }
 
     .lang-tab {
-      border: 1px solid transparent;
+      border: 2px solid transparent;
       border-radius: 9px;
       padding: 7px 14px;
       font-size: 13px;
@@ -46,6 +46,7 @@
       background: transparent;
       cursor: pointer;
       transition: all .18s ease;
+      opacity: .72;
     }
 
     .lang-tab:hover {
@@ -56,8 +57,10 @@
     .lang-tab.active {
       background: var(--brand-blue);
       color: #fff;
-      border-color: var(--brand-blue);
-      box-shadow: 0 2px 8px rgba(35,170,225,.28);
+      border-color: #0c5f80;
+      box-shadow: 0 0 0 2px rgba(35,170,225,.22), 0 2px 8px rgba(35,170,225,.28);
+      opacity: 1;
+      transform: translateY(-1px);
     }
 
     .card {
@@ -215,9 +218,10 @@
     <h2 class="title" data-i18n="title">Red Alert Settings</h2>
     <p class="subtitle" data-i18n="subtitle">Homey-style configuration for cities, quiet hours and throttling.</p>
     <div class="lang-tabs" role="tablist" aria-label="Language selector">
-      <button id="langHe" class="lang-tab active" type="button">עברית</button>
-      <button id="langEn" class="lang-tab" type="button">English</button>
+      <button id="langHe" class="lang-tab active" type="button" aria-pressed="true">✓ עברית</button>
+      <button id="langEn" class="lang-tab" type="button" aria-pressed="false">English</button>
     </div>
+    <div class="hint" id="langStatus" style="margin-top:8px;">Selected language: עברית</div>
   </div>
 
   <div class="card">
@@ -374,13 +378,23 @@
 
     function applyLanguage(lang) {
       currentLang = lang;
-      document.getElementById('langHe').classList.toggle('active', lang === 'he');
-      document.getElementById('langEn').classList.toggle('active', lang === 'en');
+      const heBtn = document.getElementById('langHe');
+      const enBtn = document.getElementById('langEn');
+
+      heBtn.classList.toggle('active', lang === 'he');
+      enBtn.classList.toggle('active', lang === 'en');
+      heBtn.setAttribute('aria-pressed', lang === 'he' ? 'true' : 'false');
+      enBtn.setAttribute('aria-pressed', lang === 'en' ? 'true' : 'false');
+      heBtn.textContent = lang === 'he' ? '✓ עברית' : 'עברית';
+      enBtn.textContent = lang === 'en' ? '✓ English' : 'English';
 
       document.querySelectorAll('[data-i18n]').forEach((el) => {
         const k = el.getAttribute('data-i18n');
         el.textContent = t(k);
       });
+
+      const langStatus = document.getElementById('langStatus');
+      langStatus.textContent = lang === 'he' ? 'השפה שנבחרה: עברית' : 'Selected language: English';
 
       document.getElementById('citySearch').placeholder = lang === 'he' ? 'הקלד שם עיר...' : 'Type city name...';
       renderPills();
