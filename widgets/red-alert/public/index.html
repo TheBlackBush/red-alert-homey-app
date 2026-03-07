@@ -13,7 +13,12 @@
     .warn { background: #f08c00; }
     .info { background: #1971c2; }
     button { border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+    button:disabled { opacity: .65; cursor: not-allowed; }
     .small { opacity: .8; font-size: 12px; }
+    .banner { border-radius: 8px; padding: 8px 10px; margin: 8px 0; font-size: 12px; display: none; }
+    .banner-ok { background: #dcfce7; color: #14532d; border: 1px solid #bbf7d0; }
+    .banner-warn { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+    .banner-bad { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; }
     ul { list-style: none; margin: 10px 0 0 0; padding: 0; }
     li { font-size: 12px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
@@ -24,24 +29,66 @@
       <strong id="title">Red Alert</strong>
       <button id="toggle">Toggle</button>
     </div>
+
+    <div id="banner" class="banner banner-warn"></div>
+
     <div class="row"><span><span id="connDot" class="dot warn"></span>Connection</span><span id="conn">-</span></div>
     <div class="row"><span><span id="activeDot" class="dot ok"></span>Active alert</span><span id="active">-</span></div>
+    <div class="row"><span>Event type</span><span id="eventType">-</span></div>
+    <div class="row"><span>Last update</span><span id="lastUpdate">-</span></div>
+
     <div class="small" id="last">No events yet</div>
     <ul id="history"></ul>
   </div>
+
   <script>
+    let lastState = null;
+
     function severityClass(severity) {
       if (severity === 'critical') return 'bad';
       if (severity === 'warning') return 'warn';
       return 'info';
     }
 
-    async function refresh(Homey) {
-      const state = await Homey.api('GET', '/state');
-      document.getElementById('conn').innerText = state.connected ? 'Connected' : 'Disconnected';
+    function formatTime(ts) {
+      if (!ts) return '-';
+      const d = new Date(ts);
+      if (Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleTimeString();
+    }
+
+    function computeConnectionState(state) {
+      const connected = !!state?.connected;
+      if (connected) return { label: 'Connected', dot: 'ok', banner: ['banner-ok', 'Live connection is healthy.'] };
+
+      const now = Number(state?.diagnostics?.now || Date.now());
+      const lastWs = Number(state?.diagnostics?.ws?.lastMessageAt || 0);
+      const idleSec = lastWs > 0 ? Math.floor((now - lastWs) / 1000) : null;
+
+      if (lastWs > 0 && idleSec !== null && idleSec < 180) {
+        return { label: 'Reconnecting', dot: 'warn', banner: ['banner-warn', `Reconnecting… last message ${idleSec}s ago.`] };
+      }
+      return { label: 'Disconnected', dot: 'bad', banner: ['banner-bad', 'Disconnected from alert feed.'] };
+    }
+
+    function setBanner(cls, text) {
+      const el = document.getElementById('banner');
+      el.className = `banner ${cls}`;
+      el.textContent = text;
+      el.style.display = 'block';
+    }
+
+    function render(state) {
+      const conn = computeConnectionState(state);
+      document.getElementById('conn').innerText = conn.label;
+      document.getElementById('connDot').className = 'dot ' + conn.dot;
+      setBanner(conn.banner[0], conn.banner[1]);
+
       document.getElementById('active').innerText = state.active ? 'Yes' : 'No';
-      document.getElementById('connDot').className = 'dot ' + (state.connected ? 'ok' : 'warn');
       document.getElementById('activeDot').className = 'dot ' + (state.active ? 'bad' : 'ok');
+      document.getElementById('eventType').innerText = state.lastEvent?.type || '-';
+      document.getElementById('lastUpdate').innerText = formatTime(state.lastEvent?.time || state.diagnostics?.ws?.lastMessageAt);
+
       document.getElementById('toggle').innerText = state.monitoringEnabled ? 'Disable' : 'Enable';
       document.getElementById('last').innerText = state.lastEvent
         ? (state.lastEvent.message || `${state.lastEvent.title} · ${state.lastEvent.areas.join(', ')}`)
@@ -54,14 +101,34 @@
         .join('');
     }
 
+    async function refresh(Homey) {
+      const state = await Homey.api('GET', '/state');
+      lastState = state;
+      render(state);
+    }
+
+    async function toggleMonitoring(Homey) {
+      const btn = document.getElementById('toggle');
+      btn.disabled = true;
+      const prevText = btn.innerText;
+      btn.innerText = 'Saving…';
+
+      try {
+        const current = lastState || await Homey.api('GET', '/state');
+        await Homey.api('POST', '/monitoring', { enabled: !current.monitoringEnabled });
+        await refresh(Homey);
+      } catch (e) {
+        setBanner('banner-bad', 'Failed to update monitoring state.');
+        btn.innerText = prevText;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
     function onHomeyReady(Homey) {
       Homey.ready();
       refresh(Homey);
-      document.getElementById('toggle').addEventListener('click', async () => {
-        const state = await Homey.api('GET', '/state');
-        await Homey.api('POST', '/monitoring', { enabled: !state.monitoringEnabled });
-        refresh(Homey);
-      });
+      document.getElementById('toggle').addEventListener('click', () => toggleMonitoring(Homey));
       setInterval(() => refresh(Homey), 10000);
     }
   </script>
