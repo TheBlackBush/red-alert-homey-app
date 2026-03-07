@@ -86,6 +86,8 @@ class RedAlertApp extends Homey.App {
     this._cityIdToName = new Map();
     this._cityIdToMeta = new Map();
     this._normalizedCityToId = new Map();
+    this._areaMetaByName = new Map();
+    this._areaMetaByNormalized = new Map();
 
     this._diag = {
       wsConnects: 0,
@@ -101,6 +103,7 @@ class RedAlertApp extends Homey.App {
       flowTriggersFailed: 0,
       dedupeDrops: 0,
       unknownAreaMisses: 0,
+      metadataAreaMisses: 0,
       nationwideMatches: 0,
       lastError: null,
     };
@@ -109,6 +112,7 @@ class RedAlertApp extends Homey.App {
     this._wsDisconnectStreak = 0;
     this._wsReconnectTimer = null;
     this._loadCitiesDictionary();
+    this._loadAreaMetadata();
     this._loadConfig();
 
     this._registerCards();
@@ -192,6 +196,38 @@ class RedAlertApp extends Homey.App {
     } catch (err) {
       this.error('Failed loading cities dictionary', err);
     }
+  }
+
+  _loadAreaMetadata() {
+    try {
+      const p = path.join(__dirname, 'data', 'area_metadata.json');
+      const raw = fs.readFileSync(p, 'utf8');
+      const payload = JSON.parse(raw);
+      const areas = payload?.areas || {};
+      const normalized = payload?.normalized || {};
+
+      this._areaMetaByName = new Map(Object.entries(areas));
+      this._areaMetaByNormalized = new Map(Object.entries(normalized));
+
+      this.log(`Loaded area metadata: areas=${this._areaMetaByName.size}, normalized=${this._areaMetaByNormalized.size}`);
+    } catch (err) {
+      this.error('Failed loading area metadata', err);
+    }
+  }
+
+  _resolveAreaMetadata(name) {
+    const raw = String(name || '').trim();
+    if (!raw) return null;
+
+    const direct = this._areaMetaByName.get(raw);
+    if (direct) return { area: raw, m: direct.m, d: direct.d };
+
+    const normalized = this._normalizeAreaName(raw);
+    const byNormalized = this._areaMetaByNormalized.get(normalized);
+    if (byNormalized) return byNormalized;
+
+    this._diag.metadataAreaMisses += 1;
+    return null;
   }
 
   _loadConfig() {
@@ -874,6 +910,10 @@ class RedAlertApp extends Homey.App {
       },
       selectedCityIdsCount: this._selectedCityIds.length,
       normalizationIndexSize: this._normalizedCityToId.size,
+      metadata: {
+        areaEntries: this._areaMetaByName.size,
+        normalizedEntries: this._areaMetaByNormalized.size,
+      },
       stats: { ...this._diag },
       lastEventId: this._lastEvent?.id || null,
       lastEventType: this._lastEvent?.type || null,
