@@ -835,7 +835,7 @@ class RedAlertApp extends Homey.App {
         ? ((SEVERITY_LABELS[event.severity || '-'] || { he: event.severity || '-' }).he)
         : ((SEVERITY_LABELS[event.severity || '-'] || { en: event.severity || '-' }).en),
       threat_id: String(event.threatId ?? ''),
-      threat_key: this._getThreatDisplayName(event, lang),
+      threat_key: event.threatKey || '',
       threat_name: this._getThreatDisplayName(event, lang),
       alert_message: this._buildAlertMessage(event, 'short', lang),
       alert_link: this._buildAlertLink(event, 'oref'),
