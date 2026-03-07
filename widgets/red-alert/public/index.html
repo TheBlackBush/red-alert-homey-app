@@ -3,43 +3,119 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script type="text/javascript" src="/homey.js" data-origin="widget"></script>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 12px; color: var(--homey-text-color, #fff); }
-    .card { border-radius: 12px; padding: 10px; background: var(--homey-background-color, rgba(255,255,255,.08)); }
-    .row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; gap: 8px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-inline-end: 6px; }
-    .ok { background: #2b8a3e; }
-    .bad { background: #c92a2a; }
-    .warn { background: #f08c00; }
-    .info { background: #1971c2; }
-    button { border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
-    button:disabled { opacity: .65; cursor: not-allowed; }
-    .small { opacity: .8; font-size: 12px; }
-    .banner { border-radius: 8px; padding: 8px 10px; margin: 8px 0; font-size: 12px; display: none; }
-    .banner-ok { background: #dcfce7; color: #14532d; border: 1px solid #bbf7d0; }
-    .banner-warn { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
-    .banner-bad { background: #fee2e2; color: #7f1d1d; border: 1px solid #fecaca; }
-    ul { list-style: none; margin: 10px 0 0 0; padding: 0; }
-    li { font-size: 12px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    body.homey-widget {
+      display: flex;
+      flex-direction: column;
+      gap: var(--homey-su-2);
+      background: var(--homey-background-color);
+      color: var(--homey-text-color);
+    }
+
+    .header-row,
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--homey-su-2);
+    }
+
+    .row-label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--homey-su-1);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      background: var(--homey-color-mono-500);
+    }
+    .dot.ok { background: var(--homey-color-green); }
+    .dot.warn { background: var(--homey-color-orange); }
+    .dot.bad { background: var(--homey-color-red); }
+    .dot.info { background: var(--homey-color-blue); }
+
+    .banner {
+      border-radius: 8px;
+      padding: var(--homey-su-2) var(--homey-su-3);
+      border: 1px solid transparent;
+      display: none;
+    }
+    .banner.ok {
+      background: color-mix(in srgb, var(--homey-color-green) 14%, transparent);
+      border-color: color-mix(in srgb, var(--homey-color-green) 40%, transparent);
+    }
+    .banner.warn {
+      background: color-mix(in srgb, var(--homey-color-orange) 14%, transparent);
+      border-color: color-mix(in srgb, var(--homey-color-orange) 40%, transparent);
+    }
+    .banner.bad {
+      background: color-mix(in srgb, var(--homey-color-red) 14%, transparent);
+      border-color: color-mix(in srgb, var(--homey-color-red) 40%, transparent);
+    }
+
+    .homey-button-primary {
+      white-space: nowrap;
+    }
+
+    .last,
+    .meta,
+    .history li {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .history li {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--homey-su-1);
+    }
   </style>
 </head>
-<body>
-  <div class="card">
-    <div class="row">
-      <strong id="title">Red Alert</strong>
-      <button id="toggle">Toggle</button>
-    </div>
-
-    <div id="banner" class="banner banner-warn"></div>
-
-    <div class="row"><span><span id="connDot" class="dot warn"></span>Connection</span><span id="conn">-</span></div>
-    <div class="row"><span><span id="activeDot" class="dot ok"></span>Active alert</span><span id="active">-</span></div>
-    <div class="row"><span>Event type</span><span id="eventType">-</span></div>
-    <div class="row"><span>Last update</span><span id="lastUpdate">-</span></div>
-
-    <div class="small" id="last">No events yet</div>
-    <ul id="history"></ul>
+<body class="homey-widget">
+  <div class="header-row">
+    <div class="homey-text-medium" id="title">Red Alert</div>
+    <button id="toggle" class="homey-button-primary">Toggle</button>
   </div>
+
+  <div id="banner" class="banner homey-text-small"></div>
+
+  <div class="row homey-text-small-light">
+    <span class="row-label"><span id="connDot" class="dot warn"></span>Connection</span>
+    <span id="conn" class="meta">-</span>
+  </div>
+
+  <div class="row homey-text-small-light">
+    <span class="row-label"><span id="activeDot" class="dot ok"></span>Active alert</span>
+    <span id="active" class="meta">-</span>
+  </div>
+
+  <div class="row homey-text-small-light">
+    <span>Event type</span>
+    <span id="eventType" class="meta">-</span>
+  </div>
+
+  <div class="row homey-text-small-light">
+    <span>Last update</span>
+    <span id="lastUpdate" class="meta">-</span>
+  </div>
+
+  <div class="last homey-text-regular" id="last">No events yet</div>
+  <ul id="history" class="history"></ul>
 
   <script>
     let lastState = null;
@@ -53,51 +129,52 @@
     function formatTime(ts) {
       if (!ts) return '-';
       const d = new Date(ts);
-      if (Number.isNaN(d.getTime())) return '-';
-      return d.toLocaleTimeString();
+      return Number.isNaN(d.getTime()) ? '-' : d.toLocaleTimeString();
     }
 
     function computeConnectionState(state) {
-      const connected = !!state?.connected;
-      if (connected) return { label: 'Connected', dot: 'ok', banner: ['banner-ok', 'Live connection is healthy.'] };
+      if (state?.connected) {
+        return { label: 'Connected', dot: 'ok', bannerClass: 'ok', bannerText: 'Live connection is healthy.' };
+      }
 
       const now = Number(state?.diagnostics?.now || Date.now());
       const lastWs = Number(state?.diagnostics?.ws?.lastMessageAt || 0);
       const idleSec = lastWs > 0 ? Math.floor((now - lastWs) / 1000) : null;
 
       if (lastWs > 0 && idleSec !== null && idleSec < 180) {
-        return { label: 'Reconnecting', dot: 'warn', banner: ['banner-warn', `Reconnecting… last message ${idleSec}s ago.`] };
+        return { label: 'Reconnecting', dot: 'warn', bannerClass: 'warn', bannerText: `Reconnecting… last message ${idleSec}s ago.` };
       }
-      return { label: 'Disconnected', dot: 'bad', banner: ['banner-bad', 'Disconnected from alert feed.'] };
+
+      return { label: 'Disconnected', dot: 'bad', bannerClass: 'bad', bannerText: 'Disconnected from alert feed.' };
     }
 
-    function setBanner(cls, text) {
+    function setBanner(kind, text) {
       const el = document.getElementById('banner');
-      el.className = `banner ${cls}`;
+      el.className = `banner ${kind} homey-text-small`;
       el.textContent = text;
-      el.style.display = 'block';
+      el.style.display = text ? 'block' : 'none';
     }
 
     function render(state) {
       const conn = computeConnectionState(state);
       document.getElementById('conn').innerText = conn.label;
-      document.getElementById('connDot').className = 'dot ' + conn.dot;
-      setBanner(conn.banner[0], conn.banner[1]);
+      document.getElementById('connDot').className = `dot ${conn.dot}`;
+      setBanner(conn.bannerClass, conn.bannerText);
 
       document.getElementById('active').innerText = state.active ? 'Yes' : 'No';
-      document.getElementById('activeDot').className = 'dot ' + (state.active ? 'bad' : 'ok');
+      document.getElementById('activeDot').className = `dot ${state.active ? 'bad' : 'ok'}`;
       document.getElementById('eventType').innerText = state.lastEvent?.type || '-';
       document.getElementById('lastUpdate').innerText = formatTime(state.lastEvent?.time || state.diagnostics?.ws?.lastMessageAt);
 
       document.getElementById('toggle').innerText = state.monitoringEnabled ? 'Disable' : 'Enable';
       document.getElementById('last').innerText = state.lastEvent
-        ? (state.lastEvent.message || `${state.lastEvent.title} · ${state.lastEvent.areas.join(', ')}`)
+        ? (state.lastEvent.message || `${state.lastEvent.title} · ${(state.lastEvent.areas || []).join(', ')}`)
         : 'No events yet';
 
       const history = (state.history || []).slice(0, 5);
-      const el = document.getElementById('history');
-      el.innerHTML = history
-        .map((h) => `<li><span class="dot ${severityClass(h.severity)}"></span>${h.message || `${h.title} · ${h.areas.join(', ')}`}</li>`)
+      const historyEl = document.getElementById('history');
+      historyEl.innerHTML = history
+        .map((h) => `<li class="homey-text-small-light"><span class="dot ${severityClass(h.severity)}"></span>${h.message || `${h.title} · ${(h.areas || []).join(', ')}`}</li>`)
         .join('');
     }
 
@@ -110,7 +187,7 @@
     async function toggleMonitoring(Homey) {
       const btn = document.getElementById('toggle');
       btn.disabled = true;
-      const prevText = btn.innerText;
+      const previousText = btn.innerText;
       btn.innerText = 'Saving…';
 
       try {
@@ -118,15 +195,21 @@
         await Homey.api('POST', '/monitoring', { enabled: !current.monitoringEnabled });
         await refresh(Homey);
       } catch (e) {
-        setBanner('banner-bad', 'Failed to update monitoring state.');
-        btn.innerText = prevText;
+        setBanner('bad', 'Failed to update monitoring state.');
+        btn.innerText = previousText;
       } finally {
         btn.disabled = false;
       }
     }
 
     function onHomeyReady(Homey) {
-      Homey.ready();
+      const settings = Homey.getSettings() || {};
+      if (settings.compact) {
+        Homey.ready({ height: 150 });
+      } else {
+        Homey.ready();
+      }
+
       refresh(Homey);
       document.getElementById('toggle').addEventListener('click', () => toggleMonitoring(Homey));
       setInterval(() => refresh(Homey), 10000);
