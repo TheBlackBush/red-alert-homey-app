@@ -126,6 +126,38 @@
             }
           },
           {
+            "name": "migun_time_sec",
+            "type": "string",
+            "title": {
+              "en": "Shelter time (sec)",
+              "he": "זמן מיגון (שניות)"
+            }
+          },
+          {
+            "name": "district",
+            "type": "string",
+            "title": {
+              "en": "District",
+              "he": "מחוז"
+            }
+          },
+          {
+            "name": "areas_count",
+            "type": "string",
+            "title": {
+              "en": "Areas count",
+              "he": "מספר אזורים"
+            }
+          },
+          {
+            "name": "primary_area",
+            "type": "string",
+            "title": {
+              "en": "Primary area",
+              "he": "אזור עיקרי"
+            }
+          },
+          {
             "name": "alert_message",
             "type": "string",
             "title": {
@@ -212,6 +244,38 @@
             "title": {
               "en": "Threat name",
               "he": "שם איום"
+            }
+          },
+          {
+            "name": "migun_time_sec",
+            "type": "string",
+            "title": {
+              "en": "Shelter time (sec)",
+              "he": "זמן מיגון (שניות)"
+            }
+          },
+          {
+            "name": "district",
+            "type": "string",
+            "title": {
+              "en": "District",
+              "he": "מחוז"
+            }
+          },
+          {
+            "name": "areas_count",
+            "type": "string",
+            "title": {
+              "en": "Areas count",
+              "he": "מספר אזורים"
+            }
+          },
+          {
+            "name": "primary_area",
+            "type": "string",
+            "title": {
+              "en": "Primary area",
+              "he": "אזור עיקרי"
             }
           },
           {
@@ -304,6 +368,38 @@
             }
           },
           {
+            "name": "migun_time_sec",
+            "type": "string",
+            "title": {
+              "en": "Shelter time (sec)",
+              "he": "זמן מיגון (שניות)"
+            }
+          },
+          {
+            "name": "district",
+            "type": "string",
+            "title": {
+              "en": "District",
+              "he": "מחוז"
+            }
+          },
+          {
+            "name": "areas_count",
+            "type": "string",
+            "title": {
+              "en": "Areas count",
+              "he": "מספר אזורים"
+            }
+          },
+          {
+            "name": "primary_area",
+            "type": "string",
+            "title": {
+              "en": "Primary area",
+              "he": "אזור עיקרי"
+            }
+          },
+          {
             "name": "alert_message",
             "type": "string",
             "title": {
@@ -390,6 +486,38 @@
             "title": {
               "en": "Threat name",
               "he": "שם איום"
+            }
+          },
+          {
+            "name": "migun_time_sec",
+            "type": "string",
+            "title": {
+              "en": "Shelter time (sec)",
+              "he": "זמן מיגון (שניות)"
+            }
+          },
+          {
+            "name": "district",
+            "type": "string",
+            "title": {
+              "en": "District",
+              "he": "מחוז"
+            }
+          },
+          {
+            "name": "areas_count",
+            "type": "string",
+            "title": {
+              "en": "Areas count",
+              "he": "מספר אזורים"
+            }
+          },
+          {
+            "name": "primary_area",
+            "type": "string",
+            "title": {
+              "en": "Primary area",
+              "he": "אזור עיקרי"
             }
           },
           {
