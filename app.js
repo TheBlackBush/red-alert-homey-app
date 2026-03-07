@@ -61,6 +61,7 @@ const NATIONWIDE_ALIASES = ['רחבי הארץ', 'ברחבי הארץ', 'כל ה
 const DEDUPE_MIN_WINDOW_MS = 60000;
 const OREF_ALERTS_URL = 'https://www.oref.org.il/warningMessages/alert/Alerts.json';
 const OREF_FALLBACK_POLL_MS = 15000;
+const INFER_ALL_CLEAR_GRACE_MS = 3 * 60 * 1000;
 const RUNTIME_STATE_KEY = 'runtime_state_v1';
 const HISTORY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -107,6 +108,7 @@ class RedAlertApp extends Homey.App {
       wsIgnoredFrames: 0,
       fallbackPollRuns: 0,
       fallbackPollHits: 0,
+      inferredAllClears: 0,
       flowTriggersFired: 0,
       flowTriggersFailed: 0,
       dedupeDrops: 0,
@@ -121,6 +123,7 @@ class RedAlertApp extends Homey.App {
     this._wsReconnectTimer = null;
     this._lastFallbackPollAt = 0;
     this._lastFallbackSourceAt = 0;
+    this._activePrimaryLastSeenAt = 0;
     this._loadCitiesDictionary();
     this._loadAreaMetadata();
     this._loadConfig();
@@ -459,6 +462,38 @@ class RedAlertApp extends Homey.App {
     return [];
   }
 
+  async _maybeInferAllClearFromFallback(hasPrimaryMatch) {
+    if (hasPrimaryMatch) return;
+    if (!this._active || this._activeType !== 'primary') return;
+
+    const lastSeenAt = Number(this._activePrimaryLastSeenAt || 0);
+    if (!lastSeenAt) return;
+
+    const elapsed = Date.now() - lastSeenAt;
+    if (elapsed < INFER_ALL_CLEAR_GRACE_MS) return;
+
+    const lastAreas = Array.isArray(this._lastEvent?.areas) ? this._lastEvent.areas : [];
+    const event = {
+      id: `INFER-END-${Date.now()}`,
+      type: 'all-clear',
+      title: 'All clear (inferred)',
+      category: 'all-clear',
+      severity: SEVERITY_BY_CATEGORY['all-clear'],
+      areas: lastAreas,
+      threatId: 8,
+      threatKey: 'all_clear',
+      threatNameHe: 'סיום אירוע',
+      threatNameEn: 'All clear',
+      time: Date.now(),
+    };
+
+    this._active = false;
+    this._activeType = null;
+    this._activePrimaryLastSeenAt = 0;
+    this._diag.inferredAllClears += 1;
+    await this._emitEvent(event, this._triggerAllClear);
+  }
+
   async _runFallbackPoll() {
     this._diag.fallbackPollRuns += 1;
     try {
@@ -481,7 +516,7 @@ class RedAlertApp extends Homey.App {
       }
 
       const records = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
-      if (!records.length) return;
+      let hasPrimaryMatch = false;
 
       for (const rec of records) {
         const threatId = Number(rec?.cat || rec?.threat || 0);
@@ -491,6 +526,8 @@ class RedAlertApp extends Homey.App {
         if (!matched.length) continue;
 
         const eventType = threat.category === 'primary' ? 'primary' : 'other';
+        if (eventType === 'primary') hasPrimaryMatch = true;
+
         const event = {
           id: `OREF-${rec?.id || rec?.alertId || Date.now()}-${threatId}`,
           type: eventType,
@@ -505,12 +542,14 @@ class RedAlertApp extends Homey.App {
           time: Date.now(),
         };
 
-        await this._emitEvent(event, this._triggerRedAlert);
         this._active = true;
         this._activeType = eventType;
+        if (eventType === 'primary') this._activePrimaryLastSeenAt = Date.now();
+        await this._emitEvent(event, this._triggerRedAlert);
         this._diag.fallbackPollHits += 1;
       }
 
+      await this._maybeInferAllClearFromFallback(hasPrimaryMatch);
       this._lastFallbackSourceAt = Date.now();
     } catch (err) {
       this._diag.lastError = String(err?.message || err);
@@ -667,6 +706,7 @@ class RedAlertApp extends Homey.App {
 
       this._active = true;
       this._activeType = eventType;
+      if (eventType === 'primary') this._activePrimaryLastSeenAt = Date.now();
       await this._emitEvent(event, this._triggerRedAlert);
       return;
     }
@@ -720,6 +760,7 @@ class RedAlertApp extends Homey.App {
         };
         this._active = false;
         this._activeType = null;
+        this._activePrimaryLastSeenAt = 0;
         await this._emitEvent(event, this._triggerAllClear);
       }
     }
@@ -1026,6 +1067,7 @@ class RedAlertApp extends Homey.App {
 
       this._active = !!state.active;
       this._activeType = state.activeType || null;
+      this._activePrimaryLastSeenAt = Number(state.activePrimaryLastSeenAt || 0);
     } catch (err) {
       this.error('Failed restoring runtime state', err);
     }
@@ -1036,6 +1078,7 @@ class RedAlertApp extends Homey.App {
       await this.homey.settings.set(RUNTIME_STATE_KEY, {
         active: this._active,
         activeType: this._activeType,
+        activePrimaryLastSeenAt: this._activePrimaryLastSeenAt,
         lastEvent: this._lastEvent,
         history: this._history.slice(0, MAX_HISTORY),
         savedAt: Date.now(),
@@ -1086,6 +1129,7 @@ class RedAlertApp extends Homey.App {
         areaEntries: this._areaMetaByName.size,
         normalizedEntries: this._areaMetaByNormalized.size,
       },
+      activePrimaryLastSeenAt: this._activePrimaryLastSeenAt || null,
       stats: { ...this._diag },
       lastEventId: this._lastEvent?.id || null,
       lastEventType: this._lastEvent?.type || null,
@@ -1174,6 +1218,7 @@ class RedAlertApp extends Homey.App {
       this._wsDisconnectStreak = 0;
       this._wsPlatform = this._wsPreferredPlatform;
       this._wsFallbackActive = false;
+      this._activePrimaryLastSeenAt = 0;
     }
 
     await this._persistRuntimeState();
