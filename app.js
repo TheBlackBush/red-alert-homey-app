@@ -61,6 +61,8 @@ const NATIONWIDE_ALIASES = ['רחבי הארץ', 'ברחבי הארץ', 'כל ה
 const DEDUPE_MIN_WINDOW_MS = 60000;
 const OREF_ALERTS_URL = 'https://www.oref.org.il/warningMessages/alert/Alerts.json';
 const OREF_FALLBACK_POLL_MS = 15000;
+const RUNTIME_STATE_KEY = 'runtime_state_v1';
+const HISTORY_TTL_MS = 24 * 60 * 60 * 1000;
 
 const AREA_ALIASES = {
   "תל אביב יפו": "תל אביב - דרום העיר ויפו",
@@ -122,6 +124,8 @@ class RedAlertApp extends Homey.App {
     this._loadCitiesDictionary();
     this._loadAreaMetadata();
     this._loadConfig();
+    this._restoreRuntimeState();
+    this._cleanupHistory();
 
     this._registerCards();
     await this._registerTokens();
@@ -156,6 +160,7 @@ class RedAlertApp extends Homey.App {
     });
 
     this.homey.setInterval(() => this._cleanupDedupe(), 10 * 60 * 1000);
+    this.homey.setInterval(() => this._cleanupHistory(), 10 * 60 * 1000);
     this.homey.setInterval(() => this._wsWatchdog(), 30000);
 
     this.log('Red Alert app initialized (stage 3)');
@@ -660,9 +665,9 @@ class RedAlertApp extends Homey.App {
         time: Number(message.data.time) * 1000 || Date.now(),
       };
 
-      await this._emitEvent(event, this._triggerRedAlert);
       this._active = true;
       this._activeType = eventType;
+      await this._emitEvent(event, this._triggerRedAlert);
       return;
     }
 
@@ -713,10 +718,9 @@ class RedAlertApp extends Homey.App {
           threatNameEn: 'All clear',
           time: Number(message.data.time) * 1000 || Date.now(),
         };
-        await this._emitEvent(event, this._triggerAllClear);
-
         this._active = false;
         this._activeType = null;
+        await this._emitEvent(event, this._triggerAllClear);
       }
     }
   }
@@ -1001,6 +1005,57 @@ class RedAlertApp extends Homey.App {
       this._diag.lastError = String(err?.message || err);
       this.error(`[flow] trigger failed: ${event.type}`, err);
     }
+
+    await this._persistRuntimeState();
+  }
+
+  _restoreRuntimeState() {
+    try {
+      const state = this.homey.settings.get(RUNTIME_STATE_KEY);
+      if (!state || typeof state !== 'object') return;
+
+      const now = Date.now();
+      const history = Array.isArray(state.history) ? state.history : [];
+      this._history = history
+        .filter((e) => Number.isFinite(e?.time) && (now - e.time) <= HISTORY_TTL_MS)
+        .slice(0, MAX_HISTORY);
+
+      const lastEvent = state.lastEvent && Number.isFinite(state.lastEvent?.time) ? state.lastEvent : null;
+      this._lastEvent = lastEvent;
+      this._lastFlowEvent = lastEvent;
+
+      this._active = !!state.active;
+      this._activeType = state.activeType || null;
+    } catch (err) {
+      this.error('Failed restoring runtime state', err);
+    }
+  }
+
+  async _persistRuntimeState() {
+    try {
+      await this.homey.settings.set(RUNTIME_STATE_KEY, {
+        active: this._active,
+        activeType: this._activeType,
+        lastEvent: this._lastEvent,
+        history: this._history.slice(0, MAX_HISTORY),
+        savedAt: Date.now(),
+      });
+    } catch (err) {
+      this._diag.lastError = String(err?.message || err);
+    }
+  }
+
+  _cleanupHistory() {
+    const cutoff = Date.now() - HISTORY_TTL_MS;
+    const before = this._history.length;
+    this._history = this._history.filter((e) => Number.isFinite(e?.time) && e.time >= cutoff).slice(0, MAX_HISTORY);
+    if (this._lastEvent && (!Number.isFinite(this._lastEvent?.time) || this._lastEvent.time < cutoff)) {
+      this._lastEvent = null;
+      this._lastFlowEvent = null;
+    }
+    if (this._history.length !== before) {
+      this._persistRuntimeState();
+    }
   }
 
   _cleanupDedupe() {
@@ -1121,6 +1176,7 @@ class RedAlertApp extends Homey.App {
       this._wsFallbackActive = false;
     }
 
+    await this._persistRuntimeState();
     return this._monitoringEnabled;
   }
 
