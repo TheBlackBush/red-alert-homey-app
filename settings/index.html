@@ -159,7 +159,22 @@
     }
 
     .footer-actions { display: flex; align-items: center; gap: 10px; }
-    #status { font-size: 13px; color: var(--muted); }
+    #status {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+    #status.success {
+      background: #e8f7ec;
+      color: #1f7a34;
+      border: 1px solid #b7e4c7;
+    }
+    #status.error {
+      background: #fdecec;
+      color: #8a1f1f;
+      border: 1px solid #f3b6b6;
+    }
 
     dialog {
       width: min(680px, 96vw);
@@ -321,7 +336,7 @@
         cities: 'ערים',
         chooseCities: 'בחירת ערים',
         citiesHint: 'בחירת הערים מתבצעת בדיאלוג עם חיפוש.',
-        quietTitle: 'שעות שקט (חל רק על התראה מקדימה)',
+        quietTitle: 'שעות שקטות (חל רק על התראה מקדימה)',
         quietStart: 'שעת התחלה (24h)',
         quietEnd: 'שעת סיום (24h)',
         quietEnable: 'הפעל שעות שקט',
@@ -570,9 +585,15 @@
             test: Number(document.getElementById('thTest').value || 0),
           });
           await setSetting(Homey, 'settings_lang', currentLang);
-          document.getElementById('status').textContent = t('saved');
+          const statusEl = document.getElementById('status');
+          statusEl.classList.remove('error');
+          statusEl.classList.add('success');
+          statusEl.textContent = t('saved');
         } catch (e) {
-          document.getElementById('status').textContent = t('saveFailed') + e.message;
+          const statusEl = document.getElementById('status');
+          statusEl.classList.remove('success');
+          statusEl.classList.add('error');
+          statusEl.textContent = t('saveFailed') + e.message;
         }
       });
 
