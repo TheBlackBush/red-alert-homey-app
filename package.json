@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "lint": "eslint --ext .js --ignore-path .gitignore .",
-    "validate": "homey app validate --level=publish"
+    "validate": "homey app validate --level=publish",
+    "build:area-metadata": "node scripts/build-area-metadata.js"
   },
   "dependencies": {
     "ws": "^8.18.3"
