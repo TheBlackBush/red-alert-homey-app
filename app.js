@@ -782,6 +782,28 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertSummaryToken.setValue(summary);
   }
 
+  _getEventAreaInsights(event) {
+    const rawAreas = Array.isArray(event?.areas) ? event.areas : [];
+    const resolved = rawAreas
+      .map((name) => ({ name: String(name || '').trim(), meta: this._resolveAreaMetadata(name) }))
+      .filter((x) => x.meta);
+
+    const migunValues = resolved
+      .map((x) => Number(x.meta?.m))
+      .filter((n) => Number.isFinite(n));
+
+    const migunTimeSec = migunValues.length ? Math.min(...migunValues) : null;
+    const primaryArea = resolved[0]?.meta?.area || rawAreas[0] || '';
+    const district = resolved[0]?.meta?.d || '';
+
+    return {
+      migunTimeSec,
+      district,
+      primaryArea,
+      areasCount: rawAreas.length,
+    };
+  }
+
   _buildAlertMessage(event, mode = 'short', lang) {
     const effectiveLang = this._getEffectiveLanguage(lang);
     if (!event) {
@@ -794,15 +816,19 @@ class RedAlertApp extends Homey.App {
     const severityKey = event.severity || '-';
     const severityLabel = SEVERITY_LABELS[severityKey] || { he: severityKey, en: severityKey };
     const severityText = effectiveLang === 'he' ? severityLabel.he : severityLabel.en;
+    const insights = this._getEventAreaInsights(event);
+    const migunText = Number.isFinite(insights.migunTimeSec)
+      ? (effectiveLang === 'he' ? `${insights.migunTimeSec} שנ׳ למרחב מוגן` : `${insights.migunTimeSec}s to shelter`)
+      : null;
 
     if (mode === 'full') {
       if (effectiveLang === 'he') {
-        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nקטגוריה: ${this._getCategoryDisplay(event, 'he')}\nחומרה: ${severityText}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
+        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nקטגוריה: ${this._getCategoryDisplay(event, 'he')}\nחומרה: ${severityText}${migunText ? `\nזמן למיגון: ${insights.migunTimeSec} שניות` : ''}${insights.district ? `\nמחוז: ${insights.district}` : ''}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
       }
-      return `🚨 Alert: ${threat}\nAreas: ${areas}\nCategory: ${this._getCategoryDisplay(event, 'en')}\nSeverity: ${severityText}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
+      return `🚨 Alert: ${threat}\nAreas: ${areas}\nCategory: ${this._getCategoryDisplay(event, 'en')}\nSeverity: ${severityText}${migunText ? `\nShelter time: ${insights.migunTimeSec}s` : ''}${insights.district ? `\nDistrict: ${insights.district}` : ''}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
     }
 
-    return `🚨 ${threat} | ${areas} | ${severityText} | ${ts}`;
+    return `🚨 ${threat} | ${areas} | ${severityText}${migunText ? ` | ${migunText}` : ''} | ${ts}`;
   }
 
   async _updateMessageToken(event, mode = 'short', lang) {
@@ -862,6 +888,7 @@ class RedAlertApp extends Homey.App {
 
     const lang = this._getEffectiveLanguage();
     const localizedAreas = this._getLocalizedAreas(event, lang);
+    const insights = this._getEventAreaInsights(event);
     const tokens = {
       title: this._getThreatDisplayName(event, lang),
       category: this._getCategoryDisplay(event, lang),
@@ -873,6 +900,10 @@ class RedAlertApp extends Homey.App {
       threat_id: String(event.threatId ?? ''),
       threat_key: event.threatKey || '',
       threat_name: this._getThreatDisplayName(event, lang),
+      migun_time_sec: Number.isFinite(insights.migunTimeSec) ? String(insights.migunTimeSec) : '',
+      district: insights.district || '',
+      areas_count: String(insights.areasCount || localizedAreas.length || 0),
+      primary_area: localizedAreas[0] || insights.primaryArea || '',
       alert_message: this._buildAlertMessage(event, 'short', lang),
       alert_link: this._buildAlertLink(event, 'oref'),
     };
