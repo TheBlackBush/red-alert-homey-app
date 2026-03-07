@@ -116,7 +116,7 @@ class RedAlertApp extends Homey.App {
     this._connect();
 
     this.homey.settings.on('set', (key) => {
-      if (!['monitoring_enabled', 'selected_city_ids', 'quiet_hours', 'throttle_by_type_ms'].includes(key)) return;
+      if (!['monitoring_enabled', 'selected_city_ids', 'quiet_hours', 'throttle_by_type_ms', 'settings_lang'].includes(key)) return;
 
       const prevMonitoring = this._monitoringEnabled;
       this._loadConfig();
@@ -214,6 +214,9 @@ class RedAlertApp extends Homey.App {
       ...(this.homey.settings.get('throttle_by_type_ms') || {}),
     };
 
+    const settingsLang = String(this.homey.settings.get('settings_lang') || 'he').toLowerCase();
+    this._settingsLang = settingsLang === 'en' ? 'en' : 'he';
+
     const preferred = String(this.homey.settings.get('ws_platform_preferred') || 'WEB').toUpperCase();
     this._wsPreferredPlatform = WS_PLATFORMS.includes(preferred) ? preferred : 'WEB';
     this._wsAutoFallback = this.homey.settings.get('ws_auto_fallback') !== false;
@@ -277,15 +280,14 @@ class RedAlertApp extends Homey.App {
     this.homey.flow.getActionCard('refresh_summary_token')
       .registerRunListener(async () => {
         await this._updateSummaryToken(this._lastEvent);
-        await this._updateMessageToken(this._lastEvent, 'short', 'he');
+        await this._updateMessageToken(this._lastEvent, 'short');
         return true;
       });
 
     this.homey.flow.getActionCard('build_message_template')
       .registerRunListener(async (args) => {
         const mode = String(args.mode || 'short');
-        const lang = String(args.lang || 'he');
-        await this._updateMessageToken(this._lastEvent, mode, lang);
+        await this._updateMessageToken(this._lastEvent, mode);
         return true;
       });
 
@@ -685,10 +687,38 @@ class RedAlertApp extends Homey.App {
     return nowMinutes >= start || nowMinutes <= end;
   }
 
-  _buildAlertSummary(event) {
-    if (!event) return 'No alerts yet';
-    const ts = new Date(event.time || Date.now()).toLocaleString('he-IL', { hour12: false });
-    const threat = event.threatNameHe || event.threatNameEn || event.title || '-';
+  _getEffectiveLanguage(lang) {
+    if (lang === 'he' || lang === 'en') return lang;
+    return this._settingsLang === 'en' ? 'en' : 'he';
+  }
+
+  _getThreatDisplayName(event, lang) {
+    const effectiveLang = this._getEffectiveLanguage(lang);
+    if (effectiveLang === 'en') {
+      return event?.threatNameEn || event?.threatNameHe || event?.title || '-';
+    }
+    return event?.threatNameHe || event?.threatNameEn || event?.title || '-';
+  }
+
+  _getCategoryDisplay(event, lang) {
+    const effectiveLang = this._getEffectiveLanguage(lang);
+    const key = event?.category || 'other';
+    const labels = {
+      primary: { he: 'ראשית', en: 'Primary' },
+      'pre-alert': { he: 'מקדימה', en: 'Pre-alert' },
+      'all-clear': { he: 'סיום אירוע', en: 'All-clear' },
+      other: { he: 'אחר', en: 'Other' },
+      test: { he: 'בדיקה', en: 'Test' },
+    };
+    const mapped = labels[key] || { he: key, en: key };
+    return effectiveLang === 'en' ? mapped.en : mapped.he;
+  }
+
+  _buildAlertSummary(event, lang) {
+    const effectiveLang = this._getEffectiveLanguage(lang);
+    if (!event) return effectiveLang === 'he' ? 'אין התראות עדיין' : 'No alerts yet';
+    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
+    const threat = this._getThreatDisplayName(event, effectiveLang);
     const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
     return `[${ts}] ${threat} | severity=${event.severity || '-'} | areas=${areas}`;
   }
@@ -699,33 +729,30 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertSummaryToken.setValue(summary);
   }
 
-  _buildAlertMessage(event, mode = 'short', lang = 'he') {
+  _buildAlertMessage(event, mode = 'short', lang) {
+    const effectiveLang = this._getEffectiveLanguage(lang);
     if (!event) {
-      return lang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
+      return effectiveLang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
     }
 
-    const ts = new Date(event.time || Date.now()).toLocaleString(lang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
-    const threat = lang === 'he'
-      ? (event.threatNameHe || event.threatNameEn || event.title || '-')
-      : (event.threatNameEn || event.threatNameHe || event.title || '-');
+    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
+    const threat = this._getThreatDisplayName(event, effectiveLang);
     const areas = Array.isArray(event.areas) ? event.areas.join(', ') : '-';
     const severityKey = event.severity || '-';
     const severityLabel = SEVERITY_LABELS[severityKey] || { he: severityKey, en: severityKey };
+    const severityText = effectiveLang === 'he' ? severityLabel.he : severityLabel.en;
 
     if (mode === 'full') {
-      if (lang === 'he') {
-        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nחומרה: ${severityLabel.he}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
+      if (effectiveLang === 'he') {
+        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nקטגוריה: ${this._getCategoryDisplay(event, 'he')}\nחומרה: ${severityText}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
       }
-      return `🚨 Alert: ${threat}\nAreas: ${areas}\nSeverity: ${severityLabel.en}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
+      return `🚨 Alert: ${threat}\nAreas: ${areas}\nCategory: ${this._getCategoryDisplay(event, 'en')}\nSeverity: ${severityText}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
     }
 
-    if (lang === 'he') {
-      return `🚨 ${threat} | ${areas} | ${severityLabel.he} | ${ts}`;
-    }
-    return `🚨 ${threat} | ${areas} | ${severityLabel.en} | ${ts}`;
+    return `🚨 ${threat} | ${areas} | ${severityText} | ${ts}`;
   }
 
-  async _updateMessageToken(event, mode = 'short', lang = 'he') {
+  async _updateMessageToken(event, mode = 'short', lang) {
     if (!this._lastAlertMessageToken) return;
     const message = this._buildAlertMessage(event, mode, lang);
     await this._lastAlertMessageToken.setValue(message);
@@ -777,21 +804,22 @@ class RedAlertApp extends Homey.App {
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
 
     await this._updateSummaryToken(event);
-    await this._updateMessageToken(event, 'short', 'he');
+    await this._updateMessageToken(event, 'short');
     await this._updateLinkToken(event, 'oref');
 
+    const lang = this._getEffectiveLanguage();
     const tokens = {
       title: event.title,
-      category: event.category,
+      category: this._getCategoryDisplay(event, lang),
       areas: event.areas.join(', '),
       timestamp: new Date(event.time).toISOString(),
-      severity: event.severity,
+      severity: lang === 'he'
+        ? ((SEVERITY_LABELS[event.severity || '-'] || { he: event.severity || '-' }).he)
+        : ((SEVERITY_LABELS[event.severity || '-'] || { en: event.severity || '-' }).en),
       threat_id: String(event.threatId ?? ''),
       threat_key: event.threatKey || '',
-      threat_name_he: event.threatNameHe || '',
-      threat_name_en: event.threatNameEn || '',
-      alert_message: this._buildAlertMessage(event, 'short', 'he'),
-      alert_message_en: this._buildAlertMessage(event, 'short', 'en'),
+      threat_name: this._getThreatDisplayName(event, lang),
+      alert_message: this._buildAlertMessage(event, 'short', lang),
       alert_link: this._buildAlertLink(event, 'oref'),
     };
 
@@ -838,21 +866,36 @@ class RedAlertApp extends Homey.App {
   }
 
   getPublicState() {
+    const lang = this._getEffectiveLanguage();
+    const toDisplayEvent = (event) => {
+      if (!event) return null;
+      return {
+        ...event,
+        threatName: this._getThreatDisplayName(event, lang),
+        categoryLabel: this._getCategoryDisplay(event, lang),
+        message: this._buildAlertMessage(event, 'short', lang),
+      };
+    };
+
     return {
+      language: lang,
       monitoringEnabled: this._monitoringEnabled,
       connected: this._connected,
       active: this._active,
       activeType: this._activeType,
       selectedCityIds: this._selectedCityIds,
-      selectedCities: this._selectedCityIds.map((id) => this._cityIdToName.get(id) || String(id)),
+      selectedCities: this._selectedCityIds.map((id) => {
+        const meta = this._cityIdToMeta.get(id);
+        if (!meta) return String(id);
+        return lang === 'en' ? (meta.en || meta.he || String(id)) : (meta.he || meta.en || String(id));
+      }),
       quietHours: this._quietHours,
       throttleByTypeMs: this._throttleByTypeMs,
-      lastEvent: this._lastEvent,
-      history: this._history.slice(0, 10),
+      lastEvent: toDisplayEvent(this._lastEvent),
+      history: this._history.slice(0, 10).map(toDisplayEvent),
       threatTypes: this.getThreatTypes(),
-      summary: this._buildAlertSummary(this._lastEvent),
-      messageHe: this._buildAlertMessage(this._lastEvent, 'short', 'he'),
-      messageEn: this._buildAlertMessage(this._lastEvent, 'short', 'en'),
+      summary: this._buildAlertSummary(this._lastEvent, lang),
+      message: this._buildAlertMessage(this._lastEvent, 'short', lang),
       linkOref: this._buildAlertLink(this._lastEvent, 'oref'),
       linkTzevaadom: this._buildAlertLink(this._lastEvent, 'tzevaadom'),
       diagnostics: this.getDiagnostics(),
@@ -860,19 +903,21 @@ class RedAlertApp extends Homey.App {
   }
 
   getThreatTypes() {
+    const lang = this._getEffectiveLanguage();
     return Object.entries(THREAT_TYPES).map(([id, t]) => ({
       id: Number(id),
       key: t.key,
-      he: t.he,
-      en: t.en,
+      label: lang === 'en' ? t.en : t.he,
       category: t.category,
     }));
   }
 
   getCities(limit = 500) {
+    const lang = this._getEffectiveLanguage();
     const entries = [];
     for (const [id, meta] of this._cityIdToMeta.entries()) {
-      entries.push({ id, he: meta.he, en: meta.en, name: meta.he });
+      const localizedName = lang === 'en' ? (meta.en || meta.he) : (meta.he || meta.en);
+      entries.push({ id, name: localizedName, he: meta.he, en: meta.en });
       if (entries.length >= limit) break;
     }
     return entries;
