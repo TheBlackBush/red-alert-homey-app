@@ -36,6 +36,12 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
   - `npm run build:area-metadata`
 - Optional custom paths:
   - `node scripts/build-area-metadata.js <migun.py> <district.py> <out.json>`
+- Network-based area refresh (JS port inspired by `areas_checker.py`):
+  - Check only (no file change): `npm run check:areas-network`
+  - Apply updates to `data/area_metadata.json`: `npm run sync:areas-network`
+  - Notes:
+    - Added areas from Oref network feed are inserted with `m: null, d: null` until enriched.
+    - Removed areas are dropped by default during sync.
 - Runtime behavior:
   - The app **does not** execute the generator automatically.
   - On startup, it only reads the generated `data/area_metadata.json`.
