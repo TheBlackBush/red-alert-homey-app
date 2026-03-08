@@ -7,7 +7,6 @@
 - [ ] City filter works (with configured city list)
 - [ ] No-filter mode works (match all)
 - [ ] Nationwide handling works (when relevant marker is received)
-- [ ] `test_trigger` correctly fires `test_alert_received`
 
 ## B) Stability and Resilience
 - [ ] Reconnect policy works (close/error/stale)

@@ -296,7 +296,6 @@ class RedAlertApp extends Homey.App {
     this._triggerRedAlert = this.homey.flow.getTriggerCard('red_alert_received');
     this._triggerPreAlert = this.homey.flow.getTriggerCard('pre_alert_received');
     this._triggerAllClear = this.homey.flow.getTriggerCard('all_clear_received');
-    this._triggerTestAlert = this.homey.flow.getTriggerCard('test_alert_received');
 
     this.homey.flow.getConditionCard('is_monitoring_enabled')
       .registerRunListener(async () => this._monitoringEnabled);
@@ -318,28 +317,6 @@ class RedAlertApp extends Homey.App {
       .registerRunListener(async (args) => {
         this._monitoringEnabled = !!args.enabled;
         await this.homey.settings.set('monitoring_enabled', this._monitoringEnabled);
-        return true;
-      });
-
-    this.homey.flow.getActionCard('test_trigger')
-      .registerRunListener(async (args) => {
-        const threatId = Number(args.threat_id || 0);
-        const threat = THREAT_TYPES[threatId] || THREAT_TYPES[0];
-
-        const event = {
-          id: `test-${Date.now()}`,
-          type: threat.category === 'primary' ? 'primary' : 'other',
-          title: args.title || 'Test alert',
-          category: 'test',
-          severity: 'warning',
-          areas: [args.area || 'Test Area'],
-          threatId,
-          threatKey: threat.key,
-          threatNameHe: threat.he,
-          threatNameEn: threat.en,
-          time: Date.now(),
-        };
-        await this._emitEvent(event, this._triggerTestAlert || this._triggerRedAlert);
         return true;
       });
 
