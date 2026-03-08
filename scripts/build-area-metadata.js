@@ -2,6 +2,7 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 
 function decodePyString(raw) {
   const q = raw[0];
@@ -49,9 +50,14 @@ function normalizeAreaName(name) {
 }
 
 function main() {
-  const migunPyPath = process.argv[2] || '/tmp/area_to_migun_time.py';
-  const districtPyPath = process.argv[3] || '/tmp/area_to_district.py';
-  const outPath = process.argv[4] || 'data/area_metadata.json';
+  const projectRoot = path.resolve(__dirname, '..');
+  const defaultMigunPath = path.join(projectRoot, 'data-src', 'area_to_migun_time.py');
+  const defaultDistrictPath = path.join(projectRoot, 'data-src', 'area_to_district.py');
+  const defaultOutPath = path.join(projectRoot, 'data', 'area_metadata.json');
+
+  const migunPyPath = process.argv[2] || defaultMigunPath;
+  const districtPyPath = process.argv[3] || defaultDistrictPath;
+  const outPath = process.argv[4] || defaultOutPath;
 
   const migunMap = parsePyDict(fs.readFileSync(migunPyPath, 'utf8'));
   const districtMap = parsePyDict(fs.readFileSync(districtPyPath, 'utf8'));

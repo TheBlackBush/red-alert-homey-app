@@ -29,8 +29,13 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
 `data/area_metadata.json` is a generated data file (used at runtime by `app.js`).
 
 - The generator script is: `scripts/build-area-metadata.js`
+- Default input files are stored in-project:
+  - `data-src/area_to_migun_time.py`
+  - `data-src/area_to_district.py`
 - Run manually when you need to refresh/update area metadata:
   - `npm run build:area-metadata`
+- Optional custom paths:
+  - `node scripts/build-area-metadata.js <migun.py> <district.py> <out.json>`
 - Runtime behavior:
   - The app **does not** execute the generator automatically.
   - On startup, it only reads the generated `data/area_metadata.json`.
