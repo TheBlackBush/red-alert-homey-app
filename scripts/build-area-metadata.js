@@ -69,7 +69,6 @@ function main() {
 
   const payload = {
     generatedAt: new Date().toISOString(),
-    source: 'amitfin/oref_alert metadata',
     areas: merged,
     normalized,
   };
