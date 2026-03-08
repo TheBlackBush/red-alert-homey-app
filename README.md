@@ -25,6 +25,16 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
   - `last_alert_link`
 - Dashboard widget for status and quick toggle
 
+## Area Metadata Build
+`data/area_metadata.json` is a generated data file (used at runtime by `app.js`).
+
+- The generator script is: `scripts/build-area-metadata.js`
+- Run manually when you need to refresh/update area metadata:
+  - `npm run build:area-metadata`
+- Runtime behavior:
+  - The app **does not** execute the generator automatically.
+  - On startup, it only reads the generated `data/area_metadata.json`.
+
 ## Notes
 - This is a community integration and **not** an official warning system replacement.
 - Keep official emergency channels enabled at all times.
