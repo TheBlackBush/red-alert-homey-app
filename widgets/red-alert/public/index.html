@@ -104,7 +104,6 @@
       cursor: not-allowed;
     }
 
-    .last,
     .meta {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -148,7 +147,6 @@
     <span id="lastUpdate" class="meta">-</span>
   </div>
 
-  <div class="last homey-text-regular" id="last">No events yet</div>
 
   <script>
     let lastState = null;
@@ -202,10 +200,6 @@
       const toggle = document.getElementById('toggle');
       toggle.checked = !!state.monitoringEnabled;
       document.getElementById('toggleLabel').innerText = state.monitoringEnabled ? 'On' : 'Off';
-
-      document.getElementById('last').innerText = state.lastEvent
-        ? (state.lastEvent.message || `${state.lastEvent.title} · ${(state.lastEvent.areas || []).join(', ')}`)
-        : 'No events yet';
 
     }
 
