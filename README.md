@@ -54,7 +54,7 @@ Data sources used by the sync:
 What it does:
 - Pulls latest areas/cities in HE+EN from Oref
 - Filters deprecated/aggregate labels
-- Rebuilds `cities.json`
+- Rebuilds `cities.json` (keys by `cityId`; `areas` keys by `areaId`; `countdown` keys by `cityId`)
 - Rebuilds `area_metadata.json` (`m`, `d`, plus EN labels metadata)
 
 Runtime behavior:
