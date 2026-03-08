@@ -64,6 +64,7 @@ const OREF_FALLBACK_POLL_MS = 15000;
 const INFER_ALL_CLEAR_GRACE_MS = 3 * 60 * 1000;
 const RUNTIME_STATE_KEY = 'runtime_state_v1';
 const HISTORY_TTL_MS = 24 * 60 * 60 * 1000;
+const APP_TIMEZONE = 'Asia/Jerusalem';
 
 const AREA_ALIASES = {
   "תל אביב יפו": "תל אביב - דרום העיר ויפו",
@@ -841,8 +842,17 @@ class RedAlertApp extends Homey.App {
 
   _isQuietHours() {
     if (!this._quietHours?.enabled) return false;
-    const now = new Date();
-    const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: APP_TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(new Date());
+
+    const hour = Number(parts.find((p) => p.type === 'hour')?.value || 0);
+    const minute = Number(parts.find((p) => p.type === 'minute')?.value || 0);
+    const nowMinutes = (hour * 60) + minute;
 
     const start = this._timeToMinutes(this._quietHours.start, 23 * 60);
     const end = this._timeToMinutes(this._quietHours.end, 6 * 60);
@@ -898,7 +908,10 @@ class RedAlertApp extends Homey.App {
   _buildAlertSummary(event, lang) {
     const effectiveLang = this._getEffectiveLanguage(lang);
     if (!event) return effectiveLang === 'he' ? 'אין התראות עדיין' : 'No alerts yet';
-    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
+    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', {
+      hour12: false,
+      timeZone: APP_TIMEZONE,
+    });
     const threat = this._getThreatDisplayName(event, effectiveLang);
     const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
     return `[${ts}] ${threat} | severity=${event.severity || '-'} | areas=${areas}`;
@@ -938,7 +951,10 @@ class RedAlertApp extends Homey.App {
       return effectiveLang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
     }
 
-    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', { hour12: false });
+    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', {
+      hour12: false,
+      timeZone: APP_TIMEZONE,
+    });
     const threat = this._getThreatDisplayName(event, effectiveLang);
     const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
     const severityKey = event.severity || '-';
