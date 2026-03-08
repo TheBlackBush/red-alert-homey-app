@@ -12,10 +12,11 @@ What this app provides:
 How to configure after install:
 1) Open the app settings in Homey.
 2) Enable monitoring.
-3) Choose your cities (or leave empty to match all cities).
-4) Configure quiet hours (optional, applies to pre-alert behavior).
-5) Configure throttle values per event type (optional).
-6) Save settings.
+3) Choose app language (Hebrew/English) in settings.
+4) Choose your cities (or leave empty to match all cities).
+5) Configure quiet hours (optional, applies to pre-alert behavior).
+6) Configure throttle values per event type (optional).
+7) Save settings.
 
 Recommended first Flow setup:
 - Trigger: "red_alert_received"
