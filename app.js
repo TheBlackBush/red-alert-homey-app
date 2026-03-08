@@ -548,6 +548,7 @@ class RedAlertApp extends Homey.App {
 
         const event = {
           id: `OREF-${rec?.id || rec?.alertId || Date.now()}-${threatId}`,
+          notificationId: rec?.id || rec?.alertId || null,
           type: eventType,
           title: rec?.title || rec?.titleHe || threat.en,
           category: threat.category,
@@ -710,6 +711,7 @@ class RedAlertApp extends Homey.App {
 
       const event = {
         id: `ALERT-${message.data.notificationId || Date.now()}`,
+        notificationId: message.data.notificationId || null,
         type: eventType,
         title: threat.en,
         category: threat.category,
@@ -747,6 +749,7 @@ class RedAlertApp extends Homey.App {
 
         const event = {
           id: `PRE-${message.data.notificationId || Date.now()}`,
+          notificationId: message.data.notificationId || null,
           type: 'pre-alert',
           title: message.data.titleHe || 'Early warning',
           category: 'pre-alert',
@@ -765,6 +768,7 @@ class RedAlertApp extends Homey.App {
       if (instructionType === SYSTEM_TYPE.END_ALERT) {
         const event = {
           id: `END-${message.data.notificationId || Date.now()}`,
+          notificationId: message.data.notificationId || null,
           type: 'all-clear',
           title: message.data.titleHe || 'All clear',
           category: 'all-clear',
@@ -1023,11 +1027,12 @@ class RedAlertApp extends Homey.App {
   }
 
   _buildAlertLink(event, source = 'tzevaadom') {
-    const city = Array.isArray(event?.areas) && event.areas.length ? event.areas[0] : '';
     if (source === 'tzevaadom') {
-      return city
-        ? `https://www.tzevaadom.co.il/en/cities/${encodeURIComponent(city)}`
-        : 'https://www.tzevaadom.co.il/';
+      const notificationId = Number(event?.notificationId);
+      if (Number.isFinite(notificationId) && notificationId > 0) {
+        return `https://www.tzevaadom.co.il/instructions/${notificationId}`;
+      }
+      return 'https://www.tzevaadom.co.il/';
     }
 
     // official source default
