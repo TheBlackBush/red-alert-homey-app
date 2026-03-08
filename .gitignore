@@ -5,6 +5,7 @@ node_modules/
 .homeybuild/
 .homeycompose/
 .homeychangelog.json
+backups/
 
 # Environment & secrets
 .env
