@@ -1084,7 +1084,10 @@ class RedAlertApp extends Homey.App {
       title: this._getThreatDisplayName(event, lang),
       category: this._getCategoryDisplay(event, lang),
       areas: localizedAreas.join(', '),
-      timestamp: new Date(event.time).toISOString(),
+      timestamp: new Date(event.time || Date.now()).toLocaleString(lang === 'he' ? 'he-IL' : 'en-US', {
+        hour12: false,
+        timeZone: APP_TIMEZONE,
+      }),
       severity: lang === 'he'
         ? ((SEVERITY_LABELS[event.severity || '-'] || { he: event.severity || '-' }).he)
         : ((SEVERITY_LABELS[event.severity || '-'] || { en: event.severity || '-' }).en),

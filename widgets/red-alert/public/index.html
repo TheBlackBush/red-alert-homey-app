@@ -155,7 +155,10 @@
     function formatTime(ts) {
       if (!ts) return '-';
       const d = new Date(ts);
-      return Number.isNaN(d.getTime()) ? '-' : d.toLocaleTimeString();
+      return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString('he-IL', {
+        hour12: false,
+        timeZone: 'Asia/Jerusalem',
+      });
     }
 
     function computeConnectionState(state) {
