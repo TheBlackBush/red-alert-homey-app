@@ -1,70 +1,53 @@
-# Contributing to red-alert-homey-app
+# Contributing to Athom and Homey
 
-First of all, thanks for taking the time to contribute 🙌
+First off all, thank you for taking the time to contribute!
 
-This project is a Homey app for Israeli red alert monitoring. Contributions are
-welcome for bug fixes, reliability improvements, UX polish, documentation, and
-metadata quality.
+The following is a set of guidelines for contributing to Athom and its packages, which are hosted in the [Athom Organization](https://github.com/athombv) on GitHub. These are just guidelines, not rules. Use your best judgment, and feel free to contact us if you have any questions.
 
-## Before opening an issue
+Please join our [community slack](https://slack.athom.com), if you have not done so already.
+We also have a [community forum](https://community.athom.com) for general discussions.
 
-Please check:
 
-- Did you read the error message/logs carefully?
-- Is there already an existing issue for the same problem?
-- Did you update your local branch to latest `master`?
-- Can you reproduce the problem consistently?
+## Before submitting a bug or feature request
 
-## Great bug reports include
+* **Have you actually read the error message**?
+* Have you searched for similar issues?
+* Have you updated homey, all apps, and the development tools (if applicable)?
+* Have you checked that it's not a problem with one of the apps you're using, rather than Homey itself?
+* Have you looked at what's involved in fixing/implementing this?
+ 
+Capable programmers should always attempt to investigate and fix problems themselves before asking for others to help. Submit a pull request instead of an issue!
 
-- **Context:** what were you trying to do?
-- **Reproduction steps:** minimal, clear, from a clean start
-- **Expected vs actual behavior**
-- **Logs/screenshots** where applicable
-- **Environment:** Homey model/version, app version
+Regular support is provided through our [support staff](support@athom.com).
 
-## Great feature requests include
+## A great bug report contains
 
-- Current behavior
-- Why it is a problem
-- Proposed solution
-- Practical use case
-- Caveats/trade-offs
+* Context – what were you trying to achieve?
+* Detailed steps to reproduce the error from scratch. Try isolating the minimal amount of code needed to reproduce the error.
+* Any applicable log files or ID's.
+* Evidence you've looked into solving the problem and ideally, a theory on the cause and a possible solution.
 
-## Pull request guidelines
+## A great feature request contains
 
-- Keep changes focused and minimal
-- One topic per PR
-- Rebase on latest `master`
-- Keep code style consistent with existing code
-- Run checks before opening PR:
+* The current situation.
+* How and why the current situation is problematic.
+* A detailed proposal or pull request that demonstrates how the problem could be solved.
+* A use case – who needs this feature and why?
+* Any caveats.
 
-```bash
-npm run lint
-npm run validate
-npm run check:area-metadata
-```
+## A great pull request contains
 
-- If your PR changes behavior, update docs (`README.md`, `README.txt`,
-  changelog as needed)
+* Minimal changes. Only submit code relevant to the current issue. Other changes should go in new pull requests.
+* Minimal commits. Please squash to a single commit before sending your pull request.
+* No conflicts. Please rebase off the latest master before submitting.
+* Code conforming to the existing conventions and formats. i.e. Please don't reformat whitespace.
+* Passing tests in the test folder (if applicable). Use existing tests as a reference.
+* Relevant documentation.
 
-## Local development
+## Speeding up your pull request
+Merging pull requests takes time. While we always try to merge your pull request as soon as possible, there are certain things you can do to speed up this process.
 
-```bash
-npm ci --include=dev
-npm run lint
-npm run validate
-homey app install
-```
-
-## Metadata sync changes
-
-If your PR touches area/city metadata flow, include:
-
-- What source endpoint(s) were used
-- Any filtering rule changes
-- Before/after counts (cities, areas)
-
-## Code of Conduct
-
-By participating, you agree to follow [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+* Ask developers to review your code changes and post their feedback.
+* Ask users to test your changes and post their feedback.
+* Keep your changes to the minimal required amount, and dedicated to one issue/feature only.
+* If your PR introduces new features or more than just a small fix, please sign our [Contributor License Agreement](https://go.athom.com/cla).
