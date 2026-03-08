@@ -41,6 +41,16 @@ Commands:
 - Check only (no file changes): `npm run check:area-metadata`
 - Apply update: `npm run sync:area-metadata`
 
+### Manual update flow (recommended)
+1. Review changes first:
+   - `npm run check:area-metadata`
+2. If output looks good, apply:
+   - `npm run sync:area-metadata`
+3. (Optional) validate app package:
+   - `npm run validate`
+
+> Note: metadata is updated only when these commands are run (not automatically at runtime).
+
 Data sources used by the sync:
 - Districts/cities Hebrew: `GetDistricts.aspx?lang=he`
 - Districts/cities English: `GetDistricts.aspx?lang=en`
