@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-03-08
+
+### Changed
+- Simplified widget layout for readability:
+  - Removed history list from the widget
+  - Removed verbose full-message line
+  - Tuned widget height for regular/compact modes
+- Updated widget previews to guideline-compliant assets:
+  - Replaced `preview-dark.png` (1024x1024, transparent, simplified)
+  - Replaced `preview-light.png` (1024x1024, transparent, simplified)
+- Improved App Store readme text (`readme.txt` / `README.txt`) with clearer setup guidance.
+
+### Removed
+- Removed flow test cards from the app:
+  - Trigger `test_alert_received`
+  - Action `test_trigger`
+
+### Validation
+- App validated successfully with `homey app validate --level=publish`.
+- App installed successfully on Homey Pro for verification.
+
 ## [0.2.0] - 2026-03-08
 
 ### Added
