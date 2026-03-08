@@ -50,10 +50,25 @@ function buildNormalizedMap(areasMap) {
   return out;
 }
 
+function loadJson(filePath, fallback = {}) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (_) {
+    return fallback;
+  }
+}
+
 async function main() {
   const { apply, keepRemoved } = parseArgs(process.argv);
   const projectRoot = path.resolve(__dirname, '..');
+
   const metaPath = path.join(projectRoot, 'data', 'area_metadata.json');
+  const migunPath = path.join(projectRoot, 'data-src', 'area_to_migun_time.json');
+  const districtPath = path.join(projectRoot, 'data-src', 'area_to_district.json');
+
+  const current = loadJson(metaPath, { areas: {} });
+  const migunMap = loadJson(migunPath, {});
+  const districtMap = loadJson(districtPath, {});
 
   const res = await fetch(CITIES_MIX_URL, {
     headers: {
@@ -64,14 +79,10 @@ async function main() {
     },
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch areas. status=${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Failed to fetch areas. status=${res.status}`);
 
   const payload = await res.json();
   const remoteAreas = toSortedUniqueAreas(payload);
-
-  const current = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
   const localAreas = Object.keys(current?.areas || {});
 
   const remoteSet = new Set(remoteAreas);
@@ -80,10 +91,46 @@ async function main() {
   const added = remoteAreas.filter((a) => !localSet.has(a));
   const removed = localAreas.filter((a) => !remoteSet.has(a)).sort((a, b) => a.localeCompare(b, 'he'));
 
-  console.log(`Remote areas: ${remoteAreas.length}`);
-  console.log(`Local areas:  ${localAreas.length}`);
-  console.log(`Added:        ${added.length}`);
-  console.log(`Removed:      ${removed.length}`);
+  let fromExisting = 0;
+  let fromSources = 0;
+  let unresolved = 0;
+
+  const mergedAreas = {};
+  for (const area of remoteAreas) {
+    const existing = current.areas?.[area];
+    if (existing && (existing.m !== null || existing.d !== null)) {
+      mergedAreas[area] = { m: existing.m ?? null, d: existing.d ?? null };
+      fromExisting += 1;
+      continue;
+    }
+
+    const m = Number.isFinite(Number(migunMap?.[area])) ? Number(migunMap[area]) : null;
+    const d = typeof districtMap?.[area] === 'string' ? districtMap[area] : null;
+
+    if (m !== null || d !== null) fromSources += 1;
+    else unresolved += 1;
+
+    mergedAreas[area] = { m, d };
+  }
+
+  if (keepRemoved) {
+    for (const area of removed) {
+      if (!Object.prototype.hasOwnProperty.call(mergedAreas, area)) {
+        const existing = current.areas?.[area] || {};
+        mergedAreas[area] = { m: existing.m ?? null, d: existing.d ?? null };
+      }
+    }
+  }
+
+  const normalized = buildNormalizedMap(mergedAreas);
+
+  console.log(`Remote areas:   ${remoteAreas.length}`);
+  console.log(`Current areas:  ${localAreas.length}`);
+  console.log(`Added:          ${added.length}`);
+  console.log(`Removed:        ${removed.length}`);
+  console.log(`Meta existing:  ${fromExisting}`);
+  console.log(`Meta src json:  ${fromSources}`);
+  console.log(`Meta unresolved:${unresolved}`);
 
   if (added.length) console.log(`Added list: ${added.join(' | ')}`);
   if (removed.length) console.log(`Removed list: ${removed.join(' | ')}`);
@@ -93,35 +140,10 @@ async function main() {
     return;
   }
 
-  const mergedAreas = {};
-
-  for (const area of remoteAreas) {
-    if (current.areas && Object.prototype.hasOwnProperty.call(current.areas, area)) {
-      mergedAreas[area] = {
-        m: current.areas[area]?.m ?? null,
-        d: current.areas[area]?.d ?? null,
-      };
-    } else {
-      mergedAreas[area] = { m: null, d: null };
-    }
-  }
-
-  if (keepRemoved) {
-    for (const area of removed) {
-      if (!Object.prototype.hasOwnProperty.call(mergedAreas, area)) {
-        mergedAreas[area] = {
-          m: current.areas?.[area]?.m ?? null,
-          d: current.areas?.[area]?.d ?? null,
-        };
-      }
-    }
-  }
-
   const updated = {
-    ...current,
     generatedAt: new Date().toISOString(),
     areas: mergedAreas,
-    normalized: buildNormalizedMap(mergedAreas),
+    normalized,
   };
 
   fs.writeFileSync(metaPath, JSON.stringify(updated));

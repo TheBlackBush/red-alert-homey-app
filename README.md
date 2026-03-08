@@ -25,26 +25,24 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
   - `last_alert_link`
 - Dashboard widget for status and quick toggle
 
-## Area Metadata Build
+## Area Metadata Sync
 `data/area_metadata.json` is a generated data file (used at runtime by `app.js`).
 
-- The generator script is: `scripts/build-area-metadata.js`
-- Default input files are stored in-project:
-  - `data-src/area_to_migun_time.py`
-  - `data-src/area_to_district.py`
-- Run manually when you need to refresh/update area metadata:
-  - `npm run build:area-metadata`
-- Optional custom paths:
-  - `node scripts/build-area-metadata.js <migun.py> <district.py> <out.json>`
-- Network-based area refresh (JS port inspired by `areas_checker.py`):
-  - Check only (no file change): `npm run check:areas-network`
-  - Apply updates to `data/area_metadata.json`: `npm run sync:areas-network`
-  - Notes:
-    - Added areas from Oref network feed are inserted with `m: null, d: null` until enriched.
-    - Removed areas are dropped by default during sync.
+- Unified JS script: `scripts/update-areas-from-network.js`
+- In-project metadata sources (JSON):
+  - `data-src/area_to_migun_time.json`
+  - `data-src/area_to_district.json`
+- Commands:
+  - Check only (no file changes): `npm run check:area-metadata`
+  - Apply update: `npm run sync:area-metadata`
+- What it does:
+  - Pulls latest area list from Oref network feed (`GetCitiesMix.aspx`)
+  - Filters deprecated/aggregate labels
+  - Merges area metadata (`m`, `d`) from existing file and source JSON maps
+  - Rebuilds `normalized` map
 - Runtime behavior:
-  - The app **does not** execute the generator automatically.
-  - On startup, it only reads the generated `data/area_metadata.json`.
+  - The app **does not** execute sync automatically.
+  - On startup, it only reads `data/area_metadata.json`.
 
 ## Notes
 - This is a community integration and **not** an official warning system replacement.
