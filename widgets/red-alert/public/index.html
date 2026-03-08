@@ -105,26 +105,10 @@
     }
 
     .last,
-    .meta,
-    .history li {
+    .meta {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .history {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .history li {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--homey-su-1);
     }
   </style>
 </head>
@@ -165,17 +149,10 @@
   </div>
 
   <div class="last homey-text-regular" id="last">No events yet</div>
-  <ul id="history" class="history"></ul>
 
   <script>
     let lastState = null;
     let isCompact = false;
-
-    function severityClass(severity) {
-      if (severity === 'critical') return 'bad';
-      if (severity === 'warning') return 'warn';
-      return 'info';
-    }
 
     function formatTime(ts) {
       if (!ts) return '-';
@@ -230,12 +207,6 @@
         ? (state.lastEvent.message || `${state.lastEvent.title} · ${(state.lastEvent.areas || []).join(', ')}`)
         : 'No events yet';
 
-      const history = (state.history || []).slice(0, isCompact ? 1 : 3);
-      const historyEl = document.getElementById('history');
-      historyEl.innerHTML = history
-        .map((h) => `<li class="homey-text-small-light"><span class="dot ${severityClass(h.severity)}"></span>${h.message || `${h.title} · ${(h.areas || []).join(', ')}`}</li>`)
-        .join('');
-      historyEl.style.display = history.length ? 'flex' : 'none';
     }
 
     async function refresh(Homey) {
