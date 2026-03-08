@@ -705,7 +705,7 @@
           "value": false
         }
       ],
-      "height": 180,
+      "height": 250,
       "api": {
         "getState": {
           "method": "GET",
