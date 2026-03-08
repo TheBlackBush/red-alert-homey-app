@@ -29,8 +29,6 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
 Generated files used by the app:
 - `data/area_metadata.json`
 - `data/cities.json`
-- `data/alarm_instructions.he.json`
-- `data/alarm_instructions.en.json`
 
 Unified JS sync script:
 - `scripts/update-areas-from-network.js`
@@ -52,15 +50,12 @@ Commands:
 Data sources used by the sync:
 - Districts/cities Hebrew: `GetDistricts.aspx?lang=he`
 - Districts/cities English: `GetDistricts.aspx?lang=en`
-- Per-city instructions Hebrew: `GetAlarmInstructions.aspx?lang=he&from=1&cityid=<id>`
-- Per-city instructions English: `GetAlarmInstructions.aspx?lang=en&from=1&cityid=<id>`
 
 What it does:
 - Pulls latest areas/cities in HE+EN from Oref
 - Filters deprecated/aggregate labels
 - Rebuilds `cities.json`
 - Rebuilds `area_metadata.json` (`m`, `d`, plus EN labels metadata)
-- Fetches and stores per-city alarm instructions in HE+EN
 
 Runtime behavior:
 - The app **does not** execute sync automatically.
