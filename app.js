@@ -475,6 +475,31 @@ class RedAlertApp extends Homey.App {
     return [];
   }
 
+  _formatTimestamp(ts, lang) {
+    const effectiveLang = this._getEffectiveLanguage(lang);
+    return new Date(ts || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', {
+      hour12: false,
+      timeZone: APP_TIMEZONE,
+    });
+  }
+
+  _createEvent(fields) {
+    return {
+      id: fields.id,
+      notificationId: fields.notificationId || null,
+      type: fields.type,
+      title: fields.title,
+      category: fields.category,
+      severity: fields.severity,
+      areas: fields.areas,
+      threatId: fields.threatId,
+      threatKey: fields.threatKey,
+      threatNameHe: fields.threatNameHe,
+      threatNameEn: fields.threatNameEn,
+      time: fields.time || Date.now(),
+    };
+  }
+
   async _maybeInferAllClearFromFallback(hasPrimaryMatch) {
     if (hasPrimaryMatch) return;
     if (!this._active || this._activeType !== 'primary') return;
@@ -486,7 +511,7 @@ class RedAlertApp extends Homey.App {
     if (elapsed < INFER_ALL_CLEAR_GRACE_MS) return;
 
     const lastAreas = Array.isArray(this._lastEvent?.areas) ? this._lastEvent.areas : [];
-    const event = {
+    const event = this._createEvent({
       id: `INFER-END-${Date.now()}`,
       type: 'all-clear',
       title: 'All clear (inferred)',
@@ -498,7 +523,7 @@ class RedAlertApp extends Homey.App {
       threatNameHe: 'סיום אירוע',
       threatNameEn: 'All clear',
       time: Date.now(),
-    };
+    });
 
     this._active = false;
     this._activeType = null;
@@ -546,7 +571,7 @@ class RedAlertApp extends Homey.App {
         const eventType = threat.category === 'primary' ? 'primary' : 'other';
         if (eventType === 'primary') hasPrimaryMatch = true;
 
-        const event = {
+        const event = this._createEvent({
           id: `OREF-${rec?.id || rec?.alertId || Date.now()}-${threatId}`,
           notificationId: rec?.id || rec?.alertId || null,
           type: eventType,
@@ -559,7 +584,7 @@ class RedAlertApp extends Homey.App {
           threatNameHe: threat.he,
           threatNameEn: threat.en,
           time: Date.now(),
-        };
+        });
 
         this._active = true;
         this._activeType = eventType;
@@ -709,7 +734,7 @@ class RedAlertApp extends Homey.App {
 
       const eventType = threat.category === 'primary' ? 'primary' : 'other';
 
-      const event = {
+      const event = this._createEvent({
         id: `ALERT-${message.data.notificationId || Date.now()}`,
         notificationId: message.data.notificationId || null,
         type: eventType,
@@ -722,7 +747,7 @@ class RedAlertApp extends Homey.App {
         threatNameHe: threat.he,
         threatNameEn: threat.en,
         time: Number(message.data.time) * 1000 || Date.now(),
-      };
+      });
 
       this._active = true;
       this._activeType = eventType;
@@ -747,7 +772,7 @@ class RedAlertApp extends Homey.App {
       if (instructionType === SYSTEM_TYPE.PRE_ALERT) {
         if (this._isQuietHours()) return;
 
-        const event = {
+        const event = this._createEvent({
           id: `PRE-${message.data.notificationId || Date.now()}`,
           notificationId: message.data.notificationId || null,
           type: 'pre-alert',
@@ -760,13 +785,13 @@ class RedAlertApp extends Homey.App {
           threatNameHe: 'התרעה מוקדמת',
           threatNameEn: 'Early warning',
           time: Number(message.data.time) * 1000 || Date.now(),
-        };
+        });
         await this._emitEvent(event, this._triggerPreAlert);
         return;
       }
 
       if (instructionType === SYSTEM_TYPE.END_ALERT) {
-        const event = {
+        const event = this._createEvent({
           id: `END-${message.data.notificationId || Date.now()}`,
           notificationId: message.data.notificationId || null,
           type: 'all-clear',
@@ -779,7 +804,7 @@ class RedAlertApp extends Homey.App {
           threatNameHe: 'סיום אירוע',
           threatNameEn: 'All clear',
           time: Number(message.data.time) * 1000 || Date.now(),
-        };
+        });
         this._active = false;
         this._activeType = null;
         this._activePrimaryLastSeenAt = 0;
@@ -929,10 +954,7 @@ class RedAlertApp extends Homey.App {
   _buildAlertSummary(event, lang) {
     const effectiveLang = this._getEffectiveLanguage(lang);
     if (!event) return effectiveLang === 'he' ? 'אין התראות עדיין' : 'No alerts yet';
-    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', {
-      hour12: false,
-      timeZone: APP_TIMEZONE,
-    });
+    const ts = this._formatTimestamp(event.time, effectiveLang);
     const threat = this._getThreatDisplayName(event, effectiveLang);
     const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
     return `[${ts}] ${threat} | severity=${event.severity || '-'} | areas=${areas}`;
@@ -972,10 +994,7 @@ class RedAlertApp extends Homey.App {
       return effectiveLang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
     }
 
-    const ts = new Date(event.time || Date.now()).toLocaleString(effectiveLang === 'he' ? 'he-IL' : 'en-US', {
-      hour12: false,
-      timeZone: APP_TIMEZONE,
-    });
+    const ts = this._formatTimestamp(event.time, effectiveLang);
     const threat = this._getThreatDisplayName(event, effectiveLang);
     const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
     const severityKey = event.severity || '-';
@@ -1084,10 +1103,7 @@ class RedAlertApp extends Homey.App {
       title: this._getThreatDisplayName(event, lang),
       category: this._getCategoryDisplay(event, lang),
       areas: localizedAreas.join(', '),
-      timestamp: new Date(event.time || Date.now()).toLocaleString(lang === 'he' ? 'he-IL' : 'en-US', {
-        hour12: false,
-        timeZone: APP_TIMEZONE,
-      }),
+      timestamp: this._formatTimestamp(event.time, lang),
       severity: lang === 'he'
         ? ((SEVERITY_LABELS[event.severity || '-'] || { he: event.severity || '-' }).he)
         : ((SEVERITY_LABELS[event.severity || '-'] || { en: event.severity || '-' }).en),
