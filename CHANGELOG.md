@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.2] - 2026-03-08
+
+### Changed
+- Completed lint stabilization and cleanup:
+  - broadened ESLint override scope for this codebase
+  - applied safe lint autofixes
+  - removed remaining lint warnings in alert message builder
+- Repository cleanup:
+  - removed obsolete backup artifact from tracked files
+  - removed unused source image asset
+
+### Validation
+- `npm run lint` passes cleanly.
+- `homey app validate --level=publish` passes.
+- Smoke install to Homey Pro completed successfully.
+
 ## [0.3.1] - 2026-03-08
 
 ### Changed
