@@ -379,7 +379,7 @@ class RedAlertApp extends Homey.App {
     try {
       await this._updateSummaryToken(this._lastEvent);
       await this._updateMessageToken(this._lastEvent, 'short');
-      await this._updateLinkToken(this._lastEvent, 'oref');
+      await this._updateLinkToken(this._lastEvent, 'tzevaadom');
     } catch (err) {
       this.error('Failed to init flow tokens', err);
     }
@@ -1022,7 +1022,7 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertMessageToken.setValue(message);
   }
 
-  _buildAlertLink(event, source = 'oref') {
+  _buildAlertLink(event, source = 'tzevaadom') {
     const city = Array.isArray(event?.areas) && event.areas.length ? event.areas[0] : '';
     if (source === 'tzevaadom') {
       return city
@@ -1034,7 +1034,7 @@ class RedAlertApp extends Homey.App {
     return 'https://www.oref.org.il/eng';
   }
 
-  async _updateLinkToken(event, source = 'oref') {
+  async _updateLinkToken(event, source = 'tzevaadom') {
     if (!this._lastAlertLinkToken) return;
     const link = this._buildAlertLink(event, source);
     await this._lastAlertLinkToken.setValue(link);
@@ -1070,7 +1070,7 @@ class RedAlertApp extends Homey.App {
 
     await this._updateSummaryToken(event);
     await this._updateMessageToken(event, 'short');
-    await this._updateLinkToken(event, 'oref');
+    await this._updateLinkToken(event, 'tzevaadom');
 
     const lang = this._getEffectiveLanguage();
     const localizedAreas = this._getLocalizedAreas(event, lang);
@@ -1091,7 +1091,7 @@ class RedAlertApp extends Homey.App {
       areas_count: String(insights.areasCount || localizedAreas.length || 0),
       primary_area: localizedAreas[0] || insights.primaryArea || '',
       alert_message: this._buildAlertMessage(event, 'short', lang),
-      alert_link: this._buildAlertLink(event, 'oref'),
+      alert_link: this._buildAlertLink(event, 'tzevaadom'),
     };
 
     try {
