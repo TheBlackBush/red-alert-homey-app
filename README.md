@@ -25,24 +25,38 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
   - `last_alert_link`
 - Dashboard widget for status and quick toggle
 
-## Area Metadata Sync
-`data/area_metadata.json` is a generated data file (used at runtime by `app.js`).
+## Area/Cities Metadata Sync
+Generated files used by the app:
+- `data/area_metadata.json`
+- `data/cities.json`
+- `data/areas.he.json`
+- `data/areas.en.json`
+- `data/alarm_instructions.he.json`
+- `data/alarm_instructions.en.json`
 
-- Unified JS script: `scripts/update-areas-from-network.js`
-- In-project metadata sources (JSON):
-  - `data-src/area_to_migun_time.json`
-  - `data-src/area_to_district.json`
-- Commands:
-  - Check only (no file changes): `npm run check:area-metadata`
-  - Apply update: `npm run sync:area-metadata`
-- What it does:
-  - Pulls latest area list from Oref network feed (`GetCitiesMix.aspx`)
-  - Filters deprecated/aggregate labels
-  - Merges area metadata (`m`, `d`) from existing file and source JSON maps
-  - Rebuilds `normalized` map
-- Runtime behavior:
-  - The app **does not** execute sync automatically.
-  - On startup, it only reads `data/area_metadata.json`.
+Unified JS sync script:
+- `scripts/update-areas-from-network.js`
+
+Commands:
+- Check only (no file changes): `npm run check:area-metadata`
+- Apply update: `npm run sync:area-metadata`
+
+Data sources used by the sync:
+- Districts/cities Hebrew: `GetDistricts.aspx?lang=he`
+- Districts/cities English: `GetDistricts.aspx?lang=en`
+- Per-city instructions Hebrew: `GetAlarmInstructions.aspx?lang=he&from=1&cityid=<id>`
+- Per-city instructions English: `GetAlarmInstructions.aspx?lang=en&from=1&cityid=<id>`
+
+What it does:
+- Pulls latest areas/cities in HE+EN from Oref
+- Filters deprecated/aggregate labels
+- Rebuilds `cities.json` and bilingual area lists
+- Rebuilds `area_metadata.json` (`m`, `d`, plus EN labels metadata)
+- Fetches and stores per-city alarm instructions in HE+EN
+
+Runtime behavior:
+- The app **does not** execute sync automatically.
+- On startup, it reads the generated data files.
 
 ## Notes
 - This is a community integration and **not** an official warning system replacement.

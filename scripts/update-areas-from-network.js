@@ -4,7 +4,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const CITIES_MIX_URL = 'https://alerts-history.oref.org.il/Shared/Ajax/GetCitiesMix.aspx';
+const DISTRICTS_HE_URL = 'https://alerts-history.oref.org.il/Shared/Ajax/GetDistricts.aspx?lang=he';
+const DISTRICTS_EN_URL = 'https://alerts-history.oref.org.il/Shared/Ajax/GetDistricts.aspx?lang=en';
+const INSTRUCTIONS_URL = (lang, cityId) => `https://alerts-history.oref.org.il/Shared/Ajax/GetAlarmInstructions.aspx?lang=${lang}&from=1&cityid=${encodeURIComponent(cityId)}`;
+
 const FILTER_SUFFIX1 = ' - כל האזורים';
 const FILTER_SUFFIX2 = ' כל - האזורים';
 const DEPRECATION_SUFFIX = ' (אזור התרעה ישן)';
@@ -23,131 +26,220 @@ function parseArgs(argv) {
   return {
     apply: args.has('--apply'),
     keepRemoved: args.has('--keep-removed'),
+    withInstructions: !args.has('--skip-instructions'),
   };
 }
 
-function toSortedUniqueAreas(payload) {
-  if (!Array.isArray(payload)) return [];
-
-  const set = new Set();
-  for (const row of payload) {
-    const label = String(row?.label || '').trim();
-    if (!label) continue;
-    if (label.endsWith(FILTER_SUFFIX1)) continue;
-    if (label.endsWith(FILTER_SUFFIX2)) continue;
-    if (label.endsWith(DEPRECATION_SUFFIX)) continue;
-    set.add(label);
-  }
-
-  return [...set].sort((a, b) => a.localeCompare(b, 'he'));
+function shouldFilterLabel(label) {
+  const s = String(label || '').trim();
+  return !s || s.endsWith(FILTER_SUFFIX1) || s.endsWith(FILTER_SUFFIX2) || s.endsWith(DEPRECATION_SUFFIX);
 }
 
-function buildNormalizedMap(areasMap) {
-  const out = {};
-  for (const [area, meta] of Object.entries(areasMap)) {
-    out[normalizeAreaName(area)] = { area, m: meta?.m ?? null, d: meta?.d ?? null };
-  }
-  return out;
-}
-
-function loadJson(filePath, fallback = {}) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (_) {
-    return fallback;
-  }
-}
-
-async function main() {
-  const { apply, keepRemoved } = parseArgs(process.argv);
-  const projectRoot = path.resolve(__dirname, '..');
-
-  const metaPath = path.join(projectRoot, 'data', 'area_metadata.json');
-  const migunPath = path.join(projectRoot, 'data-src', 'area_to_migun_time.json');
-  const districtPath = path.join(projectRoot, 'data-src', 'area_to_district.json');
-
-  const current = loadJson(metaPath, { areas: {} });
-  const migunMap = loadJson(migunPath, {});
-  const districtMap = loadJson(districtPath, {});
-
-  const res = await fetch(CITIES_MIX_URL, {
+function fetchJson(url) {
+  return fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0',
       'X-Requested-With': 'XMLHttpRequest',
       Accept: 'application/json,text/plain,*/*',
       Referer: 'https://www.oref.org.il/',
     },
+  }).then(async (res) => {
+    if (!res.ok) throw new Error(`GET ${url} failed status=${res.status}`);
+    return res.json();
   });
+}
 
-  if (!res.ok) throw new Error(`Failed to fetch areas. status=${res.status}`);
+function buildCombinedCities(heRows, enRows) {
+  const enById = new Map();
+  for (const row of enRows || []) {
+    const id = Number(row?.id);
+    if (!Number.isFinite(id)) continue;
+    if (shouldFilterLabel(row?.label) || shouldFilterLabel(row?.label_he)) continue;
+    if (!enById.has(id)) enById.set(id, row);
+  }
 
-  const payload = await res.json();
-  const remoteAreas = toSortedUniqueAreas(payload);
-  const localAreas = Object.keys(current?.areas || {});
+  const citiesById = new Map();
+  for (const row of heRows || []) {
+    const id = Number(row?.id);
+    if (!Number.isFinite(id)) continue;
+    if (shouldFilterLabel(row?.label) || shouldFilterLabel(row?.label_he)) continue;
 
-  const remoteSet = new Set(remoteAreas);
-  const localSet = new Set(localAreas);
+    const enRow = enById.get(id);
+    const heName = String(row?.label_he || row?.label || '').trim();
+    const enName = String(enRow?.label || '').trim();
 
-  const added = remoteAreas.filter((a) => !localSet.has(a));
-  const removed = localAreas.filter((a) => !remoteSet.has(a)).sort((a, b) => a.localeCompare(b, 'he'));
+    if (!heName) continue;
 
-  let fromExisting = 0;
-  let fromSources = 0;
-  let unresolved = 0;
+    citiesById.set(id, {
+      id,
+      he: heName,
+      en: enName || heName,
+      areaHe: String(row?.areaname || '').trim(),
+      areaEn: String(enRow?.areaname || '').trim(),
+      areaId: Number(row?.areaid),
+      countdown: Number.isFinite(Number(row?.migun_time)) ? Number(row.migun_time) : null,
+      value: String(row?.value || ''),
+    });
+  }
 
-  const mergedAreas = {};
-  for (const area of remoteAreas) {
-    const existing = current.areas?.[area];
-    if (existing && (existing.m !== null || existing.d !== null)) {
-      mergedAreas[area] = { m: existing.m ?? null, d: existing.d ?? null };
-      fromExisting += 1;
-      continue;
-    }
+  return citiesById;
+}
 
-    const m = Number.isFinite(Number(migunMap?.[area])) ? Number(migunMap[area]) : null;
-    const d = typeof districtMap?.[area] === 'string' ? districtMap[area] : null;
+function toCitiesJsonPayload(citiesById) {
+  const cities = {};
+  for (const city of [...citiesById.values()].sort((a, b) => a.he.localeCompare(b.he, 'he'))) {
+    // Keep compatibility with app.js dictionary loader.
+    cities[city.he] = {
+      id: city.id,
+      he: city.he,
+      en: city.en,
+      area: city.areaId,
+      countdown: city.countdown,
+    };
+  }
 
-    if (m !== null || d !== null) fromSources += 1;
-    else unresolved += 1;
+  return {
+    cities,
+    areas: {},
+    countdown: {},
+    '@VERSION': 'network-sync-v2',
+    '@BUILD_DATE': new Date().toISOString(),
+  };
+}
 
-    mergedAreas[area] = { m, d };
+function buildAreaMetadata(citiesById, keepRemoved, previousAreas = {}) {
+  const areas = {};
+
+  for (const city of citiesById.values()) {
+    const key = city.he;
+    if (!key) continue;
+    areas[key] = {
+      m: Number.isFinite(city.countdown) ? city.countdown : null,
+      d: city.areaHe || null,
+      en: city.en || null,
+      d_en: city.areaEn || null,
+      cityId: city.id,
+    };
   }
 
   if (keepRemoved) {
-    for (const area of removed) {
-      if (!Object.prototype.hasOwnProperty.call(mergedAreas, area)) {
-        const existing = current.areas?.[area] || {};
-        mergedAreas[area] = { m: existing.m ?? null, d: existing.d ?? null };
+    for (const [area, meta] of Object.entries(previousAreas || {})) {
+      if (!Object.prototype.hasOwnProperty.call(areas, area)) {
+        areas[area] = meta;
       }
     }
   }
 
-  const normalized = buildNormalizedMap(mergedAreas);
+  const normalized = {};
+  for (const [area, meta] of Object.entries(areas)) {
+    normalized[normalizeAreaName(area)] = {
+      area,
+      m: meta?.m ?? null,
+      d: meta?.d ?? null,
+      en: meta?.en ?? null,
+      d_en: meta?.d_en ?? null,
+      cityId: meta?.cityId ?? null,
+    };
+  }
 
-  console.log(`Remote areas:   ${remoteAreas.length}`);
-  console.log(`Current areas:  ${localAreas.length}`);
-  console.log(`Added:          ${added.length}`);
-  console.log(`Removed:        ${removed.length}`);
-  console.log(`Meta existing:  ${fromExisting}`);
-  console.log(`Meta src json:  ${fromSources}`);
-  console.log(`Meta unresolved:${unresolved}`);
+  return { areas, normalized };
+}
+
+async function fetchInstructions(citiesById) {
+  const ids = [...citiesById.keys()];
+  const outHe = {};
+  const outEn = {};
+  const concurrency = 10;
+  let idx = 0;
+
+  async function worker() {
+    while (idx < ids.length) {
+      const i = idx++;
+      const id = ids[i];
+      try {
+        const [he, en] = await Promise.all([
+          fetchJson(INSTRUCTIONS_URL('he', id)),
+          fetchJson(INSTRUCTIONS_URL('en', id)),
+        ]);
+        outHe[id] = he;
+        outEn[id] = en;
+      } catch (_) {
+        // best effort
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  return { outHe, outEn };
+}
+
+async function main() {
+  const { apply, keepRemoved, withInstructions } = parseArgs(process.argv);
+  const root = path.resolve(__dirname, '..');
+
+  const metadataPath = path.join(root, 'data', 'area_metadata.json');
+  const citiesPath = path.join(root, 'data', 'cities.json');
+  const areasHePath = path.join(root, 'data', 'areas.he.json');
+  const areasEnPath = path.join(root, 'data', 'areas.en.json');
+  const instructionsHePath = path.join(root, 'data', 'alarm_instructions.he.json');
+  const instructionsEnPath = path.join(root, 'data', 'alarm_instructions.en.json');
+
+  const previousMetadata = fs.existsSync(metadataPath)
+    ? JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
+    : { areas: {} };
+
+  const [heRows, enRows] = await Promise.all([fetchJson(DISTRICTS_HE_URL), fetchJson(DISTRICTS_EN_URL)]);
+  const citiesById = buildCombinedCities(heRows, enRows);
+
+  const nextAreasHe = [...new Set([...citiesById.values()].map((x) => x.he).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
+  const nextAreasEn = [...new Set([...citiesById.values()].map((x) => x.en).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'en'));
+
+  const prevAreaKeys = Object.keys(previousMetadata.areas || {});
+  const nextAreaSet = new Set(nextAreasHe);
+  const prevAreaSet = new Set(prevAreaKeys);
+  const added = nextAreasHe.filter((x) => !prevAreaSet.has(x));
+  const removed = prevAreaKeys.filter((x) => !nextAreaSet.has(x)).sort((a, b) => a.localeCompare(b, 'he'));
+
+  console.log(`Cities from network: ${citiesById.size}`);
+  console.log(`Areas (HE):          ${nextAreasHe.length}`);
+  console.log(`Added areas:         ${added.length}`);
+  console.log(`Removed areas:       ${removed.length}`);
 
   if (added.length) console.log(`Added list: ${added.join(' | ')}`);
   if (removed.length) console.log(`Removed list: ${removed.join(' | ')}`);
 
   if (!apply) {
-    console.log('\nDry run only. Re-run with --apply to update data/area_metadata.json');
+    console.log('\nDry run only. Re-run with --apply to write updated files.');
     return;
   }
 
-  const updated = {
-    generatedAt: new Date().toISOString(),
-    areas: mergedAreas,
-    normalized,
-  };
+  const citiesPayload = toCitiesJsonPayload(citiesById);
+  const { areas, normalized } = buildAreaMetadata(citiesById, keepRemoved, previousMetadata.areas || {});
 
-  fs.writeFileSync(metaPath, JSON.stringify(updated));
-  console.log(`Updated ${metaPath}`);
+  fs.writeFileSync(citiesPath, JSON.stringify(citiesPayload));
+  fs.writeFileSync(areasHePath, JSON.stringify(nextAreasHe));
+  fs.writeFileSync(areasEnPath, JSON.stringify(nextAreasEn));
+  fs.writeFileSync(
+    metadataPath,
+    JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      areas,
+      normalized,
+    }),
+  );
+
+  if (withInstructions) {
+    const { outHe, outEn } = await fetchInstructions(citiesById);
+    fs.writeFileSync(instructionsHePath, JSON.stringify(outHe));
+    fs.writeFileSync(instructionsEnPath, JSON.stringify(outEn));
+    console.log(`Saved instructions: he=${Object.keys(outHe).length}, en=${Object.keys(outEn).length}`);
+  }
+
+  console.log('Updated:');
+  console.log(`- ${citiesPath}`);
+  console.log(`- ${areasHePath}`);
+  console.log(`- ${areasEnPath}`);
+  console.log(`- ${metadataPath}`);
 }
 
 main().catch((err) => {
