@@ -11,15 +11,33 @@ const ORIGIN = 'https://www.tzevaadom.co.il';
 const MAX_HISTORY = 50;
 
 const THREAT_TYPES = {
-  0: { key: 'rockets_missiles', he: 'ירי רקטות וטילים', en: 'Rockets and missiles', category: 'primary' },
-  1: { key: 'hazmat', he: 'אירוע חומרים מסוכנים', en: 'Hazardous materials', category: 'other' },
-  2: { key: 'terror_infiltration', he: 'חדירת מחבלים', en: 'Terrorist infiltration', category: 'primary' },
-  3: { key: 'earthquake', he: 'רעידת אדמה', en: 'Earthquake', category: 'other' },
-  4: { key: 'tsunami', he: 'חשש לצונאמי', en: 'Tsunami', category: 'other' },
-  5: { key: 'hostile_aircraft', he: 'חדירת כלי טיס עוין', en: 'Hostile aircraft intrusion', category: 'primary' },
-  6: { key: 'radiological', he: 'חשש לאירוע רדיולוגי', en: 'Radiological event', category: 'other' },
-  7: { key: 'chemical', he: 'חשש לאירוע כימי', en: 'Chemical event', category: 'primary' },
-  8: { key: 'homefront_alerts', he: 'התרעות פיקוד העורף', en: 'Home Front alerts', category: 'other' },
+  0: {
+    key: 'rockets_missiles', he: 'ירי רקטות וטילים', en: 'Rockets and missiles', category: 'primary',
+  },
+  1: {
+    key: 'hazmat', he: 'אירוע חומרים מסוכנים', en: 'Hazardous materials', category: 'other',
+  },
+  2: {
+    key: 'terror_infiltration', he: 'חדירת מחבלים', en: 'Terrorist infiltration', category: 'primary',
+  },
+  3: {
+    key: 'earthquake', he: 'רעידת אדמה', en: 'Earthquake', category: 'other',
+  },
+  4: {
+    key: 'tsunami', he: 'חשש לצונאמי', en: 'Tsunami', category: 'other',
+  },
+  5: {
+    key: 'hostile_aircraft', he: 'חדירת כלי טיס עוין', en: 'Hostile aircraft intrusion', category: 'primary',
+  },
+  6: {
+    key: 'radiological', he: 'חשש לאירוע רדיולוגי', en: 'Radiological event', category: 'other',
+  },
+  7: {
+    key: 'chemical', he: 'חשש לאירוע כימי', en: 'Chemical event', category: 'primary',
+  },
+  8: {
+    key: 'homefront_alerts', he: 'התרעות פיקוד העורף', en: 'Home Front alerts', category: 'other',
+  },
 };
 
 const SEVERITY_BY_CATEGORY = {
@@ -67,13 +85,13 @@ const HISTORY_TTL_MS = 24 * 60 * 60 * 1000;
 const APP_TIMEZONE = 'Asia/Jerusalem';
 
 const AREA_ALIASES = {
-  "תל אביב יפו": "תל אביב - דרום העיר ויפו",
-  "תל אביב": "תל אביב - מרכז העיר",
-  "ירושלים": "ירושלים - מערב",
-  "באר שבע": "באר שבע",
-  "ראשון לציון": "ראשון לציון - מערב",
-  "מודיעין": "מודיעין מכבים רעות",
-  "רחבי הארץ": "__NATIONWIDE__",
+  'תל אביב יפו': 'תל אביב - דרום העיר ויפו',
+  'תל אביב': 'תל אביב - מרכז העיר',
+  ירושלים: 'ירושלים - מערב',
+  'באר שבע': 'באר שבע',
+  'ראשון לציון': 'ראשון לציון - מערב',
+  מודיעין: 'מודיעין מכבים רעות',
+  'רחבי הארץ': '__NATIONWIDE__',
 };
 
 class RedAlertApp extends Homey.App {
@@ -376,7 +394,7 @@ class RedAlertApp extends Homey.App {
     this._maybeSwitchPlatform(reason);
 
     const backoff = Math.min(
-      WS_RECONNECT_BASE_MS * Math.pow(WS_RECONNECT_FACTOR, Math.max(0, this._wsReconnectAttempt - 1)),
+      WS_RECONNECT_BASE_MS * (WS_RECONNECT_FACTOR ** Math.max(0, this._wsReconnectAttempt - 1)),
       WS_RECONNECT_MAX_MS,
     );
     const jitter = Math.floor(Math.random() * 2000);
@@ -395,7 +413,9 @@ class RedAlertApp extends Homey.App {
     this._diag.wsHardResets += 1;
     this.log(`[ws] hard reset websocket (reason=${reason})`);
 
-    try { if (this._ws) this._ws.terminate(); } catch (_) {}
+    try {
+      if (this._ws) this._ws.terminate();
+    } catch (_) {}
     this._ws = null;
     this._connected = false;
 
@@ -425,8 +445,8 @@ class RedAlertApp extends Homey.App {
       this.log(`[ws] health state=${readyState} connected=${this._connected} idleSec=${idleSec} lastType=${this._lastWsEventType}`);
     }
 
-    const shouldFallbackPoll = (!this._ws || this._ws.readyState !== WebSocket.OPEN) ||
-      (this._lastWsMessageAt && (now - this._lastWsMessageAt > WS_STALE_TIMEOUT_MS));
+    const shouldFallbackPoll = (!this._ws || this._ws.readyState !== WebSocket.OPEN)
+      || (this._lastWsMessageAt && (now - this._lastWsMessageAt > WS_STALE_TIMEOUT_MS));
 
     if (shouldFallbackPoll && now - this._lastFallbackPollAt > OREF_FALLBACK_POLL_MS) {
       this._lastFallbackPollAt = now;
@@ -439,7 +459,9 @@ class RedAlertApp extends Homey.App {
     if (idleMs > WS_STALE_TIMEOUT_MS) {
       this.log(`[ws] stale connection detected (${Math.round(idleMs / 1000)}s idle), reconnecting`);
       this._wsDisconnectStreak += 1;
-      try { this._ws.terminate(); } catch (_) {}
+      try {
+        this._ws.terminate();
+      } catch (_) {}
       this._scheduleReconnect('stale-watchdog');
     }
   }
@@ -496,7 +518,7 @@ class RedAlertApp extends Homey.App {
       });
       if (!res.ok) return;
 
-      const text = (await res.text()).replace(/\u0000/g, '').trim();
+      const text = (await res.text()).split('\0').join('').trim();
       if (!text) return;
 
       let payload;
@@ -506,7 +528,12 @@ class RedAlertApp extends Homey.App {
         return;
       }
 
-      const records = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
+      let records = [];
+      if (Array.isArray(payload)) {
+        records = payload;
+      } else if (Array.isArray(payload?.data)) {
+        records = payload.data;
+      }
       let hasPrimaryMatch = false;
 
       for (const rec of records) {
@@ -951,9 +978,12 @@ class RedAlertApp extends Homey.App {
     const severityLabel = SEVERITY_LABELS[severityKey] || { he: severityKey, en: severityKey };
     const severityText = effectiveLang === 'he' ? severityLabel.he : severityLabel.en;
     const insights = this._getEventAreaInsights(event);
-    const migunText = Number.isFinite(insights.migunTimeSec)
-      ? (effectiveLang === 'he' ? `${insights.migunTimeSec} שנ׳ למרחב מוגן` : `${insights.migunTimeSec}s to shelter`)
-      : null;
+    let migunText = null;
+    if (Number.isFinite(insights.migunTimeSec)) {
+      migunText = effectiveLang === 'he'
+        ? `${insights.migunTimeSec} שנ׳ למרחב מוגן`
+        : `${insights.migunTimeSec}s to shelter`;
+    }
 
     if (mode === 'full') {
       if (effectiveLang === 'he') {
@@ -1209,7 +1239,9 @@ class RedAlertApp extends Homey.App {
     const entries = [];
     for (const [id, meta] of this._cityIdToMeta.entries()) {
       const localizedName = lang === 'en' ? (meta.en || meta.he) : (meta.he || meta.en);
-      entries.push({ id, name: localizedName, he: meta.he, en: meta.en });
+      entries.push({
+        id, name: localizedName, he: meta.he, en: meta.en,
+      });
       if (entries.length >= limit) break;
     }
     return entries;

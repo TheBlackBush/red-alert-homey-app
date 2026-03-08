@@ -15,7 +15,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['lib/**/*.js'],
+      files: ['**/*.js'],
       rules: {
         strict: 'off',
         'import/extensions': 'off',
