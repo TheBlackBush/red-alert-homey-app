@@ -15,7 +15,6 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
   - `is_alert_active`
 - Flow actions:
   - `set_monitoring_enabled`
-  - `test_trigger`
   - `refresh_summary_token`
   - `build_message_template` (short/full, he/en)
   - `build_alert_link` (oref/tzevaadom)
