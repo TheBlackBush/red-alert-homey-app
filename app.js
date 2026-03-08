@@ -1030,7 +1030,7 @@ class RedAlertApp extends Homey.App {
     if (source === 'tzevaadom') {
       const notificationId = Number(event?.notificationId);
       if (Number.isFinite(notificationId) && notificationId > 0) {
-        return `https://www.tzevaadom.co.il/instructions/${notificationId}`;
+        return `https://www.tzevaadom.co.il/alerts/${notificationId}`;
       }
       return 'https://www.tzevaadom.co.il/';
     }
