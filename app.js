@@ -186,18 +186,31 @@ class RedAlertApp extends Homey.App {
       const payload = JSON.parse(raw);
       const cities = payload?.cities || {};
 
-      for (const [name, meta] of Object.entries(cities)) {
-        const id = Number(meta?.id);
-        if (!Number.isNaN(id)) {
-          const he = String(meta?.he || name || '');
-          const en = String(meta?.en || he || '');
-          this._cityNameToId.set(String(name), id);
-          this._cityIdToName.set(id, he);
-          this._cityIdToMeta.set(id, { he, en });
-          this._normalizedCityToId.set(this._normalizeAreaName(name), id);
-          this._normalizedCityToId.set(this._normalizeAreaName(he), id);
-          this._normalizedCityToId.set(this._normalizeAreaName(en), id);
-        }
+      for (const [key, meta] of Object.entries(cities)) {
+        const id = Number(meta?.id ?? key);
+        if (Number.isNaN(id)) continue;
+
+        const he = String(meta?.he || '').trim();
+        const en = String(meta?.en || he || '').trim();
+        const fallbackName = String(key || '').trim();
+        const primaryName = he || en || fallbackName;
+
+        this._cityNameToId.set(String(key), id);
+        if (primaryName) this._cityNameToId.set(primaryName, id);
+        if (he) this._cityNameToId.set(he, id);
+        if (en) this._cityNameToId.set(en, id);
+
+        this._cityIdToName.set(id, he || en || fallbackName || String(id));
+        this._cityIdToMeta.set(id, {
+          he: he || en || fallbackName || String(id),
+          en: en || he || fallbackName || String(id),
+          areaId: Number(meta?.areaId ?? meta?.area),
+        });
+
+        this._normalizedCityToId.set(this._normalizeAreaName(String(key)), id);
+        if (fallbackName) this._normalizedCityToId.set(this._normalizeAreaName(fallbackName), id);
+        if (he) this._normalizedCityToId.set(this._normalizeAreaName(he), id);
+        if (en) this._normalizedCityToId.set(this._normalizeAreaName(en), id);
       }
 
       for (const [alias, target] of Object.entries(AREA_ALIASES)) {

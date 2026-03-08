@@ -84,22 +84,41 @@ function buildCombinedCities(heRows, enRows) {
 
 function toCitiesJsonPayload(citiesById) {
   const cities = {};
-  for (const city of [...citiesById.values()].sort((a, b) => a.he.localeCompare(b.he, 'he'))) {
-    // Keep compatibility with app.js dictionary loader.
-    cities[city.he] = {
+  const areas = {};
+  const countdown = {};
+
+  for (const city of [...citiesById.values()].sort((a, b) => a.id - b.id)) {
+    const cityId = String(city.id);
+    const areaId = Number.isFinite(city.areaId) ? city.areaId : null;
+
+    cities[cityId] = {
       id: city.id,
       he: city.he,
       en: city.en,
-      area: city.areaId,
+      areaId,
+      area: areaId, // backward compatibility
+      areaHe: city.areaHe || null,
+      areaEn: city.areaEn || null,
       countdown: city.countdown,
+      value: city.value || '',
     };
+
+    countdown[cityId] = city.countdown;
+
+    if (areaId !== null && !areas[String(areaId)]) {
+      areas[String(areaId)] = {
+        id: areaId,
+        he: city.areaHe || null,
+        en: city.areaEn || null,
+      };
+    }
   }
 
   return {
     cities,
-    areas: {},
-    countdown: {},
-    '@VERSION': 'network-sync-v2',
+    areas,
+    countdown,
+    '@VERSION': 'network-sync-v3',
     '@BUILD_DATE': new Date().toISOString(),
   };
 }
