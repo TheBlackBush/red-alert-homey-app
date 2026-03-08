@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2026-03-08
+
+### Changed
+- Removed obsolete `RELEASE-CHECKLIST-0.2.0.md` from repository.
+- Cleanup/documentation housekeeping:
+  - kept only `README.txt` (removed duplicate lowercase readme file)
+  - added language selection step to setup instructions
+  - added `backups/` to `.gitignore`
+
+### Validation
+- App validated successfully with `homey app validate --level=publish`.
+
 ## [0.3.0] - 2026-03-08
 
 ### Changed
