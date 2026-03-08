@@ -179,8 +179,6 @@ async function main() {
 
   const metadataPath = path.join(root, 'data', 'area_metadata.json');
   const citiesPath = path.join(root, 'data', 'cities.json');
-  const areasHePath = path.join(root, 'data', 'areas.he.json');
-  const areasEnPath = path.join(root, 'data', 'areas.en.json');
   const instructionsHePath = path.join(root, 'data', 'alarm_instructions.he.json');
   const instructionsEnPath = path.join(root, 'data', 'alarm_instructions.en.json');
 
@@ -217,8 +215,6 @@ async function main() {
   const { areas, normalized } = buildAreaMetadata(citiesById, keepRemoved, previousMetadata.areas || {});
 
   fs.writeFileSync(citiesPath, JSON.stringify(citiesPayload));
-  fs.writeFileSync(areasHePath, JSON.stringify(nextAreasHe));
-  fs.writeFileSync(areasEnPath, JSON.stringify(nextAreasEn));
   fs.writeFileSync(
     metadataPath,
     JSON.stringify({
@@ -237,8 +233,6 @@ async function main() {
 
   console.log('Updated:');
   console.log(`- ${citiesPath}`);
-  console.log(`- ${areasHePath}`);
-  console.log(`- ${areasEnPath}`);
   console.log(`- ${metadataPath}`);
 }
 

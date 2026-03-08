@@ -29,8 +29,6 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
 Generated files used by the app:
 - `data/area_metadata.json`
 - `data/cities.json`
-- `data/areas.he.json`
-- `data/areas.en.json`
 - `data/alarm_instructions.he.json`
 - `data/alarm_instructions.en.json`
 
@@ -60,7 +58,7 @@ Data sources used by the sync:
 What it does:
 - Pulls latest areas/cities in HE+EN from Oref
 - Filters deprecated/aggregate labels
-- Rebuilds `cities.json` and bilingual area lists
+- Rebuilds `cities.json`
 - Rebuilds `area_metadata.json` (`m`, `d`, plus EN labels metadata)
 - Fetches and stores per-city alarm instructions in HE+EN
 
