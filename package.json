@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "eslint --ext .js --ignore-path .gitignore .",
     "validate": "homey app validate --level=publish",
-    "build:area-metadata": "node scripts/build-area-metadata.js"
+    "build:area-metadata": "node scripts/build-area-metadata.js",
+    "check:areas-network": "node scripts/update-areas-from-network.js",
+    "sync:areas-network": "node scripts/update-areas-from-network.js --apply"
   },
   "dependencies": {
     "ws": "^8.18.3"
