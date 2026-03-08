@@ -987,9 +987,30 @@ class RedAlertApp extends Homey.App {
 
     if (mode === 'full') {
       if (effectiveLang === 'he') {
-        return `🚨 התראה: ${threat}\nאזורים: ${areas}\nקטגוריה: ${this._getCategoryDisplay(event, 'he')}\nחומרה: ${severityText}${migunText ? `\nזמן למיגון: ${insights.migunTimeSec} שניות` : ''}${insights.district ? `\nמחוז: ${insights.district}` : ''}\nסוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nזמן: ${ts}`;
+        const lines = [
+          `🚨 התראה: ${threat}`,
+          `אזורים: ${areas}`,
+          `קטגוריה: ${this._getCategoryDisplay(event, 'he')}`,
+          `חומרה: ${severityText}`,
+        ];
+        if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
+        if (insights.district) lines.push(`מחוז: ${insights.district}`);
+        lines.push(`סוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
+        lines.push(`זמן: ${ts}`);
+        return lines.join('\n');
       }
-      return `🚨 Alert: ${threat}\nAreas: ${areas}\nCategory: ${this._getCategoryDisplay(event, 'en')}\nSeverity: ${severityText}${migunText ? `\nShelter time: ${insights.migunTimeSec}s` : ''}${insights.district ? `\nDistrict: ${insights.district}` : ''}\nType: ${event.threatKey || '-'} (#${event.threatId ?? '-'})\nTime: ${ts}`;
+
+      const lines = [
+        `🚨 Alert: ${threat}`,
+        `Areas: ${areas}`,
+        `Category: ${this._getCategoryDisplay(event, 'en')}`,
+        `Severity: ${severityText}`,
+      ];
+      if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
+      if (insights.district) lines.push(`District: ${insights.district}`);
+      lines.push(`Type: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
+      lines.push(`Time: ${ts}`);
+      return lines.join('\n');
     }
 
     return `🚨 ${threat} | ${areas} | ${severityText}${migunText ? ` | ${migunText}` : ''} | ${ts}`;
