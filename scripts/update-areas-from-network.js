@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 'use strict';
 
 const fs = require('fs');
@@ -175,7 +174,6 @@ async function main() {
   const citiesById = buildCombinedCities(heRows, enRows);
 
   const nextAreasHe = [...new Set([...citiesById.values()].map((x) => x.he).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'he'));
-  const nextAreasEn = [...new Set([...citiesById.values()].map((x) => x.en).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'en'));
 
   const prevAreaKeys = Object.keys(previousMetadata.areas || {});
   const nextAreaSet = new Set(nextAreasHe);
@@ -215,6 +213,5 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err.message || err);
-  process.exit(1);
+  throw err;
 });
