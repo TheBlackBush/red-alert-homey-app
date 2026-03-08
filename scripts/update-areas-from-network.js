@@ -6,8 +6,6 @@ const path = require('path');
 
 const DISTRICTS_HE_URL = 'https://alerts-history.oref.org.il/Shared/Ajax/GetDistricts.aspx?lang=he';
 const DISTRICTS_EN_URL = 'https://alerts-history.oref.org.il/Shared/Ajax/GetDistricts.aspx?lang=en';
-const INSTRUCTIONS_URL = (lang, cityId) => `https://alerts-history.oref.org.il/Shared/Ajax/GetAlarmInstructions.aspx?lang=${lang}&from=1&cityid=${encodeURIComponent(cityId)}`;
-
 const FILTER_SUFFIX1 = ' - כל האזורים';
 const FILTER_SUFFIX2 = ' כל - האזורים';
 const DEPRECATION_SUFFIX = ' (אזור התרעה ישן)';
@@ -26,7 +24,6 @@ function parseArgs(argv) {
   return {
     apply: args.has('--apply'),
     keepRemoved: args.has('--keep-removed'),
-    withInstructions: !args.has('--skip-instructions'),
   };
 }
 
@@ -145,43 +142,12 @@ function buildAreaMetadata(citiesById, keepRemoved, previousAreas = {}) {
   return { areas, normalized };
 }
 
-async function fetchInstructions(citiesById) {
-  const ids = [...citiesById.keys()];
-  const outHe = {};
-  const outEn = {};
-  const concurrency = 10;
-  let idx = 0;
-
-  async function worker() {
-    while (idx < ids.length) {
-      const i = idx++;
-      const id = ids[i];
-      try {
-        const [he, en] = await Promise.all([
-          fetchJson(INSTRUCTIONS_URL('he', id)),
-          fetchJson(INSTRUCTIONS_URL('en', id)),
-        ]);
-        outHe[id] = he;
-        outEn[id] = en;
-      } catch (_) {
-        // best effort
-      }
-    }
-  }
-
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  return { outHe, outEn };
-}
-
 async function main() {
-  const { apply, keepRemoved, withInstructions } = parseArgs(process.argv);
+  const { apply, keepRemoved } = parseArgs(process.argv);
   const root = path.resolve(__dirname, '..');
 
   const metadataPath = path.join(root, 'data', 'area_metadata.json');
   const citiesPath = path.join(root, 'data', 'cities.json');
-  const instructionsHePath = path.join(root, 'data', 'alarm_instructions.he.json');
-  const instructionsEnPath = path.join(root, 'data', 'alarm_instructions.en.json');
-
   const previousMetadata = fs.existsSync(metadataPath)
     ? JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
     : { areas: {} };
@@ -223,13 +189,6 @@ async function main() {
       normalized,
     }),
   );
-
-  if (withInstructions) {
-    const { outHe, outEn } = await fetchInstructions(citiesById);
-    fs.writeFileSync(instructionsHePath, JSON.stringify(outHe));
-    fs.writeFileSync(instructionsEnPath, JSON.stringify(outEn));
-    console.log(`Saved instructions: he=${Object.keys(outHe).length}, en=${Object.keys(outEn).length}`);
-  }
 
   console.log('Updated:');
   console.log(`- ${citiesPath}`);
