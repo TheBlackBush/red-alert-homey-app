@@ -972,6 +972,39 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertSummaryToken.setValue(summary);
   }
 
+  _buildDedupeAreaKey(event) {
+    const rawAreas = Array.isArray(event?.areas) ? event.areas : [];
+    if (!rawAreas.length) return 'none';
+
+    const zoneKeys = new Set();
+
+    for (const areaName of rawAreas) {
+      const raw = String(areaName || '').trim();
+      if (!raw) continue;
+
+      const cityId = this._normalizedCityToId.get(this._normalizeAreaName(raw));
+      if (Number.isFinite(cityId)) {
+        const cityMeta = this._cityIdToMeta.get(cityId);
+        if (Number.isFinite(cityMeta?.areaId)) {
+          zoneKeys.add(`areaId:${cityMeta.areaId}`);
+          continue;
+        }
+      }
+
+      const areaMeta = this._resolveAreaMetadata(raw);
+      if (areaMeta?.area) {
+        zoneKeys.add(`area:${this._normalizeAreaName(areaMeta.area)}`);
+      } else if (areaMeta?.d) {
+        zoneKeys.add(`district:${this._normalizeAreaName(areaMeta.d)}`);
+      } else {
+        zoneKeys.add(`city:${this._normalizeAreaName(raw)}`);
+      }
+    }
+
+    if (!zoneKeys.size) return 'none';
+    return [...zoneKeys].sort().join('|');
+  }
+
   _getEventAreaInsights(event) {
     const rawAreas = Array.isArray(event?.areas) ? event.areas : [];
     const resolved = rawAreas
@@ -1083,9 +1116,7 @@ class RedAlertApp extends Homey.App {
     const throttleMs = Number(this._throttleByTypeMs[event.type] || 0);
     const dedupeWindowMs = Math.max(DEDUPE_MIN_WINDOW_MS, throttleMs);
 
-    const areaKey = Array.isArray(event.areas)
-      ? [...event.areas].map((a) => this._normalizeAreaName(a)).sort().join('|')
-      : 'none';
+    const areaKey = this._buildDedupeAreaKey(event);
     const bucket = Math.floor((event.time || now) / 60000);
 
     const dedupeKey = `${event.type}:${event.id}`;
