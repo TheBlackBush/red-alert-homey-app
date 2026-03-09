@@ -734,9 +734,11 @@ class RedAlertApp extends Homey.App {
 
       const eventType = threat.category === 'primary' ? 'primary' : 'other';
 
+      const wsNotificationId = message.data.notificationId ?? message.data.alertId ?? message.data.id ?? null;
+
       const event = this._createEvent({
-        id: `ALERT-${message.data.notificationId || Date.now()}`,
-        notificationId: message.data.notificationId || null,
+        id: `ALERT-${wsNotificationId || Date.now()}`,
+        notificationId: wsNotificationId,
         type: eventType,
         title: threat.en,
         category: threat.category,
@@ -772,9 +774,11 @@ class RedAlertApp extends Homey.App {
       if (instructionType === SYSTEM_TYPE.PRE_ALERT) {
         if (this._isQuietHours()) return;
 
+        const wsNotificationId = message.data.notificationId ?? message.data.alertId ?? message.data.id ?? null;
+
         const event = this._createEvent({
-          id: `PRE-${message.data.notificationId || Date.now()}`,
-          notificationId: message.data.notificationId || null,
+          id: `PRE-${wsNotificationId || Date.now()}`,
+          notificationId: wsNotificationId,
           type: 'pre-alert',
           title: message.data.titleHe || 'Early warning',
           category: 'pre-alert',
@@ -791,9 +795,11 @@ class RedAlertApp extends Homey.App {
       }
 
       if (instructionType === SYSTEM_TYPE.END_ALERT) {
+        const wsNotificationId = message.data.notificationId ?? message.data.alertId ?? message.data.id ?? null;
+
         const event = this._createEvent({
-          id: `END-${message.data.notificationId || Date.now()}`,
-          notificationId: message.data.notificationId || null,
+          id: `END-${wsNotificationId || Date.now()}`,
+          notificationId: wsNotificationId,
           type: 'all-clear',
           title: message.data.titleHe || 'All clear',
           category: 'all-clear',
@@ -1045,10 +1051,18 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertMessageToken.setValue(message);
   }
 
+  _extractNotificationId(raw) {
+    if (raw === null || raw === undefined) return null;
+    const str = String(raw).trim();
+    if (!str) return null;
+    const digits = str.match(/\d+/g)?.join('') || '';
+    return digits.length ? digits : null;
+  }
+
   _buildAlertLink(event, source = 'tzevaadom') {
     if (source === 'tzevaadom') {
-      const notificationId = Number(event?.notificationId);
-      if (Number.isFinite(notificationId) && notificationId > 0) {
+      const notificationId = this._extractNotificationId(event?.notificationId);
+      if (notificationId) {
         return `https://www.tzevaadom.co.il/alerts/${notificationId}`;
       }
       return 'https://www.tzevaadom.co.il/';
