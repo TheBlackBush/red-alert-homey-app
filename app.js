@@ -487,6 +487,7 @@ class RedAlertApp extends Homey.App {
     return {
       id: fields.id,
       notificationId: fields.notificationId || null,
+      source: fields.source || 'unknown',
       type: fields.type,
       title: fields.title,
       category: fields.category,
@@ -513,6 +514,7 @@ class RedAlertApp extends Homey.App {
     const lastAreas = Array.isArray(this._lastEvent?.areas) ? this._lastEvent.areas : [];
     const event = this._createEvent({
       id: `INFER-END-${Date.now()}`,
+      source: 'inferred',
       type: 'all-clear',
       title: 'All clear (inferred)',
       category: 'all-clear',
@@ -574,6 +576,7 @@ class RedAlertApp extends Homey.App {
         const event = this._createEvent({
           id: `OREF-${rec?.id || rec?.alertId || Date.now()}-${threatId}`,
           notificationId: rec?.id || rec?.alertId || null,
+          source: 'oref-fallback',
           type: eventType,
           title: rec?.title || rec?.titleHe || threat.en,
           category: threat.category,
@@ -739,6 +742,7 @@ class RedAlertApp extends Homey.App {
       const event = this._createEvent({
         id: `ALERT-${wsNotificationId || Date.now()}`,
         notificationId: wsNotificationId,
+        source: 'tzevaadom-ws',
         type: eventType,
         title: threat.en,
         category: threat.category,
@@ -779,6 +783,7 @@ class RedAlertApp extends Homey.App {
         const event = this._createEvent({
           id: `PRE-${wsNotificationId || Date.now()}`,
           notificationId: wsNotificationId,
+          source: 'tzevaadom-ws',
           type: 'pre-alert',
           title: message.data.titleHe || 'Early warning',
           category: 'pre-alert',
@@ -800,6 +805,7 @@ class RedAlertApp extends Homey.App {
         const event = this._createEvent({
           id: `END-${wsNotificationId || Date.now()}`,
           notificationId: wsNotificationId,
+          source: 'tzevaadom-ws',
           type: 'all-clear',
           title: message.data.titleHe || 'All clear',
           category: 'all-clear',
@@ -1048,6 +1054,13 @@ class RedAlertApp extends Homey.App {
     }
 
     const notificationId = this._extractNotificationId(event?.notificationId);
+    const sourceLabels = {
+      'tzevaadom-ws': { he: 'צבע אדום (WebSocket)', en: 'TzevaAdom (WebSocket)' },
+      'oref-fallback': { he: 'פיקוד העורף (Fallback)', en: 'Home Front Command (Fallback)' },
+      inferred: { he: 'מוסק', en: 'Inferred' },
+      unknown: { he: 'לא ידוע', en: 'Unknown' },
+    };
+    const sourceLabel = (sourceLabels[event?.source] || sourceLabels.unknown)[effectiveLang === 'he' ? 'he' : 'en'];
 
     if (mode === 'full') {
       if (effectiveLang === 'he') {
@@ -1056,6 +1069,7 @@ class RedAlertApp extends Homey.App {
           `אזורים: ${areas}`,
           `קטגוריה: ${this._getCategoryDisplay(event, 'he')}`,
           `חומרה: ${severityText}`,
+          `מקור: ${sourceLabel}`,
           `כמות אזורים: ${insights.areasCount || 0}`,
         ];
         if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
@@ -1071,6 +1085,7 @@ class RedAlertApp extends Homey.App {
         `Areas: ${areas}`,
         `Category: ${this._getCategoryDisplay(event, 'en')}`,
         `Severity: ${severityText}`,
+        `Source: ${sourceLabel}`,
         `Areas count: ${insights.areasCount || 0}`,
       ];
       if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
@@ -1085,8 +1100,9 @@ class RedAlertApp extends Homey.App {
     const areaCount = insights.areasCount || 0;
     const idPart = notificationId ? (effectiveLang === 'he' ? ` | מזהה: ${notificationId}` : ` | ID: ${notificationId}`) : '';
     const districtPart = insights.district ? (effectiveLang === 'he' ? ` | מחוז: ${insights.district}` : ` | District: ${insights.district}`) : '';
+    const sourcePart = effectiveLang === 'he' ? ` | מקור: ${sourceLabel}` : ` | Source: ${sourceLabel}`;
 
-    return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart} | ${ts}`;
+    return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${sourcePart}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart} | ${ts}`;
   }
 
   async _updateMessageToken(event, mode = 'short', lang) {
