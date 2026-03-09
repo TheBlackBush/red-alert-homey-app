@@ -1047,6 +1047,8 @@ class RedAlertApp extends Homey.App {
         : `${insights.migunTimeSec}s to shelter`;
     }
 
+    const notificationId = this._extractNotificationId(event?.notificationId);
+
     if (mode === 'full') {
       if (effectiveLang === 'he') {
         const lines = [
@@ -1054,10 +1056,12 @@ class RedAlertApp extends Homey.App {
           `אזורים: ${areas}`,
           `קטגוריה: ${this._getCategoryDisplay(event, 'he')}`,
           `חומרה: ${severityText}`,
+          `כמות אזורים: ${insights.areasCount || 0}`,
         ];
         if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
         if (insights.district) lines.push(`מחוז: ${insights.district}`);
         lines.push(`סוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
+        if (notificationId) lines.push(`Alert ID: ${notificationId}`);
         lines.push(`זמן: ${ts}`);
         return lines.join('\n');
       }
@@ -1067,15 +1071,22 @@ class RedAlertApp extends Homey.App {
         `Areas: ${areas}`,
         `Category: ${this._getCategoryDisplay(event, 'en')}`,
         `Severity: ${severityText}`,
+        `Areas count: ${insights.areasCount || 0}`,
       ];
       if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
       if (insights.district) lines.push(`District: ${insights.district}`);
       lines.push(`Type: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
+      if (notificationId) lines.push(`Alert ID: ${notificationId}`);
       lines.push(`Time: ${ts}`);
       return lines.join('\n');
     }
 
-    return `🚨 ${threat} | ${areas} | ${severityText}${migunText ? ` | ${migunText}` : ''} | ${ts}`;
+    const category = this._getCategoryDisplay(event, effectiveLang);
+    const areaCount = insights.areasCount || 0;
+    const idPart = notificationId ? (effectiveLang === 'he' ? ` | מזהה: ${notificationId}` : ` | ID: ${notificationId}`) : '';
+    const districtPart = insights.district ? (effectiveLang === 'he' ? ` | מחוז: ${insights.district}` : ` | District: ${insights.district}`) : '';
+
+    return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart} | ${ts}`;
   }
 
   async _updateMessageToken(event, mode = 'short', lang) {
