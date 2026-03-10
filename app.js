@@ -1046,7 +1046,6 @@ class RedAlertApp extends Homey.App {
         ];
         if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
         if (insights.district) lines.push(`מחוז: ${insights.district}`);
-        lines.push(`סוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
         if (notificationId) lines.push(`מזהה התראה: ${notificationId}`);
         lines.push(`זמן: ${ts}`);
         return lines.join('\n');
@@ -1062,7 +1061,6 @@ class RedAlertApp extends Homey.App {
       ];
       if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
       if (insights.district) lines.push(`District: ${insights.district}`);
-      lines.push(`Type: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
       if (notificationId) lines.push(`Alert ID: ${notificationId}`);
       lines.push(`Time: ${ts}`);
       return lines.join('\n');
