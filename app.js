@@ -1039,30 +1039,26 @@ class RedAlertApp extends Homey.App {
         const lines = [
           `🚨 התראה: ${threat}`,
           `אזורים: ${areas}`,
-          `קטגוריה: ${this._getCategoryDisplay(event, 'he')}`,
-          `חומרה: ${severityText}`,
-          `מקור: ${sourceLabel}`,
-          `כמות אזורים: ${insights.areasCount || 0}`,
         ];
-        if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
         if (insights.district) lines.push(`מחוז: ${insights.district}`);
-        if (notificationId) lines.push(`מזהה התראה: ${notificationId}`);
+        lines.push(`קטגוריה: ${this._getCategoryDisplay(event, 'he')}`);
+        lines.push(`חומרה: ${severityText}`);
+        if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
         lines.push(`זמן: ${ts}`);
+        lines.push(`מקור: ${sourceLabel}`);
         return lines.join('\n');
       }
 
       const lines = [
         `🚨 Alert: ${threat}`,
         `Areas: ${areas}`,
-        `Category: ${this._getCategoryDisplay(event, 'en')}`,
-        `Severity: ${severityText}`,
-        `Source: ${sourceLabel}`,
-        `Areas count: ${insights.areasCount || 0}`,
       ];
-      if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
       if (insights.district) lines.push(`District: ${insights.district}`);
-      if (notificationId) lines.push(`Alert ID: ${notificationId}`);
+      lines.push(`Category: ${this._getCategoryDisplay(event, 'en')}`);
+      lines.push(`Severity: ${severityText}`);
+      if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
       lines.push(`Time: ${ts}`);
+      lines.push(`Source: ${sourceLabel}`);
       return lines.join('\n');
     }
 
