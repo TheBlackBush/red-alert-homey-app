@@ -354,11 +354,6 @@ class RedAlertApp extends Homey.App {
   }
 
   async _registerTokens() {
-    this._lastAlertSummaryToken = await this.homey.flow.createToken('last_alert_summary', {
-      type: 'string',
-      title: 'Last alert summary',
-    });
-
     this._lastAlertMessageToken = await this.homey.flow.createToken('last_alert_message', {
       type: 'string',
       title: 'Last alert message',
@@ -370,7 +365,6 @@ class RedAlertApp extends Homey.App {
     });
 
     try {
-      await this._updateSummaryToken(this._lastEvent);
       await this._updateMessageToken(this._lastEvent, 'full');
       await this._updateLinkToken(this._lastEvent, 'tzevaadom');
     } catch (err) {
@@ -956,21 +950,6 @@ class RedAlertApp extends Homey.App {
     });
   }
 
-  _buildAlertSummary(event, lang) {
-    const effectiveLang = this._getEffectiveLanguage(lang);
-    if (!event) return effectiveLang === 'he' ? 'אין התראות עדיין' : 'No alerts yet';
-    const ts = this._formatTimestamp(event.time, effectiveLang);
-    const threat = this._getThreatDisplayName(event, effectiveLang);
-    const areas = this._getLocalizedAreas(event, effectiveLang).join(', ') || '-';
-    return `[${ts}] ${threat} | severity=${event.severity || '-'} | areas=${areas}`;
-  }
-
-  async _updateSummaryToken(event) {
-    if (!this._lastAlertSummaryToken) return;
-    const summary = this._buildAlertSummary(event);
-    await this._lastAlertSummaryToken.setValue(summary);
-  }
-
   _buildDedupeAreaKey(event) {
     const rawAreas = Array.isArray(event?.areas) ? event.areas : [];
     if (!rawAreas.length) return 'none';
@@ -1157,7 +1136,6 @@ class RedAlertApp extends Homey.App {
     this._history.unshift(event);
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
 
-    await this._updateSummaryToken(event);
     await this._updateMessageToken(event, 'full');
     await this._updateLinkToken(event, 'tzevaadom');
 
@@ -1326,7 +1304,6 @@ class RedAlertApp extends Homey.App {
       lastEvent: toDisplayEvent(this._lastEvent),
       history: this._history.slice(0, 10).map(toDisplayEvent),
       threatTypes: this.getThreatTypes(),
-      summary: this._buildAlertSummary(this._lastEvent, lang),
       message: this._buildAlertMessage(this._lastEvent, 'full', lang),
       linkOref: this._buildAlertLink(this._lastEvent, 'oref'),
       linkTzevaadom: this._buildAlertLink(this._lastEvent, 'tzevaadom'),
