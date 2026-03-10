@@ -341,13 +341,13 @@ class RedAlertApp extends Homey.App {
     this.homey.flow.getActionCard('refresh_summary_token')
       .registerRunListener(async () => {
         await this._updateSummaryToken(this._lastEvent);
-        await this._updateMessageToken(this._lastEvent, 'short');
+        await this._updateMessageToken(this._lastEvent, 'full');
         return true;
       });
 
     this.homey.flow.getActionCard('build_message_template')
       .registerRunListener(async (args) => {
-        const mode = String(args.mode || 'short');
+        const mode = String(args.mode || 'full');
         await this._updateMessageToken(this._lastEvent, mode);
         return true;
       });
@@ -378,7 +378,7 @@ class RedAlertApp extends Homey.App {
 
     try {
       await this._updateSummaryToken(this._lastEvent);
-      await this._updateMessageToken(this._lastEvent, 'short');
+      await this._updateMessageToken(this._lastEvent, 'full');
       await this._updateLinkToken(this._lastEvent, 'tzevaadom');
     } catch (err) {
       this.error('Failed to init flow tokens', err);
@@ -1033,7 +1033,7 @@ class RedAlertApp extends Homey.App {
     };
   }
 
-  _buildAlertMessage(event, mode = 'short', lang) {
+  _buildAlertMessage(event, mode = 'full', lang) {
     const effectiveLang = this._getEffectiveLanguage(lang);
     if (!event) {
       return effectiveLang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
@@ -1105,7 +1105,7 @@ class RedAlertApp extends Homey.App {
     return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${sourcePart}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart} | ${ts}`;
   }
 
-  async _updateMessageToken(event, mode = 'short', lang) {
+  async _updateMessageToken(event, mode = 'full', lang) {
     if (!this._lastAlertMessageToken) return;
     const message = this._buildAlertMessage(event, mode, lang);
     await this._lastAlertMessageToken.setValue(message);
@@ -1165,7 +1165,7 @@ class RedAlertApp extends Homey.App {
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
 
     await this._updateSummaryToken(event);
-    await this._updateMessageToken(event, 'short');
+    await this._updateMessageToken(event, 'full');
     await this._updateLinkToken(event, 'tzevaadom');
 
     const lang = this._getEffectiveLanguage();
@@ -1186,7 +1186,7 @@ class RedAlertApp extends Homey.App {
       district: insights.district || '',
       areas_count: String(insights.areasCount || localizedAreas.length || 0),
       primary_area: localizedAreas[0] || insights.primaryArea || '',
-      alert_message: this._buildAlertMessage(event, 'short', lang),
+      alert_message: this._buildAlertMessage(event, 'full', lang),
       alert_link: this._buildAlertLink(event, 'tzevaadom'),
     };
 
@@ -1311,7 +1311,7 @@ class RedAlertApp extends Homey.App {
         ...event,
         threatName: this._getThreatDisplayName(event, lang),
         categoryLabel: this._getCategoryDisplay(event, lang),
-        message: this._buildAlertMessage(event, 'short', lang),
+        message: this._buildAlertMessage(event, 'full', lang),
       };
     };
 
@@ -1334,7 +1334,7 @@ class RedAlertApp extends Homey.App {
       history: this._history.slice(0, 10).map(toDisplayEvent),
       threatTypes: this.getThreatTypes(),
       summary: this._buildAlertSummary(this._lastEvent, lang),
-      message: this._buildAlertMessage(this._lastEvent, 'short', lang),
+      message: this._buildAlertMessage(this._lastEvent, 'full', lang),
       linkOref: this._buildAlertLink(this._lastEvent, 'oref'),
       linkTzevaadom: this._buildAlertLink(this._lastEvent, 'tzevaadom'),
       diagnostics: this.getDiagnostics(),

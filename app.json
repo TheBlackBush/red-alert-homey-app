@@ -636,17 +636,17 @@
             },
             "values": [
               {
-                "id": "short",
-                "label": {
-                  "en": "Short",
-                  "he": "קצר"
-                }
-              },
-              {
                 "id": "full",
                 "label": {
                   "en": "Full",
                   "he": "מלא"
+                }
+              },
+              {
+                "id": "short",
+                "label": {
+                  "en": "Short",
+                  "he": "קצר"
                 }
               }
             ]
