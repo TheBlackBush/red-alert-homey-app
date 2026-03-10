@@ -656,17 +656,6 @@
       },
       {
         "title": {
-          "en": "Refresh last alert summary token",
-          "he": "רענן טוקן סיכום התראה אחרונה"
-        },
-        "titleFormatted": {
-          "en": "Refresh last alert summary token",
-          "he": "רענן טוקן סיכום התראה אחרונה"
-        },
-        "id": "refresh_summary_token"
-      },
-      {
-        "title": {
           "en": "Set monitoring",
           "he": "הגדר ניטור"
         },

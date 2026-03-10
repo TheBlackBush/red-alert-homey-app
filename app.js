@@ -338,13 +338,6 @@ class RedAlertApp extends Homey.App {
         return true;
       });
 
-    this.homey.flow.getActionCard('refresh_summary_token')
-      .registerRunListener(async () => {
-        await this._updateSummaryToken(this._lastEvent);
-        await this._updateMessageToken(this._lastEvent, 'full');
-        return true;
-      });
-
     this.homey.flow.getActionCard('build_message_template')
       .registerRunListener(async (args) => {
         const mode = String(args.mode || 'full');
