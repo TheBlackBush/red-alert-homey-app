@@ -1075,7 +1075,7 @@ class RedAlertApp extends Homey.App {
         if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
         if (insights.district) lines.push(`מחוז: ${insights.district}`);
         lines.push(`סוג: ${event.threatKey || '-'} (#${event.threatId ?? '-'})`);
-        if (notificationId) lines.push(`Alert ID: ${notificationId}`);
+        if (notificationId) lines.push(`מזהה התראה: ${notificationId}`);
         lines.push(`זמן: ${ts}`);
         return lines.join('\n');
       }
