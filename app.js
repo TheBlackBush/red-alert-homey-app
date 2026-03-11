@@ -1125,6 +1125,7 @@ class RedAlertApp extends Homey.App {
     }
 
     const notificationId = this._extractNotificationId(event?.notificationId);
+    const alertLink = this._buildAlertLink(event, 'tzevaadom');
     const sourceLabels = {
       'tzevaadom-ws': { he: 'צבע אדום (WebSocket)', en: 'TzevaAdom (WebSocket)' },
       'oref-fallback': { he: 'פיקוד העורף (Fallback)', en: 'Home Front Command (Fallback)' },
@@ -1145,6 +1146,7 @@ class RedAlertApp extends Homey.App {
         if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
         lines.push(`זמן: ${ts}`);
         lines.push(`מקור: ${sourceLabel}`);
+        lines.push(`קישור: ${alertLink}`);
         return lines.join('\n');
       }
 
@@ -1158,6 +1160,7 @@ class RedAlertApp extends Homey.App {
       if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
       lines.push(`Time: ${ts}`);
       lines.push(`Source: ${sourceLabel}`);
+      lines.push(`Link: ${alertLink}`);
       return lines.join('\n');
     }
 
@@ -1175,8 +1178,9 @@ class RedAlertApp extends Homey.App {
     }
 
     const sourcePart = effectiveLang === 'he' ? ` | מקור: ${sourceLabel}` : ` | Source: ${sourceLabel}`;
+    const linkPart = effectiveLang === 'he' ? ` | קישור: ${alertLink}` : ` | Link: ${alertLink}`;
 
-    return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${sourcePart}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart} | ${ts}`;
+    return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${sourcePart}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart}${linkPart} | ${ts}`;
   }
 
   async _updateMessageToken(event, mode = 'full', lang) {
