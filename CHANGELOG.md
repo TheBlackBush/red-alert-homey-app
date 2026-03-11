@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2026-03-11
+
+### Changed
+- Refined `README.txt` formatting for better Homey App Store rendering (plain-text friendly structure, simplified sections and lists).
+- Documentation alignment pass to keep store-facing text consistent with current token/link behavior.
+
+### Validation
+- `npm run lint` passes cleanly.
+- `homey app validate --level=publish` passes.
+
 ## [0.4.1] - 2026-03-11
 
 ### Changed
