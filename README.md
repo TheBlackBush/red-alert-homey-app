@@ -7,9 +7,9 @@
 Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no devices).
 
 ## Features
-- Real-time WebSocket listener (`ws.tzevaadom.co.il`)
+- Real-time WebSocket listener (`ws.tzevaadom.co.il`) with resilience/fallback behavior
 - Threat-type mapping (threat ID/key/hebrew/english) exposed to flows and widget
-- App settings page for monitoring, cities, quiet hours and throttle policies
+- App settings page for monitoring, language, cities, quiet hours, and throttle policies
 - Flow triggers:
   - `red_alert_received`
   - `pre_alert_received`
@@ -17,15 +17,22 @@ Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no
 - Flow conditions:
   - `is_monitoring_enabled`
   - `is_alert_active`
+  - `matches_threat_key`
+  - `matches_severity`
 - Flow actions:
   - `set_monitoring_enabled`
-  - `refresh_summary_token`
-  - `build_message_template` (short/full, he/en)
+  - `build_message_template` (short/full)
   - `build_alert_link` (oref/tzevaadom)
-- Flow tokens:
-  - `last_alert_summary`
+- Global flow tokens:
   - `last_alert_message`
   - `last_alert_link`
+- Alert link generation:
+  - TzevaAdom source resolves latest matching `alerts/<id>` via `https://api.tzevaadom.co.il/alerts-history`
+  - TzevaAdom fallback is `https://www.tzevaadom.co.il/`
+  - Oref source uses language-aware history links:
+    - HE: `https://www.oref.org.il/heb/alerts-history`
+    - EN: `https://www.oref.org.il/eng/alerts-history`
+- Alert message token includes direct alert link in both short and full formats
 - Dashboard widget for status and quick toggle
 
 ## Area/Cities Metadata Sync
