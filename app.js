@@ -1226,8 +1226,9 @@ class RedAlertApp extends Homey.App {
       return 'https://www.tzevaadom.co.il/';
     }
 
-    // official source default
-    return 'https://www.oref.org.il/eng';
+    const lang = this._getEffectiveLanguage();
+    if (lang === 'he') return 'https://www.oref.org.il/heb/alerts-history';
+    return 'https://www.oref.org.il/eng/alerts-history';
   }
 
   async _updateLinkToken(event, source = 'tzevaadom') {
