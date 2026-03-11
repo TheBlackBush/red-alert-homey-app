@@ -78,6 +78,8 @@ const NATIONWIDE_CITY_ID = 10000000;
 const NATIONWIDE_ALIASES = ['רחבי הארץ', 'ברחבי הארץ', 'כל הארץ', 'nationwide'];
 const DEDUPE_MIN_WINDOW_MS = 60000;
 const OREF_ALERTS_URL = 'https://www.oref.org.il/warningMessages/alert/Alerts.json';
+const TZEVAADOM_ALERTS_HISTORY_URL = 'https://api.tzevaadom.co.il/alerts-history';
+const TZEVAADOM_ALERTS_HISTORY_CACHE_MS = 5000;
 const OREF_FALLBACK_POLL_MS = 15000;
 const INFER_ALL_CLEAR_GRACE_MS = 3 * 60 * 1000;
 const RUNTIME_STATE_KEY = 'runtime_state_v1';
@@ -134,6 +136,10 @@ class RedAlertApp extends Homey.App {
       unknownAreaMisses: 0,
       metadataAreaMisses: 0,
       nationwideMatches: 0,
+      historyLinkResolutions: 0,
+      historyLinkFallbacks: 0,
+      historyFetches: 0,
+      historyFetchFailures: 0,
       lastError: null,
     };
 
@@ -143,6 +149,9 @@ class RedAlertApp extends Homey.App {
     this._lastFallbackPollAt = 0;
     this._lastFallbackSourceAt = 0;
     this._activePrimaryLastSeenAt = 0;
+    this._alertsHistoryCacheAt = 0;
+    this._alertsHistoryCache = [];
+    this._alertsHistoryInFlight = null;
     this._loadCitiesDictionary();
     this._loadAreaMetadata();
     this._loadConfig();
@@ -588,6 +597,96 @@ class RedAlertApp extends Homey.App {
     } catch (err) {
       this._diag.lastError = String(err?.message || err);
     }
+  }
+
+  async _fetchTzevaadomAlertsHistory(force = false) {
+    const now = Date.now();
+    if (!force && this._alertsHistoryCache.length && (now - this._alertsHistoryCacheAt) < TZEVAADOM_ALERTS_HISTORY_CACHE_MS) {
+      return this._alertsHistoryCache;
+    }
+
+    if (!force && this._alertsHistoryInFlight) {
+      return this._alertsHistoryInFlight;
+    }
+
+    this._alertsHistoryInFlight = (async () => {
+      this._diag.historyFetches += 1;
+      const res = await fetch(TZEVAADOM_ALERTS_HISTORY_URL, {
+        headers: {
+          'user-agent': 'Mozilla/5.0',
+          accept: 'application/json,text/plain,*/*',
+          origin: ORIGIN,
+          referer: `${ORIGIN}/`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`alerts-history HTTP ${res.status}`);
+      const payload = await res.json();
+      const records = Array.isArray(payload) ? payload : [];
+      this._alertsHistoryCache = records;
+      this._alertsHistoryCacheAt = Date.now();
+      return records;
+    })();
+
+    try {
+      return await this._alertsHistoryInFlight;
+    } catch (err) {
+      this._diag.historyFetchFailures += 1;
+      this._diag.lastError = String(err?.message || err);
+      throw err;
+    } finally {
+      this._alertsHistoryInFlight = null;
+    }
+  }
+
+  _recordMatchesAreas(record, targetAreas, threatId = null, strictThreat = false) {
+    if (!record || !Array.isArray(record.alerts)) return false;
+
+    for (const alert of record.alerts) {
+      if (strictThreat && Number.isFinite(threatId) && Number(alert?.threat) !== Number(threatId)) continue;
+      const cities = Array.isArray(alert?.cities) ? alert.cities : [];
+      for (const city of cities) {
+        const normalized = this._normalizeAreaName(city);
+        if (targetAreas.has(normalized)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  async _resolveLatestTzevaadomAlertId(event) {
+    const targetAreas = new Set(
+      (Array.isArray(event?.areas) ? event.areas : [])
+        .map((name) => this._normalizeAreaName(name))
+        .filter(Boolean),
+    );
+
+    if (!targetAreas.size) return null;
+
+    let records = [];
+    try {
+      records = await this._fetchTzevaadomAlertsHistory();
+    } catch (_) {
+      return null;
+    }
+
+    const threatId = Number.isFinite(Number(event?.threatId)) ? Number(event.threatId) : null;
+
+    if (Number.isFinite(threatId)) {
+      for (const record of records) {
+        if (!this._recordMatchesAreas(record, targetAreas, threatId, true)) continue;
+        const id = this._extractNotificationId(record?.id);
+        if (id) return id;
+      }
+    }
+
+    for (const record of records) {
+      if (!this._recordMatchesAreas(record, targetAreas, null, false)) continue;
+      const id = this._extractNotificationId(record?.id);
+      if (id) return id;
+    }
+
+    return null;
   }
 
   _wsUrl(platform) {
@@ -1087,6 +1186,11 @@ class RedAlertApp extends Homey.App {
 
   _buildAlertLink(event, source = 'tzevaadom') {
     if (source === 'tzevaadom') {
+      const resolvedAlertId = this._extractNotificationId(event?.resolvedAlertId);
+      if (resolvedAlertId) {
+        return `https://www.tzevaadom.co.il/alerts/${resolvedAlertId}`;
+      }
+
       const notificationId = this._extractNotificationId(event?.notificationId);
       if (notificationId) {
         return `https://www.tzevaadom.co.il/alerts/${notificationId}`;
@@ -1129,6 +1233,16 @@ class RedAlertApp extends Homey.App {
     this._lastFlowEvent = event;
     this._history.unshift(event);
     if (this._history.length > MAX_HISTORY) this._history.length = MAX_HISTORY;
+
+    const resolvedAlertId = await this._resolveLatestTzevaadomAlertId(event);
+    if (resolvedAlertId) {
+      event.resolvedAlertId = resolvedAlertId;
+      event.linkResolutionSource = 'history';
+      this._diag.historyLinkResolutions += 1;
+    } else {
+      event.linkResolutionSource = this._extractNotificationId(event?.notificationId) ? 'notificationId' : 'fallback';
+      this._diag.historyLinkFallbacks += 1;
+    }
 
     await this._updateMessageToken(event, 'full');
     await this._updateLinkToken(event, 'tzevaadom');
