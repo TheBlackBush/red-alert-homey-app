@@ -37,12 +37,14 @@ Available global tokens:
   - Updated automatically on every incoming event.
   - Includes: threat, areas, category, severity, time, source, and alert link.
 - **Last alert link**
-  - Link to the alert details page.
+  - Link to alert details/history page.
   - Updated automatically on every incoming event.
   - TzevaAdom link resolution priority:
     1) latest matching id from `https://api.tzevaadom.co.il/alerts-history`
-    2) fallback to incoming `notificationId`
-    3) fallback to `https://www.tzevaadom.co.il/`
+    2) fallback to `https://www.tzevaadom.co.il/`
+  - Oref link is language-aware by app settings:
+    - Hebrew: `https://www.oref.org.il/heb/alerts-history`
+    - English: `https://www.oref.org.il/eng/alerts-history`
 
 How to use tokens in Flows:
 1) Create/open a Flow with a trigger (for example **Red alert received**).

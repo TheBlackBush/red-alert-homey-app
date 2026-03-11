@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2026-03-11
+
+### Changed
+- Removed `notificationId` fallback from TzevaAdom alert-link generation.
+  - New behavior for TzevaAdom links:
+    1. use latest resolved id from `alerts-history`
+    2. fallback directly to `https://www.tzevaadom.co.il/`
+- Renamed internal helper for clarity:
+  - `_extractNotificationId` -> `_extractNumericId`.
+- Updated Oref source link behavior to use language-specific alerts-history URL based on selected app language:
+  - Hebrew: `https://www.oref.org.il/heb/alerts-history`
+  - English: `https://www.oref.org.il/eng/alerts-history`
+- Updated documentation (`README.md`, `README.txt`) to match current flow cards/tokens and link behavior.
+
+### Validation
+- `node --check app.js` passes.
+- `npm run lint` passes cleanly.
+- `homey app validate --level=publish` passes.
+
 ## [0.4.0] - 2026-03-11
 
 ### Added
