@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-03-11
+
+### Added
+- Alert message now includes direct alert link (`https://www.tzevaadom.co.il/alerts/<id>`) in both full and compact formats.
+- New TzevaAdom history-based link resolver:
+  - fetches `https://api.tzevaadom.co.il/alerts-history`
+  - resolves latest matching alert id by selected/matched cities
+  - prefers threat-aware matching when available
+
+### Changed
+- Improved link generation priority for TzevaAdom links:
+  1. resolved id from alerts-history
+  2. fallback to incoming `notificationId`
+  3. fallback to TzevaAdom homepage
+- Added short cache and in-flight deduplication for `alerts-history` fetches to reduce redundant requests.
+- Refactored alert message builder to reduce HE/EN duplication while preserving output behavior.
+- Added diagnostics counters for history fetch/link resolution behavior.
+
+### Validation
+- `node --check app.js` passes.
+- `npm run lint` passes cleanly.
+- `homey app validate --level=publish` passes.
+- App installed successfully on Homey Pro for verification.
+
 ## [0.3.2] - 2026-03-08
 
 ### Changed
