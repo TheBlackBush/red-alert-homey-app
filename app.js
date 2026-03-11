@@ -1163,8 +1163,17 @@ class RedAlertApp extends Homey.App {
 
     const category = this._getCategoryDisplay(event, effectiveLang);
     const areaCount = insights.areasCount || 0;
-    const idPart = notificationId ? (effectiveLang === 'he' ? ` | מזהה: ${notificationId}` : ` | ID: ${notificationId}`) : '';
-    const districtPart = insights.district ? (effectiveLang === 'he' ? ` | מחוז: ${insights.district}` : ` | District: ${insights.district}`) : '';
+
+    let idPart = '';
+    if (notificationId) {
+      idPart = effectiveLang === 'he' ? ` | מזהה: ${notificationId}` : ` | ID: ${notificationId}`;
+    }
+
+    let districtPart = '';
+    if (insights.district) {
+      districtPart = effectiveLang === 'he' ? ` | מחוז: ${insights.district}` : ` | District: ${insights.district}`;
+    }
+
     const sourcePart = effectiveLang === 'he' ? ` | מקור: ${sourceLabel}` : ` | Source: ${sourceLabel}`;
 
     return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${sourcePart}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart} | ${ts}`;
