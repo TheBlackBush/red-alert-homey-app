@@ -675,14 +675,14 @@ class RedAlertApp extends Homey.App {
     if (Number.isFinite(threatId)) {
       for (const record of records) {
         if (!this._recordMatchesAreas(record, targetAreas, threatId, true)) continue;
-        const id = this._extractNotificationId(record?.id);
+        const id = this._extractNumericId(record?.id);
         if (id) return id;
       }
     }
 
     for (const record of records) {
       if (!this._recordMatchesAreas(record, targetAreas, null, false)) continue;
-      const id = this._extractNotificationId(record?.id);
+      const id = this._extractNumericId(record?.id);
       if (id) return id;
     }
 
@@ -1155,7 +1155,7 @@ class RedAlertApp extends Homey.App {
         : `${insights.migunTimeSec}s to shelter`;
     }
 
-    const notificationId = this._extractNotificationId(event?.notificationId);
+    const notificationId = this._extractNumericId(event?.notificationId);
     const alertLink = this._buildAlertLink(event, 'tzevaadom');
     const sourceLabels = {
       'tzevaadom-ws': { he: 'צבע אדום (WebSocket)', en: 'TzevaAdom (WebSocket)' },
@@ -1209,7 +1209,7 @@ class RedAlertApp extends Homey.App {
     await this._lastAlertMessageToken.setValue(message);
   }
 
-  _extractNotificationId(raw) {
+  _extractNumericId(raw) {
     if (raw === null || raw === undefined) return null;
     const str = String(raw).trim();
     if (!str) return null;
@@ -1219,7 +1219,7 @@ class RedAlertApp extends Homey.App {
 
   _buildAlertLink(event, source = 'tzevaadom') {
     if (source === 'tzevaadom') {
-      const resolvedAlertId = this._extractNotificationId(event?.resolvedAlertId);
+      const resolvedAlertId = this._extractNumericId(event?.resolvedAlertId);
       if (resolvedAlertId) {
         return `https://www.tzevaadom.co.il/alerts/${resolvedAlertId}`;
       }
