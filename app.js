@@ -1106,8 +1106,39 @@ class RedAlertApp extends Homey.App {
 
   _buildAlertMessage(event, mode = 'full', lang) {
     const effectiveLang = this._getEffectiveLanguage(lang);
+
+    const text = {
+      he: {
+        noAlerts: 'אין התראות עדיין.',
+        alert: 'התראה',
+        areas: 'אזורים',
+        district: 'מחוז',
+        category: 'קטגוריה',
+        severity: 'חומרה',
+        shelterTime: 'זמן למיגון',
+        time: 'זמן',
+        source: 'מקור',
+        link: 'קישור',
+        id: 'מזהה',
+      },
+      en: {
+        noAlerts: 'No alerts yet.',
+        alert: 'Alert',
+        areas: 'Areas',
+        district: 'District',
+        category: 'Category',
+        severity: 'Severity',
+        shelterTime: 'Shelter time',
+        time: 'Time',
+        source: 'Source',
+        link: 'Link',
+        id: 'ID',
+      },
+    };
+
+    const labels = effectiveLang === 'he' ? text.he : text.en;
     if (!event) {
-      return effectiveLang === 'he' ? 'אין התראות עדיין.' : 'No alerts yet.';
+      return labels.noAlerts;
     }
 
     const ts = this._formatTimestamp(event.time, effectiveLang);
@@ -1135,32 +1166,21 @@ class RedAlertApp extends Homey.App {
     const sourceLabel = (sourceLabels[event?.source] || sourceLabels.unknown)[effectiveLang === 'he' ? 'he' : 'en'];
 
     if (mode === 'full') {
-      if (effectiveLang === 'he') {
-        const lines = [
-          `🚨 התראה: ${threat}`,
-          `אזורים: ${areas}`,
-        ];
-        if (insights.district) lines.push(`מחוז: ${insights.district}`);
-        lines.push(`קטגוריה: ${this._getCategoryDisplay(event, 'he')}`);
-        lines.push(`חומרה: ${severityText}`);
-        if (migunText) lines.push(`זמן למיגון: ${insights.migunTimeSec} שניות`);
-        lines.push(`זמן: ${ts}`);
-        lines.push(`מקור: ${sourceLabel}`);
-        lines.push(`קישור: ${alertLink}`);
-        return lines.join('\n');
-      }
-
       const lines = [
-        `🚨 Alert: ${threat}`,
-        `Areas: ${areas}`,
+        `🚨 ${labels.alert}: ${threat}`,
+        `${labels.areas}: ${areas}`,
       ];
-      if (insights.district) lines.push(`District: ${insights.district}`);
-      lines.push(`Category: ${this._getCategoryDisplay(event, 'en')}`);
-      lines.push(`Severity: ${severityText}`);
-      if (migunText) lines.push(`Shelter time: ${insights.migunTimeSec}s`);
-      lines.push(`Time: ${ts}`);
-      lines.push(`Source: ${sourceLabel}`);
-      lines.push(`Link: ${alertLink}`);
+      if (insights.district) lines.push(`${labels.district}: ${insights.district}`);
+      lines.push(`${labels.category}: ${this._getCategoryDisplay(event, effectiveLang)}`);
+      lines.push(`${labels.severity}: ${severityText}`);
+      if (migunText) {
+        lines.push(effectiveLang === 'he'
+          ? `${labels.shelterTime}: ${insights.migunTimeSec} שניות`
+          : `${labels.shelterTime}: ${insights.migunTimeSec}s`);
+      }
+      lines.push(`${labels.time}: ${ts}`);
+      lines.push(`${labels.source}: ${sourceLabel}`);
+      lines.push(`${labels.link}: ${alertLink}`);
       return lines.join('\n');
     }
 
@@ -1169,16 +1189,16 @@ class RedAlertApp extends Homey.App {
 
     let idPart = '';
     if (notificationId) {
-      idPart = effectiveLang === 'he' ? ` | מזהה: ${notificationId}` : ` | ID: ${notificationId}`;
+      idPart = ` | ${labels.id}: ${notificationId}`;
     }
 
     let districtPart = '';
     if (insights.district) {
-      districtPart = effectiveLang === 'he' ? ` | מחוז: ${insights.district}` : ` | District: ${insights.district}`;
+      districtPart = ` | ${labels.district}: ${insights.district}`;
     }
 
-    const sourcePart = effectiveLang === 'he' ? ` | מקור: ${sourceLabel}` : ` | Source: ${sourceLabel}`;
-    const linkPart = effectiveLang === 'he' ? ` | קישור: ${alertLink}` : ` | Link: ${alertLink}`;
+    const sourcePart = ` | ${labels.source}: ${sourceLabel}`;
+    const linkPart = ` | ${labels.link}: ${alertLink}`;
 
     return `🚨 ${threat} | ${category} | ${areas} (${areaCount}) | ${severityText}${sourcePart}${migunText ? ` | ${migunText}` : ''}${districtPart}${idPart}${linkPart} | ${ts}`;
   }
