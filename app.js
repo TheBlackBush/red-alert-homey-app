@@ -1223,11 +1223,6 @@ class RedAlertApp extends Homey.App {
       if (resolvedAlertId) {
         return `https://www.tzevaadom.co.il/alerts/${resolvedAlertId}`;
       }
-
-      const notificationId = this._extractNotificationId(event?.notificationId);
-      if (notificationId) {
-        return `https://www.tzevaadom.co.il/alerts/${notificationId}`;
-      }
       return 'https://www.tzevaadom.co.il/';
     }
 
@@ -1273,7 +1268,7 @@ class RedAlertApp extends Homey.App {
       event.linkResolutionSource = 'history';
       this._diag.historyLinkResolutions += 1;
     } else {
-      event.linkResolutionSource = this._extractNotificationId(event?.notificationId) ? 'notificationId' : 'fallback';
+      event.linkResolutionSource = 'fallback';
       this._diag.historyLinkFallbacks += 1;
     }
 
