@@ -1,29 +1,38 @@
 {
   "0.2.0": {
-    "en": "Introduced the JavaScript metadata sync pipeline from Oref network feeds, moved to ID-keyed cities/areas/countdown data, enforced Asia/Jerusalem timezone handling, and removed deprecated Python metadata tooling."
+    "en": "Introduced the JavaScript metadata sync pipeline from Oref network feeds, moved to ID-keyed cities/areas/countdown data, enforced Asia/Jerusalem timezone handling, and removed deprecated Python metadata tooling.",
+    "he": "נוספה תשתית סנכרון מטא-דאטה ב-JavaScript מפידי Oref, בוצע מעבר למבנה נתונים מבוסס מזהים לערים/אזורים/זמני התרעה, נאכף אזור זמן Asia/Jerusalem והוסרה תשתית Python מיושנת."
   },
   "0.2.1": {
-    "en": "Metadata sync improvements, timezone fixes (Asia/Jerusalem), and data pipeline cleanup for cities/areas."
+    "en": "Metadata sync improvements, timezone fixes (Asia/Jerusalem), and data pipeline cleanup for cities/areas.",
+    "he": "שיפורי סנכרון מטא-דאטה, תיקוני אזור זמן (Asia/Jerusalem), וניקוי תהליך הנתונים עבור ערים/אזורים."
   },
   "0.3.0": {
-    "en": "Improved widget readability, removed test flow cards, refreshed App Store README text, and updated widget previews to guideline-compliant assets."
+    "en": "Improved widget readability, removed test flow cards, refreshed App Store README text, and updated widget previews to guideline-compliant assets.",
+    "he": "שופרה קריאות הווידג׳ט, הוסרו כרטיסי Flow לבדיקה, עודכן טקסט ה-README לחנות, ועודכנו תמונות תצוגה מקדימה בהתאם להנחיות."
   },
   "0.3.1": {
-    "en": "Repository/documentation cleanup, language-selection setup update, and backup ignore improvements."
+    "en": "Repository/documentation cleanup, language-selection setup update, and backup ignore improvements.",
+    "he": "ניקוי ריפו/תיעוד, עדכון שלב בחירת שפה בהגדרות, ושיפור כללי ignore לגיבויים."
   },
   "0.3.2": {
-    "en": "Completed lint cleanup, removed obsolete repository artifacts, and stabilized publish-level validation."
+    "en": "Completed lint cleanup, removed obsolete repository artifacts, and stabilized publish-level validation.",
+    "he": "הושלם ניקוי lint, הוסרו ארטיפקטים מיושנים מהריפו, ויוצבה ולידציית publish."
   },
   "0.4.0": {
-    "en": "Added history-based TzevaAdom alert-link resolution, included alert links in generated messages, and improved diagnostics/caching behavior."
+    "en": "Added history-based TzevaAdom alert-link resolution, included alert links in generated messages, and improved diagnostics/caching behavior.",
+    "he": "נוסף מנגנון יצירת קישורי התרעות לפי היסטוריית צבע אדום, שולבו קישורים בהודעות שנוצרות, ושופרו מנגנוני דיאגנוסטיקה ו-cache."
   },
   "0.4.1": {
-    "en": "Removed notificationId fallback for TzevaAdom links, added language-aware Oref alerts-history links, and refreshed related docs."
+    "en": "Removed notificationId fallback for TzevaAdom links, added language-aware Oref alerts-history links, and refreshed related docs.",
+    "he": "הוסר fallback של notificationId לקישורי צבע אדום, נוספו קישורי היסטוריית התרעות Oref בהתאם לשפה, ועודכן התיעוד הרלוונטי."
   },
   "0.4.2": {
-    "en": "Refined Homey Store README.txt formatting and aligned store-facing docs with current token/link behavior."
+    "en": "Refined Homey Store README.txt formatting and aligned store-facing docs with current token/link behavior.",
+    "he": "שופר פורמט README.txt עבור חנות Homey, והותאם תיעוד החנות להתנהגות העדכנית של קישורים וטוקנים."
   },
   "0.4.3": {
-    "en": "Synchronized release metadata and local release rules for a consistent Homey publishing flow."
+    "en": "Synchronized release metadata and local release rules for a consistent Homey publishing flow.",
+    "he": "סונכרנו מטא-דאטה של שחרור וכללי שחרור מקומיים כדי לייצר תהליך פרסום עקבי ל-Homey."
   }
 }
