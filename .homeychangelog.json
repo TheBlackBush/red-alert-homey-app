@@ -1,0 +1,29 @@
+{
+  "0.2.0": {
+    "en": "Introduced the JavaScript metadata sync pipeline from Oref network feeds, moved to ID-keyed cities/areas/countdown data, enforced Asia/Jerusalem timezone handling, and removed deprecated Python metadata tooling."
+  },
+  "0.2.1": {
+    "en": "Metadata sync improvements, timezone fixes (Asia/Jerusalem), and data pipeline cleanup for cities/areas."
+  },
+  "0.3.0": {
+    "en": "Improved widget readability, removed test flow cards, refreshed App Store README text, and updated widget previews to guideline-compliant assets."
+  },
+  "0.3.1": {
+    "en": "Repository/documentation cleanup, language-selection setup update, and backup ignore improvements."
+  },
+  "0.3.2": {
+    "en": "Completed lint cleanup, removed obsolete repository artifacts, and stabilized publish-level validation."
+  },
+  "0.4.0": {
+    "en": "Added history-based TzevaAdom alert-link resolution, included alert links in generated messages, and improved diagnostics/caching behavior."
+  },
+  "0.4.1": {
+    "en": "Removed notificationId fallback for TzevaAdom links, added language-aware Oref alerts-history links, and refreshed related docs."
+  },
+  "0.4.2": {
+    "en": "Refined Homey Store README.txt formatting and aligned store-facing docs with current token/link behavior."
+  },
+  "0.4.3": {
+    "en": "Synchronized release metadata and local release rules for a consistent Homey publishing flow."
+  }
+}

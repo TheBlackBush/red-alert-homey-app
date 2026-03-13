@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.3] - 2026-03-13
+
+### Changed
+- Added/normalized Homey release metadata files and local release rules for consistent publishing flow.
+
+### Validation
+- `homey app validate --level=publish` expected to pass with synchronized changelog sources.
+
 ## [0.4.2] - 2026-03-11
 
 ### Changed

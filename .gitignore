@@ -4,7 +4,6 @@ node_modules/
 # Homey build/runtime artifacts
 .homeybuild/
 .homeycompose/
-.homeychangelog.json
 backups/
 
 # Environment & secrets
@@ -30,6 +29,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+# Local release notes/rules
+RELEASE_RULES.md
 
 # Local planning docs
 MIGRATION-PLAN.md
