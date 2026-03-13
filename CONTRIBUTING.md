@@ -39,7 +39,7 @@ Regular support is provided through our [support staff](support@athom.com).
 
 * Minimal changes. Only submit code relevant to the current issue. Other changes should go in new pull requests.
 * Minimal commits. Please squash to a single commit before sending your pull request.
-* No conflicts. Please rebase off the latest master before submitting.
+* No conflicts. Please rebase off the latest main before submitting.
 * Code conforming to the existing conventions and formats. i.e. Please don't reformat whitespace.
 * Passing tests in the test folder (if applicable). Use existing tests as a reference.
 * Relevant documentation.
