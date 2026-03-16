@@ -34,5 +34,9 @@
   "0.4.3": {
     "en": "Synchronized release metadata and local release rules for a consistent Homey publishing flow.",
     "he": "סונכרנו מטא-דאטה של שחרור וכללי שחרור מקומיים כדי לייצר תהליך פרסום עקבי ל-Homey."
+  },
+  "0.4.4": {
+    "en": "Updated repository/support links to TheBlackBush organization and added PayPal donation metadata.",
+    "he": "עודכנו קישורי ריפו/תמיכה לארגון TheBlackBush ונוסף מטא-דאטה לתרומות PayPal."
   }
 }
