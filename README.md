@@ -1,8 +1,9 @@
 # red-alert-homey-app
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/TheBlackBush/red-alert-homey-app)](https://github.com/TheBlackBush/red-alert-homey-app/releases)
-[![GitHub last commit](https://img.shields.io/github/last-commit/TheBlackBush/red-alert-homey-app)](https://github.com/TheBlackBush/red-alert-homey-app/commits/main)
-[![Homey SDK](https://img.shields.io/badge/Homey-SDK%20v3-00AEEF)](https://apps.developer.homey.app/the-basics)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/TheBlackBush/red-alert-homey-app?style=for-the-badge)](https://github.com/TheBlackBush/red-alert-homey-app/releases)
+[![GitHub last commit](https://img.shields.io/github/last-commit/TheBlackBush/red-alert-homey-app?style=for-the-badge)](https://github.com/TheBlackBush/red-alert-homey-app/commits/main)
+[![Homey SDK](https://img.shields.io/badge/Homey-SDK%20v3-00AEEF?style=for-the-badge)](https://apps.developer.homey.app/the-basics)
+[![Ko-fi](https://img.shields.io/badge/support_me_on_ko--fi-F16061?style=for-the-badge&logo=kofi&logoColor=f5f5f5)](https://ko-fi.com/M4M11W3R7J)
 
 - Source: https://github.com/TheBlackBush/red-alert-homey-app
 - Support: https://github.com/TheBlackBush/red-alert-homey-app/issues
