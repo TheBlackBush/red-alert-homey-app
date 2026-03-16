@@ -48,8 +48,8 @@
   "support": "https://github.com/TheBlackBush/red-alert-homey-app/issues",
   "contributing": {
     "donate": {
-      "githubSponsors": {
-        "username": "TheBlackBush"
+      "paypal": {
+        "username": "idanbush"
       }
     }
   },
