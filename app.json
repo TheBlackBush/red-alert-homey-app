@@ -43,6 +43,13 @@
   "homepage": "https://github.com/BuSHari",
   "source": "https://github.com/TheBlackBush/red-alert-homey-app",
   "support": "https://github.com/TheBlackBush/red-alert-homey-app/issues",
+  "contributing": {
+    "donate": {
+      "githubSponsors": {
+        "username": "TheBlackBush"
+      }
+    }
+  },
   "api": {
     "cities": {
       "method": "GET",
