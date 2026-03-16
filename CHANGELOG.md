@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updated README badges to `for-the-badge` style.
 - Added Ko-fi support badge to README.
+- Added `bugs.url` metadata in `app.json` (issues page).
+- Cleaned README by removing explicit Source/Support/Donate plain-text link list.
 
 ### Validation
 - `homey app validate --level=publish` passes.
