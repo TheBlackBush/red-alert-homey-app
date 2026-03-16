@@ -5,10 +5,6 @@
 [![Homey SDK](https://img.shields.io/badge/Homey-SDK%20v3-00AEEF?style=for-the-badge)](https://apps.developer.homey.app/the-basics)
 [![Ko-fi](https://img.shields.io/badge/support_me_on_ko--fi-F16061?style=for-the-badge&logo=kofi&logoColor=f5f5f5)](https://ko-fi.com/M4M11W3R7J)
 
-- Source: https://github.com/TheBlackBush/red-alert-homey-app
-- Support: https://github.com/TheBlackBush/red-alert-homey-app/issues
-- Donate: https://paypal.me/idanbush
-
 Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no devices).
 
 ## Features
