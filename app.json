@@ -41,8 +41,8 @@
     "name": "Idan Bush"
   },
   "homepage": "https://github.com/BuSHari",
-  "source": "https://github.com/BuSHari/red-alert-homey-app",
-  "support": "https://github.com/BuSHari/red-alert-homey-app/issues",
+  "source": "https://github.com/TheBlackBush/red-alert-homey-app",
+  "support": "https://github.com/TheBlackBush/red-alert-homey-app/issues",
   "api": {
     "cities": {
       "method": "GET",
