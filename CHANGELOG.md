@@ -13,12 +13,9 @@ All notable changes to this project will be documented in this file.
 
 ## [0.4.6] - 2026-03-16
 
-### Fixed
-- Synchronized release version metadata across `app.json` and `package.json`.
-- Finalized release metadata consistency for Homey publishing/tag alignment.
-
-### Validation
-- `homey app validate --level=publish` passes.
+### Note
+- Transitional metadata-sync release.
+- Superseded by `0.4.7`, which completed full version sync including `.homeycompose/app.json`.
 
 ## [0.4.5] - 2026-03-16
 
@@ -28,8 +25,8 @@ All notable changes to this project will be documented in this file.
 - Added `bugs.url` metadata in `app.json` (issues page).
 - Cleaned README by removing explicit Source/Support/Donate plain-text link list.
 
-### Validation
-- `homey app validate --level=publish` passes.
+### Note
+- Followed by metadata alignment fixes in `0.4.6` and finalized sync in `0.4.7`.
 
 ## [0.4.4] - 2026-03-16
 
