@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.8] - 2026-03-16
+
+### Fixed
+- Restored `contributing.donate.paypal.username` to `idanbush` in app metadata.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.7] - 2026-03-16
 
 ### Fixed

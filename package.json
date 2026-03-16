@@ -1,6 +1,6 @@
 {
   "name": "com.idanbush.redalert",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Homey Red Alert monitoring app for Israel (flows + widgets)",
   "main": "app.js",
   "scripts": {

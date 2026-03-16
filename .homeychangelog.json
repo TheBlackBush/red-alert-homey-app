@@ -50,5 +50,9 @@
   "0.4.7": {
     "en": "Synchronized app.json/package.json/.homeycompose version metadata to prevent version rewrites during Homey validation.",
     "he": "סונכרנו גרסאות app.json/package.json/.homeycompose למניעת דריסת גרסה בזמן ולידציית Homey."
+  },
+  "0.4.8": {
+    "en": "Restored PayPal donate metadata (username: idanbush) in app manifest.",
+    "he": "שוחזר מטא-דאטה תרומות PayPal (username: idanbush) בקובץ המניפסט של האפליקציה."
   }
 }
