@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.6] - 2026-03-16
+
+### Fixed
+- Synchronized release version metadata across `app.json` and `package.json`.
+- Finalized release metadata consistency for Homey publishing/tag alignment.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.5] - 2026-03-16
 
 ### Changed

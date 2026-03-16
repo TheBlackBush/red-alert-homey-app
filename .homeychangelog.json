@@ -42,5 +42,9 @@
   "0.4.5": {
     "en": "Updated README badges to for-the-badge style, added Ko-fi badge, added bugs metadata URL, and cleaned README links section.",
     "he": "עודכנו תגיות README לסגנון for-the-badge, נוספה תגית Ko-fi, נוסף bugs URL במטא-דאטה, ונוקה מקטע הקישורים ב-README."
+  },
+  "0.4.6": {
+    "en": "Synchronized app.json/package.json version metadata for consistent Homey release alignment.",
+    "he": "סונכרנה גרסת המטא-דאטה בין app.json ל-package.json עבור יישור מלא של שחרור Homey."
   }
 }
