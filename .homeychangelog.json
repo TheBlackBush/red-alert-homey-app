@@ -46,5 +46,9 @@
   "0.4.6": {
     "en": "Synchronized app.json/package.json version metadata for consistent Homey release alignment.",
     "he": "סונכרנה גרסת המטא-דאטה בין app.json ל-package.json עבור יישור מלא של שחרור Homey."
+  },
+  "0.4.7": {
+    "en": "Synchronized app.json/package.json/.homeycompose version metadata to prevent version rewrites during Homey validation.",
+    "he": "סונכרנו גרסאות app.json/package.json/.homeycompose למניעת דריסת גרסה בזמן ולידציית Homey."
   }
 }

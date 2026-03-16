@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.7] - 2026-03-16
+
+### Fixed
+- Synchronized version metadata across `app.json`, `package.json`, and Homey compose source (`.homeycompose/app.json`).
+- Ensured Homey pre-processing no longer rewrites `app.json` back to an older version.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.6] - 2026-03-16
 
 ### Fixed
