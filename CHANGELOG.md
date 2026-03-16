@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.5] - 2026-03-16
+
+### Changed
+- Updated README badges to `for-the-badge` style.
+- Added Ko-fi support badge to README.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.4] - 2026-03-16
 
 ### Changed

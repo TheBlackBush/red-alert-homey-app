@@ -38,5 +38,9 @@
   "0.4.4": {
     "en": "Updated repository/support links to TheBlackBush organization and added PayPal donation metadata.",
     "he": "עודכנו קישורי ריפו/תמיכה לארגון TheBlackBush ונוסף מטא-דאטה לתרומות PayPal."
+  },
+  "0.4.5": {
+    "en": "Updated README badges to for-the-badge style and added Ko-fi support badge.",
+    "he": "עודכנו תגיות README לסגנון for-the-badge ונוספה תגית תמיכה של Ko-fi."
   }
 }
