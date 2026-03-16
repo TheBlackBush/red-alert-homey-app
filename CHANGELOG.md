@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.4] - 2026-03-16
+
+### Changed
+- Updated repository references to the new project location under `TheBlackBush/red-alert-homey-app`.
+- Updated app metadata links (`source`, `support`) to point to the new GitHub repository and issues page.
+- Added `contributing.donate.paypal` metadata in `app.json`.
+
+### Validation
+- Metadata files are consistent and app manifest parses correctly.
+
 ## [0.4.3] - 2026-03-13
 
 ### Changed

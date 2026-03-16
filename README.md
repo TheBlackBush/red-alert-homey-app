@@ -4,6 +4,10 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/TheBlackBush/red-alert-homey-app)](https://github.com/TheBlackBush/red-alert-homey-app/commits/main)
 [![Homey SDK](https://img.shields.io/badge/Homey-SDK%20v3-00AEEF)](https://apps.developer.homey.app/the-basics)
 
+- Source: https://github.com/TheBlackBush/red-alert-homey-app
+- Support: https://github.com/TheBlackBush/red-alert-homey-app/issues
+- Donate: https://paypal.me/idanbush
+
 Homey app (SDK v3) for Israeli civil defense alerts using **Flows + Widget** (no devices).
 
 ## Features
