@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [0.4.8] - 2026-03-16
 
 ### Fixed
-- Restored `contributing.donate.paypal.username` to `idanbush` in app metadata.
+- Improved the app's donation section by restoring the PayPal support link.
 
 ### Validation
 - `homey app validate --level=publish` passes.
