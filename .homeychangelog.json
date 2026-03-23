@@ -36,8 +36,8 @@
     "he": "סונכרנו מטא-דאטה של שחרור וכללי שחרור מקומיים כדי לייצר תהליך פרסום עקבי ל-Homey."
   },
   "0.4.4": {
-    "en": "Updated repository/support links to TheBlackBush organization and added PayPal donation metadata.",
-    "he": "עודכנו קישורי ריפו/תמיכה לארגון TheBlackBush ונוסף מטא-דאטה לתרומות PayPal."
+    "en": "Updated repository/support links for the app and added PayPal donation metadata.",
+    "he": "עודכנו קישורי הריפו/התמיכה של האפליקציה ונוסף מטא-דאטה לתרומות PayPal."
   },
   "0.4.5": {
     "en": "Updated README badges to for-the-badge style, added Ko-fi badge, added bugs metadata URL, and cleaned README links section.",
@@ -52,7 +52,11 @@
     "he": "סונכרנו גרסאות app.json/package.json/.homeycompose למניעת דריסת גרסה בזמן ולידציית Homey."
   },
   "0.4.8": {
-    "en": "Restored PayPal donate metadata (username: idanbush) in app manifest.",
-    "he": "שוחזר מטא-דאטה תרומות PayPal (username: idanbush) בקובץ המניפסט של האפליקציה."
+    "en": "Improved the app's donation section by restoring the PayPal support link.",
+    "he": "שופר מקטע התרומות באפליקציה באמצעות שחזור קישור התמיכה ב-PayPal."
+  },
+  "0.4.9": {
+    "en": "Reworded the recent release notes for clearer Homey Store-facing changelog text.",
+    "he": "נוסח מחדש טקסט הערות השחרור האחרונות כדי לייצר תיאור ברור יותר לחנות Homey."
   }
 }

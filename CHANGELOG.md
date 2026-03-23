@@ -2,10 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.9] - 2026-03-23
+
+### Changed
+- Reworded the latest release notes for clearer Homey Store-facing changelog text.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.8] - 2026-03-16
 
 ### Fixed
-- Restored `contributing.donate.paypal.username` to `idanbush` in app metadata.
+- Improved the app's donation section by restoring the PayPal support link.
 
 ### Validation
 - `homey app validate --level=publish` passes.
@@ -39,7 +47,7 @@ All notable changes to this project will be documented in this file.
 ## [0.4.4] - 2026-03-16
 
 ### Changed
-- Updated repository references to the new project location under `TheBlackBush/red-alert-homey-app`.
+- Updated repository references to the app's GitHub project location.
 - Updated app metadata links (`source`, `support`) to point to the new GitHub repository and issues page.
 - Added `contributing.donate.paypal` metadata in `app.json`.
 
