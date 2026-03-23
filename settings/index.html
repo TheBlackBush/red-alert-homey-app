@@ -292,10 +292,6 @@
           <label for="thOther" data-i18n="thOther">Other threat throttle</label>
           <input id="thOther" type="number" min="0" step="1000" />
         </div>
-        <div>
-          <label for="thTest" data-i18n="thTest">Test trigger throttle</label>
-          <input id="thTest" type="number" min="0" step="1000" />
-        </div>
       </div>
       <div class="hint" data-i18n="throttleHint">0 = no throttle. Recommended defaults are pre-filled.</div>
     </div>
@@ -345,7 +341,6 @@
         thPreAlert: 'השהיה להתראה מקדימה',
         thAllClear: 'השהיה לסיום אירוע',
         thOther: 'השהיה לסוגי איום אחרים',
-        thTest: 'השהיה לטריגר בדיקה',
         throttleHint: '0 = ללא השהיה. ברירות מחדל כבר מוזנות.',
         save: 'שמור',
         dialogTitle: 'בחירת ערים',
@@ -374,7 +369,6 @@
         thPreAlert: 'Pre-alert throttle',
         thAllClear: 'All-clear throttle',
         thOther: 'Other threat throttle',
-        thTest: 'Test trigger throttle',
         throttleHint: '0 = no throttle. Recommended defaults are pre-filled.',
         save: 'Save',
         dialogTitle: 'Choose Cities',
@@ -542,12 +536,11 @@
         document.getElementById('quietEnabled').checked = !!quietHours.enabled;
       });
 
-      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000, test: 0 }, (tval) => {
+      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000 }, (tval) => {
         document.getElementById('thPrimary').value = Number(tval.primary ?? 120000);
         document.getElementById('thPreAlert').value = Number(tval['pre-alert'] ?? 180000);
         document.getElementById('thAllClear').value = Number(tval['all-clear'] ?? 120000);
         document.getElementById('thOther').value = Number(tval.other ?? 120000);
-        document.getElementById('thTest').value = Number(tval.test ?? 0);
       });
 
       document.getElementById('openCities').addEventListener('click', openDialog);
@@ -582,7 +575,6 @@
             'pre-alert': Number(document.getElementById('thPreAlert').value || 180000),
             'all-clear': Number(document.getElementById('thAllClear').value || 120000),
             other: Number(document.getElementById('thOther').value || 120000),
-            test: Number(document.getElementById('thTest').value || 0),
           });
           await setSetting(Homey, 'settings_lang', currentLang);
           const statusEl = document.getElementById('status');
