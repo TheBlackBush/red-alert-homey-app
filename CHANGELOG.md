@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.9] - 2026-03-23
+
+### Changed
+- Reworded the latest release notes for clearer Homey Store-facing changelog text.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.8] - 2026-03-16
 
 ### Fixed

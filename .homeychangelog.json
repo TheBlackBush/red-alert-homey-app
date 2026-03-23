@@ -54,5 +54,9 @@
   "0.4.8": {
     "en": "Improved the app's donation section by restoring the PayPal support link.",
     "he": "שופר מקטע התרומות באפליקציה באמצעות שחזור קישור התמיכה ב-PayPal."
+  },
+  "0.4.9": {
+    "en": "Reworded the recent release notes for clearer Homey Store-facing changelog text.",
+    "he": "נוסח מחדש טקסט הערות השחרור האחרונות כדי לייצר תיאור ברור יותר לחנות Homey."
   }
 }
