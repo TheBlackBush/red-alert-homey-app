@@ -45,7 +45,7 @@ State that survives restarts (last event, history, the active-alert flag) is sto
 
 ## Homey compose gotcha
 
-`app.json` is **generated** from `.homeycompose/` (app manifest, flow triggers/conditions/actions/tokens). `.homeycompose/` is in `.gitignore` and exists only locally, while the generated `app.json` is what is committed. To change a Flow card or the manifest, edit the file under `.homeycompose/`, run `npm run validate` (or `homey app build`) to regenerate `app.json`, and commit `app.json`. Hand edits to `app.json` get overwritten on the next build. Widget definitions live in `widgets/red-alert/widget.compose.json` (tracked). Locale strings are in `locales/en.json` and `locales/he.json`.
+`app.json` is **generated** from `.homeycompose/` (app manifest, flow triggers/conditions/actions/tokens). To change a Flow card or the manifest, edit the file under `.homeycompose/`, run `npm run validate` (or `homey app build`) to regenerate `app.json`, and commit both. Hand edits to `app.json` get overwritten on the next build. Widget definitions live in `widgets/red-alert/widget.compose.json` (tracked). Locale strings are in `locales/en.json` and `locales/he.json`.
 
 ## Releases
 
