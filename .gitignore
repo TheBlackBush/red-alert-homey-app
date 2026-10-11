@@ -3,7 +3,6 @@ node_modules/
 
 # Homey build/runtime artifacts
 .homeybuild/
-.homeycompose/
 backups/
 
 # Environment & secrets

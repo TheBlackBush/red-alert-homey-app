@@ -278,22 +278,22 @@
       <div class="grid2">
         <div>
           <label for="thPrimary" data-i18n="thPrimary">Primary alert throttle</label>
-          <input id="thPrimary" type="number" min="0" step="1000" />
+          <input id="thPrimary" type="number" min="60000" step="1000" />
         </div>
         <div>
           <label for="thPreAlert" data-i18n="thPreAlert">Pre-alert throttle</label>
-          <input id="thPreAlert" type="number" min="0" step="1000" />
+          <input id="thPreAlert" type="number" min="60000" step="1000" />
         </div>
         <div>
           <label for="thAllClear" data-i18n="thAllClear">All-clear throttle</label>
-          <input id="thAllClear" type="number" min="0" step="1000" />
+          <input id="thAllClear" type="number" min="60000" step="1000" />
         </div>
         <div>
           <label for="thOther" data-i18n="thOther">Other threat throttle</label>
-          <input id="thOther" type="number" min="0" step="1000" />
+          <input id="thOther" type="number" min="60000" step="1000" />
         </div>
       </div>
-      <div class="hint" data-i18n="throttleHint">0 = no throttle. Recommended defaults are pre-filled.</div>
+      <div class="hint" data-i18n="throttleHint">How long a repeat of the same alert is ignored. Minimum 60000 (1 minute). Recommended defaults are pre-filled.</div>
     </div>
   </div>
 
@@ -323,6 +323,7 @@
     let selectedCityIds = [];
     let draftCityIds = [];
     let currentLang = 'he';
+    const THROTTLE_MIN_MS = 60000;
 
     const I18N = {
       he: {
@@ -341,7 +342,7 @@
         thPreAlert: 'השהיה להתראה מקדימה',
         thAllClear: 'השהיה לסיום אירוע',
         thOther: 'השהיה לסוגי איום אחרים',
-        throttleHint: '0 = ללא השהיה. ברירות מחדל כבר מוזנות.',
+        throttleHint: 'כמה זמן מתעלמים מחזרה של אותה התראה. מינימום 60000 (דקה). ברירות מחדל כבר מוזנות.',
         save: 'שמור',
         dialogTitle: 'בחירת ערים',
         close: 'סגור',
@@ -369,7 +370,7 @@
         thPreAlert: 'Pre-alert throttle',
         thAllClear: 'All-clear throttle',
         thOther: 'Other threat throttle',
-        throttleHint: '0 = no throttle. Recommended defaults are pre-filled.',
+        throttleHint: 'How long a repeat of the same alert is ignored. Minimum 60000 (1 minute). Recommended defaults are pre-filled.',
         save: 'Save',
         dialogTitle: 'Choose Cities',
         close: 'Close',
@@ -423,6 +424,16 @@
       return new Promise((resolve, reject) => {
         Homey.set(key, value, (err) => err ? reject(err) : resolve());
       });
+    }
+
+    // The app never ignores repeats for less than a minute, so smaller values are raised to it.
+    function readThrottle(id, fallback) {
+      const raw = document.getElementById(id).value;
+      const value = Number(raw);
+      if (raw === '' || !Number.isFinite(value)) return fallback;
+      const clamped = Math.max(THROTTLE_MIN_MS, Math.round(value));
+      document.getElementById(id).value = clamped;
+      return clamped;
     }
 
     function renderPills() {
@@ -571,10 +582,10 @@
             end: document.getElementById('quietEnd').value || '06:00',
           });
           await setSetting(Homey, 'throttle_by_type_ms', {
-            primary: Number(document.getElementById('thPrimary').value || 120000),
-            'pre-alert': Number(document.getElementById('thPreAlert').value || 180000),
-            'all-clear': Number(document.getElementById('thAllClear').value || 120000),
-            other: Number(document.getElementById('thOther').value || 120000),
+            primary: readThrottle('thPrimary', 120000),
+            'pre-alert': readThrottle('thPreAlert', 180000),
+            'all-clear': readThrottle('thAllClear', 120000),
+            other: readThrottle('thOther', 120000),
           });
           await setSetting(Homey, 'settings_lang', currentLang);
           const statusEl = document.getElementById('status');

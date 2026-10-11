@@ -58,5 +58,9 @@
   "0.4.9": {
     "en": "Reworded the recent release notes for clearer Homey Store-facing changelog text.",
     "he": "נוסח מחדש טקסט הערות השחרור האחרונות כדי לייצר תיאור ברור יותר לחנות Homey."
+  },
+  "0.4.10": {
+    "en": "The settings throttle fields now keep values of one minute or more and explain what they do. The app's support link opens the new Red Alert Israel user guide, and bug reports go to the shared support page.",
+    "he": "שדות ההשהיה בהגדרות שומרים כעת ערכים של דקה ומעלה ומסבירים מה הם עושים. קישור התמיכה של האפליקציה פותח את מדריך המשתמש החדש של צבע אדום ישראל, ודיווחי תקלות עוברים לדף התמיכה המשותף."
   }
 }

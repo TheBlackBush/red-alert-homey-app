@@ -1,0 +1,21 @@
+{
+  "title": {
+    "en": "Build alert message template",
+    "he": "בנה תבנית הודעת התראה"
+  },
+  "titleFormatted": {
+    "en": "Build [[mode]] message",
+    "he": "בנה הודעת [[mode]]"
+  },
+  "args": [
+    {
+      "name": "mode",
+      "type": "dropdown",
+      "title": { "en": "Mode", "he": "מצב" },
+      "values": [
+        { "id": "full", "label": { "en": "Full", "he": "מלא" } },
+        { "id": "short", "label": { "en": "Short", "he": "קצר" } }
+      ]
+    }
+  ]
+}

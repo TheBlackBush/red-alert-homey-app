@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.10] - 2026-10-11
+
+### Fixed
+- Settings: a throttle value of 0 or below one minute was silently saved as the default. Values are now kept, raised to the one-minute minimum the app already applies, and the hint explains this.
+
+### Changed
+- App Store support link now opens the Red Alert Israel user guide (homey-apps-support wiki).
+- Homepage and bug report links now point to the homey-apps-support repository.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.9] - 2026-03-23
 
 ### Changed

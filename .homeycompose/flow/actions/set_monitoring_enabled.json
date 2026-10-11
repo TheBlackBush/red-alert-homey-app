@@ -1,0 +1,17 @@
+{
+  "title": {
+    "en": "Set monitoring",
+    "he": "הגדר ניטור"
+  },
+  "titleFormatted": {
+    "en": "Set monitoring to [[enabled]]",
+    "he": "הגדר ניטור ל-[[enabled]]"
+  },
+  "args": [
+    {
+      "name": "enabled",
+      "type": "checkbox",
+      "title": { "en": "Enabled", "he": "פעיל" }
+    }
+  ]
+}
