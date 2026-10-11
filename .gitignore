@@ -29,9 +29,19 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+*.swo
 
-# Local release notes/rules
-RELEASE_RULES.md
+# Test/build artifacts
+coverage/
+.nyc_output/
+dist/
 
-# Local planning docs
-MIGRATION-PLAN.md
+# Local docs, release rules and the support guide (see .claude/README.md)
+.claude/
+
+# Local tooling state
+.claude-flow/
+.swarm/
+ruvector.db
+agentdb.rvf
+agentdb.rvf.lock

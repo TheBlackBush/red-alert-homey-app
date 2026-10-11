@@ -40,12 +40,12 @@
   "author": {
     "name": "Idan Bush"
   },
-  "homepage": "https://github.com/BuSHari",
+  "homepage": "https://github.com/TheBlackBush/homey-apps-support",
   "source": "https://github.com/TheBlackBush/red-alert-homey-app",
   "bugs": {
-    "url": "https://github.com/TheBlackBush/red-alert-homey-app/issues"
+    "url": "https://github.com/TheBlackBush/homey-apps-support/issues"
   },
-  "support": "https://github.com/TheBlackBush/red-alert-homey-app/issues",
+  "support": "https://github.com/TheBlackBush/homey-apps-support/wiki/Red-Alert-Israel",
   "contributing": {
     "donate": {
       "paypal": {
