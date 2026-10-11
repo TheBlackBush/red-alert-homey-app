@@ -60,7 +60,7 @@
     "he": "נוסח מחדש טקסט הערות השחרור האחרונות כדי לייצר תיאור ברור יותר לחנות Homey."
   },
   "0.4.10": {
-    "en": "The settings page now reads right to left in Hebrew, and the throttle fields keep values of one minute or more and explain what they do. The app's support link opens the new Red Alert Israel user guide, and bug reports go to the shared support page.",
-    "he": "דף ההגדרות מוצג כעת מימין לשמאל בעברית, ושדות ההשהיה שומרים ערכים של דקה ומעלה ומסבירים מה הם עושים. קישור התמיכה של האפליקציה פותח את מדריך המשתמש החדש של צבע אדום ישראל, ודיווחי תקלות עוברים לדף התמיכה המשותף."
+    "en": "Redesigned settings page: clearer sections, a fixed language switcher, right-to-left layout in Hebrew, removable area chips, a warning when no area is selected, and repeated-alert times in seconds (minimum one minute). The app's support link opens the new Red Alert Israel user guide.",
+    "he": "דף ההגדרות עוצב מחדש: חלוקה ברורה יותר, בורר שפה קבוע, תצוגה מימין לשמאל בעברית, הסרת אזורים בלחיצה, אזהרה כשלא נבחר אזור, וזמני התרעות חוזרות בשניות (מינימום דקה). קישור התמיכה של האפליקציה פותח את מדריך המשתמש החדש של צבע אדום ישראל."
   }
 }
