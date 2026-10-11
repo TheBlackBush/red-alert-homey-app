@@ -92,6 +92,12 @@
       background: #fff;
     }
 
+    /* Keep digits and times in reading order on the Hebrew (RTL) page */
+    [dir='rtl'] input[type='number'], [dir='rtl'] input[type='time'] {
+      direction: ltr;
+      text-align: right;
+    }
+
     .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -388,6 +394,8 @@
 
     function applyLanguage(lang) {
       currentLang = lang;
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
       const heBtn = document.getElementById('langHe');
       const enBtn = document.getElementById('langEn');
 

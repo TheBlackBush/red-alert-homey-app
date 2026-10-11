@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Settings: a throttle value of 0 or below one minute was silently saved as the default. Values are now kept, raised to the one-minute minimum the app already applies, and the hint explains this.
 
 ### Changed
+- Settings page switches to right-to-left layout when Hebrew is selected (numbers and times stay in reading order).
 - App Store support link now opens the Red Alert Israel user guide (homey-apps-support wiki).
 - Homepage and bug report links now point to the homey-apps-support repository.
 
