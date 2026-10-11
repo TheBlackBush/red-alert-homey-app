@@ -17,6 +17,7 @@
       --ra-line: color-mix(in srgb, var(--ra-text) 14%, transparent);
       --ra-surface: color-mix(in srgb, var(--ra-text) 4%, transparent);
       --ra-radius: 12px;
+      --ra-accent: var(--homey-color-blue, #3b6fe0);
     }
 
     body {
@@ -60,25 +61,37 @@
       border: 1px solid var(--ra-line);
     }
 
-    .ra-lang button {
-      appearance: none;
-      border: 0;
-      border-radius: 7px;
-      padding: 8px 0;
+    /* Homey styles plain buttons globally, so these rules are marked important */
+    .ra-lang > button.ra-lang-btn {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 38px !important;
+      margin: 0 !important;
+      padding: 8px 0 !important;
+      border: 0 !important;
+      border-radius: 7px !important;
+      box-shadow: none !important;
       font: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--ra-muted);
-      background: transparent;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      text-transform: none !important;
+      color: var(--ra-muted) !important;
+      background: transparent !important;
       cursor: pointer;
-      transition: background .15s ease, color .15s ease;
     }
 
-    .ra-lang button[aria-pressed='true'] {
-      color: var(--ra-text);
-      background: var(--homey-color-mono-000, #fff);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    .ra-lang > button.ra-lang-btn[aria-pressed='true'] {
+      color: #fff !important;
+      background: var(--ra-accent) !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18) !important;
     }
+
+    .ra-lang-check { display: none; font-size: 14px; }
+    .ra-lang-btn[aria-pressed='true'] .ra-lang-check { display: inline; }
 
     .ra-lang-hint {
       font-size: 12px;
@@ -133,37 +146,61 @@
       line-height: 1.4;
     }
 
-    /* Switch, same look as the dashboard widget */
+    /* Switch: an invisible native checkbox over a drawn track. Homey styles checkboxes
+       globally, so the input rules are marked important. */
     .ra-switch {
       flex: none;
       position: relative;
-      width: 46px;
-      height: 28px;
-      margin: 0;
-      border-radius: 999px;
-      border: 1px solid var(--ra-line);
-      background: color-mix(in srgb, var(--ra-text) 16%, transparent);
-      appearance: none;
+      display: inline-block;
+      width: 50px;
+      height: 30px;
+    }
+
+    .ra-switch > input.ra-switch-input {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      opacity: 0 !important;
+      z-index: 1;
       cursor: pointer;
+    }
+
+    .ra-switch > input.ra-switch-input::before,
+    .ra-switch > input.ra-switch-input::after { display: none !important; }
+
+    .ra-switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--ra-text) 20%, transparent);
       transition: background .2s ease;
     }
 
-    .ra-switch::after {
+    .ra-switch-track::after {
       content: '';
       position: absolute;
-      top: 2px;
-      inset-inline-start: 2px;
-      width: 22px;
-      height: 22px;
+      top: 3px;
+      inset-inline-start: 3px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: #fff;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
       transition: transform .2s ease;
     }
 
-    .ra-switch:checked { background: var(--ra-green); }
-    .ra-switch:checked::after { transform: translateX(18px); }
-    .ra-switch:checked:dir(rtl)::after { transform: translateX(-18px); }
+    .ra-switch-input:checked + .ra-switch-track { background: var(--ra-green); }
+    .ra-switch-input:checked + .ra-switch-track::after { transform: translateX(20px); }
+    .ra-switch-input:checked + .ra-switch-track:dir(rtl)::after { transform: translateX(-20px); }
+    .ra-switch-input:focus-visible + .ra-switch-track { outline: 2px solid var(--ra-accent); outline-offset: 2px; }
+
+    .ra-toggle-row { cursor: pointer; }
 
     .ra-status {
       display: inline-flex;
@@ -208,21 +245,28 @@
       color: var(--ra-text);
     }
 
-    .ra-chip button {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      color: var(--ra-muted);
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      font-size: 16px;
-      line-height: 1;
+    .ra-chip > button.ra-chip-x {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: inline-grid !important;
+      place-items: center;
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      color: var(--ra-muted) !important;
+      font-size: 16px !important;
+      line-height: 1 !important;
       cursor: pointer;
-      padding: 0;
     }
 
-    .ra-chip button:hover { background: var(--ra-line); color: var(--ra-text); }
+    .ra-chip > button.ra-chip-x:active { background: var(--ra-line) !important; }
 
     .ra-callout {
       font-size: 13px;
@@ -387,15 +431,23 @@
 
     .ra-dialog-title strong { font-size: 17px; }
 
-    .ra-close {
-      appearance: none;
-      border: 0;
-      background: var(--ra-surface);
-      color: var(--ra-text);
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-size: 18px;
+    .ra-dialog-title > button.ra-close {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: inline-grid !important;
+      place-items: center;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+      background: var(--ra-surface) !important;
+      color: var(--ra-text) !important;
+      font-size: 20px !important;
+      line-height: 1 !important;
       cursor: pointer;
     }
 
@@ -447,8 +499,8 @@
     </div>
 
     <div class="ra-lang" dir="ltr" role="group" aria-label="Language">
-      <button id="langHe" type="button" lang="he" aria-pressed="true">עברית</button>
-      <button id="langEn" type="button" lang="en" aria-pressed="false">English</button>
+      <button id="langHe" class="ra-lang-btn" type="button" lang="he" aria-pressed="true"><span class="ra-lang-check" aria-hidden="true">✓</span>עברית</button>
+      <button id="langEn" class="ra-lang-btn" type="button" lang="en" aria-pressed="false"><span class="ra-lang-check" aria-hidden="true">✓</span>English</button>
     </div>
     <p class="ra-lang-hint" data-i18n="langHint">Language of this page and of alert messages in Flows.</p>
   </header>
@@ -457,12 +509,15 @@
   <fieldset class="homey-form-fieldset ra-section">
     <legend class="homey-form-legend" data-i18n="monitoringLegend">Monitoring</legend>
     <div class="ra-card">
-      <div class="ra-row">
-        <label class="ra-row-text" for="monitoring">
-          <span class="ra-row-title" data-i18n="monitoring">Receive alerts</span>
-          <span class="ra-row-desc" data-i18n="monitoringDesc">When off, the app ignores all alerts and your Flows do not start.</span>
-        </label>
-        <input id="monitoring" class="ra-switch" type="checkbox" role="switch" />
+      <div class="ra-row ra-toggle-row" data-toggle="monitoring">
+        <div class="ra-row-text">
+          <span class="ra-row-title" id="monitoringTitle" data-i18n="monitoring">Receive alerts</span>
+          <span class="ra-row-desc" id="monitoringDesc" data-i18n="monitoringDesc">When off, the app ignores all alerts and your Flows do not start.</span>
+        </div>
+        <span class="ra-switch">
+          <input id="monitoring" class="ra-switch-input" type="checkbox" role="switch" aria-labelledby="monitoringTitle" aria-describedby="monitoringDesc" />
+          <span class="ra-switch-track" aria-hidden="true"></span>
+        </span>
       </div>
       <div id="monitoringStatus" class="ra-status is-on"></div>
     </div>
@@ -484,12 +539,15 @@
   <fieldset class="homey-form-fieldset ra-section">
     <legend class="homey-form-legend" data-i18n="quietLegend">Quiet hours</legend>
     <div class="ra-card">
-      <div class="ra-row">
-        <label class="ra-row-text" for="quietEnabled">
-          <span class="ra-row-title" data-i18n="quietEnable">Silence early warnings at night</span>
-          <span class="ra-row-desc" data-i18n="quietDesc">Only early warnings are silenced. Red alerts and all-clear messages always come through.</span>
-        </label>
-        <input id="quietEnabled" class="ra-switch" type="checkbox" role="switch" />
+      <div class="ra-row ra-toggle-row" data-toggle="quietEnabled">
+        <div class="ra-row-text">
+          <span class="ra-row-title" id="quietEnabledTitle" data-i18n="quietEnable">Silence early warnings at night</span>
+          <span class="ra-row-desc" id="quietEnabledDesc" data-i18n="quietDesc">Only early warnings are silenced. Red alerts and all-clear messages always come through.</span>
+        </div>
+        <span class="ra-switch">
+          <input id="quietEnabled" class="ra-switch-input" type="checkbox" role="switch" aria-labelledby="quietEnabledTitle" aria-describedby="quietEnabledDesc" />
+          <span class="ra-switch-track" aria-hidden="true"></span>
+        </span>
       </div>
       <div id="quietTimes" class="ra-times">
         <div class="homey-form-group">
@@ -742,6 +800,7 @@
         label.textContent = name;
         const remove = document.createElement('button');
         remove.type = 'button';
+        remove.className = 'ra-chip-x';
         remove.textContent = '×';
         remove.setAttribute('aria-label', t('removeCity', { name }));
         remove.addEventListener('click', () => {
@@ -955,6 +1014,15 @@
       $('quietEnabled').addEventListener('change', () => { renderQuiet(); updateDirty(); });
       ['quietStart', 'quietEnd', ...Object.keys(THROTTLE_FIELDS)].forEach((id) => {
         $(id).addEventListener('input', updateDirty);
+      });
+
+      document.querySelectorAll('.ra-toggle-row').forEach((row) => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.ra-switch')) return;
+          const input = $(row.dataset.toggle);
+          input.checked = !input.checked;
+          input.dispatchEvent(new Event('change'));
+        });
       });
 
       $('resetThrottle').addEventListener('click', () => { fillThrottle(THROTTLE_DEFAULTS); updateDirty(); });
