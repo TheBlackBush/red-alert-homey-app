@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.10] - 2026-10-12
+
+### Fixed
+- Settings: a throttle value of 0 or below one minute was silently saved as the default. Values are now kept, raised to the one-minute minimum the app already applies, and the hint explains this.
+
+### Changed
+- Redesigned settings page built on Homey's form styles: sections for monitoring, alert areas, quiet hours and an "Advanced" section for repeated alerts.
+- Language switcher stays in a fixed place; the page switches to right-to-left when Hebrew is selected (numbers and times stay in reading order).
+- Selected areas are shown as chips that can be removed directly; a warning appears when no area is selected (all of Israel); selected areas are listed first in the picker.
+- Repeated-alert times are shown in seconds instead of milliseconds, with a "Restore defaults" button.
+- Unsaved changes are shown above the Save button, and the page links to the user guide.
+- App Store support link now opens the Red Alert Israel user guide (homey-apps-support wiki).
+- Homepage and bug report links now point to the homey-apps-support repository.
+
+### Validation
+- `homey app validate --level=publish` passes.
+
 ## [0.4.9] - 2026-03-23
 
 ### Changed

@@ -58,5 +58,9 @@
   "0.4.9": {
     "en": "Reworded the recent release notes for clearer Homey Store-facing changelog text.",
     "he": "נוסח מחדש טקסט הערות השחרור האחרונות כדי לייצר תיאור ברור יותר לחנות Homey."
+  },
+  "0.4.10": {
+    "en": "Redesigned settings page: clearer sections, a fixed language switcher, right-to-left layout in Hebrew, removable area chips, a warning when no area is selected, and repeated-alert times in seconds (minimum one minute). The app's support link opens the new Red Alert Israel user guide.",
+    "he": "דף ההגדרות עוצב מחדש: חלוקה ברורה יותר, בורר שפה קבוע, תצוגה מימין לשמאל בעברית, הסרת אזורים בלחיצה, אזהרה כשלא נבחר אזור, וזמני התרעות חוזרות בשניות (מינימום דקה). קישור התמיכה של האפליקציה פותח את מדריך המשתמש החדש של צבע אדום ישראל."
   }
 }

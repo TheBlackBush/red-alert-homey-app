@@ -1,0 +1,65 @@
+{
+  "id": "il.co.tzevaadom",
+  "version": "0.4.10",
+  "compatibility": ">=12.3.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Red Alert Israel",
+    "he": "צבע אדום ישראל"
+  },
+  "description": {
+    "en": "Civil defense alert automations for Israel",
+    "he": "אוטומציות להתראות פיקוד העורף בישראל"
+  },
+  "category": "security",
+  "tags": {
+    "en": [
+      "red alert",
+      "israel",
+      "safety",
+      "oref",
+      "tzofar"
+    ],
+    "he": [
+      "צבע אדום",
+      "פיקוד העורף",
+      "התראה",
+      "ישראל"
+    ]
+  },
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "brandColor": "#ff142c",
+  "author": {
+    "name": "Idan Bush"
+  },
+  "homepage": "https://github.com/TheBlackBush/homey-apps-support",
+  "source": "https://github.com/TheBlackBush/red-alert-homey-app",
+  "bugs": {
+    "url": "https://github.com/TheBlackBush/homey-apps-support/issues"
+  },
+  "support": "https://github.com/TheBlackBush/homey-apps-support/wiki/Red-Alert-Israel",
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "idanbush"
+      }
+    }
+  },
+  "api": {
+    "cities": {
+      "method": "GET",
+      "path": "/cities"
+    },
+    "diagnostics": {
+      "method": "GET",
+      "path": "/diagnostics"
+    }
+  }
+}

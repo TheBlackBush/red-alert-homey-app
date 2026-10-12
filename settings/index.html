@@ -1,595 +1,1047 @@
 <!doctype html>
-<html>
+<html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Red Alert Israel</title>
   <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
   <style>
     :root {
-      --card-bg: #f8fafc;
-      --card-border: #e2e8f0;
-      --muted: #64748b;
-      --brand-blue: #23aae1;
-      --brand-gray: #414143;
+      --ra-red: #e5322d;
+      --ra-red-soft: rgba(229, 50, 45, 0.1);
+      --ra-amber: #b45309;
+      --ra-amber-soft: rgba(245, 158, 11, 0.14);
+      --ra-green: var(--homey-color-green, #2fb344);
+      --ra-text: var(--homey-text-color, #1f2937);
+      --ra-muted: color-mix(in srgb, var(--ra-text) 60%, transparent);
+      --ra-line: color-mix(in srgb, var(--ra-text) 14%, transparent);
+      --ra-surface: color-mix(in srgb, var(--ra-text) 4%, transparent);
+      --ra-radius: 12px;
+      --ra-accent: var(--homey-color-blue, #3b6fe0);
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      margin: 20px;
-      max-width: 920px;
-      color: #0f172a;
-      background: #ffffff;
+      margin: 0;
+      padding: 20px 16px 0;
+      font-family: var(--homey-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+      color: var(--ra-text);
     }
 
-    .header { margin-bottom: 16px; }
-    .title { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
-    .subtitle { color: var(--muted); margin: 0; font-size: 14px; }
-
-    .lang-tabs {
-      display: inline-flex;
-      gap: 8px;
-      border: 1px solid #d6e3ee;
-      border-radius: 12px;
-      padding: 6px;
-      background: #f7fbfe;
-      margin-top: 10px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+    /* Header */
+    .ra-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .lang-tab {
-      border: 2px solid transparent;
-      border-radius: 9px;
-      padding: 7px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--brand-gray);
-      background: transparent;
-      cursor: pointer;
-      transition: all .18s ease;
-      opacity: .72;
-    }
-
-    .lang-tab:hover {
-      background: #eef6fb;
-      border-color: #d6e3ee;
-    }
-
-    .lang-tab.active {
-      background: var(--brand-blue);
-      color: #fff;
-      border-color: #0c5f80;
-      box-shadow: 0 0 0 2px rgba(35,170,225,.22), 0 2px 8px rgba(35,170,225,.28);
-      opacity: 1;
-      transform: translateY(-1px);
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .row { margin-bottom: 14px; }
-    .row:last-child { margin-bottom: 0; }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #0f172a;
-    }
-
-    input[type='text'], input[type='number'] {
-      width: 100%;
-      padding: 10px 11px;
-      box-sizing: border-box;
-      border: 1px solid #cbd5e1;
+    .ra-brand-icon {
+      flex: none;
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
-      font-size: 14px;
-      background: #fff;
+      background: var(--ra-red);
+      display: grid;
+      place-items: center;
     }
 
-    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .ra-brand-icon svg { width: 22px; height: 22px; }
 
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .ra-brand .homey-title { margin: 0; }
+    .ra-brand .homey-subtitle { margin: 2px 0 0; }
 
-    .btn {
-      appearance: none;
+    /* Language switcher: always left-to-right and full width, so it never moves */
+    .ra-lang {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      margin: 16px 0 4px;
       border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      line-height: 1.2;
-      cursor: pointer;
-      font-weight: 700;
-      transition: all .16s ease;
+      background: var(--ra-surface);
+      border: 1px solid var(--ra-line);
     }
 
-    .btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(35, 170, 225, .28);
-    }
-
-    .btn:active { transform: translateY(1px); }
-
-    .btn:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-primary {
-      background: var(--brand-blue) !important;
-      color: #fff !important;
+    /* Homey styles plain buttons globally, so these rules are marked important */
+    .ra-lang > button.ra-lang-btn {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 38px !important;
+      margin: 0 !important;
+      padding: 8px 0 !important;
       border: 0 !important;
-      box-shadow: none;
+      border-radius: 7px !important;
+      box-shadow: none !important;
+      font: inherit;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      text-transform: none !important;
+      color: var(--ra-muted) !important;
+      background: transparent !important;
+      cursor: pointer;
     }
 
-    .btn-primary:hover { background: var(--brand-blue) !important; }
-
-    .btn-secondary {
-      background: #eef4f8 !important;
-      color: var(--brand-gray) !important;
-      border: 1px solid #d6e3ee !important;
+    .ra-lang > button.ra-lang-btn[aria-pressed='true'] {
+      color: #fff !important;
+      background: var(--ra-accent) !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18) !important;
     }
 
-    .btn-secondary:hover {
-      background: #eef4f8 !important;
-      border: 1px solid #d6e3ee !important;
+    .ra-lang-check { display: none; font-size: 14px; }
+    .ra-lang-btn[aria-pressed='true'] .ra-lang-check { display: inline; }
+
+    .ra-lang-hint {
+      font-size: 12px;
+      color: var(--ra-muted);
+      margin: 0 2px 8px;
     }
 
-    .pill-wrap {
+    /* Sections */
+    .ra-section {
+      border: 0;
+      padding: 0;
+      margin: 20px 0 0;
+      min-width: 0;
+    }
+
+    .ra-section .homey-form-legend {
+      padding: 0 2px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: var(--ra-muted);
+    }
+
+    .ra-card {
+      border: 1px solid var(--ra-line);
+      border-radius: var(--ra-radius);
+      padding: 14px;
+    }
+
+    .ra-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ra-row-text { min-width: 0; }
+
+    .ra-row-title, .ra-row-desc { display: block; }
+
+    .ra-row-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ra-text);
+    }
+
+    .ra-row-desc {
+      font-size: 13px;
+      color: var(--ra-muted);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* Switch: an invisible native checkbox over a drawn track. Homey styles checkboxes
+       globally, so the input rules are marked important. */
+    .ra-switch {
+      flex: none;
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 30px;
+    }
+
+    .ra-switch > input.ra-switch-input {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      opacity: 0 !important;
+      z-index: 1;
+      cursor: pointer;
+    }
+
+    .ra-switch > input.ra-switch-input::before,
+    .ra-switch > input.ra-switch-input::after { display: none !important; }
+
+    .ra-switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--ra-text) 20%, transparent);
+      transition: background .2s ease;
+    }
+
+    .ra-switch-track::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      inset-inline-start: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transition: transform .2s ease;
+    }
+
+    .ra-switch-input:checked + .ra-switch-track { background: var(--ra-green); }
+    .ra-switch-input:checked + .ra-switch-track::after { transform: translateX(20px); }
+    .ra-switch-input:checked + .ra-switch-track:dir(rtl)::after { transform: translateX(-20px); }
+    .ra-switch-input:focus-visible + .ra-switch-track { outline: 2px solid var(--ra-accent); outline-offset: 2px; }
+
+    .ra-toggle-row { cursor: pointer; }
+
+    .ra-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .ra-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .ra-status.is-on { color: var(--ra-green); background: color-mix(in srgb, var(--ra-green) 12%, transparent); }
+    .ra-status.is-off { color: var(--ra-red); background: var(--ra-red-soft); }
+
+    /* Cities */
+    .ra-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-      min-height: 28px;
-    }
-
-    .pill {
-      background: #e2e8f0;
-      color: #0f172a;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .footer-actions { display: flex; align-items: center; gap: 10px; }
-    #status {
-      font-size: 13px;
-      color: var(--muted);
-      padding: 6px 10px;
-      border-radius: 8px;
-    }
-    #status.success {
-      background: #e8f7ec;
-      color: #1f7a34;
-      border: 1px solid #b7e4c7;
-    }
-    #status.error {
-      background: #fdecec;
-      color: #8a1f1f;
-      border: 1px solid #f3b6b6;
-    }
-
-    dialog {
-      width: min(680px, 96vw);
-      border: 0;
-      border-radius: 14px;
-      padding: 0;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
-    }
-
-    dialog::backdrop { background: rgba(15, 23, 42, .35); }
-
-    .dialog-head {
-      padding: 14px;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .dialog-body { padding: 14px; }
-    .city-list {
-      max-height: 360px;
-      overflow: auto;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      background: #fff;
-      padding: 8px;
-      margin-top: 10px;
-    }
-
-    .city-item {
-      display: flex;
-      align-items: center;
       gap: 8px;
-      padding: 6px 4px;
-      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 12px;
+    }
+
+    .ra-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding-block: 6px;
+      padding-inline: 12px 6px;
+      border-radius: 999px;
+      background: var(--ra-surface);
+      border: 1px solid var(--ra-line);
+      font-size: 14px;
+      color: var(--ra-text);
+    }
+
+    .ra-chip > button.ra-chip-x {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: inline-grid !important;
+      place-items: center;
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      color: var(--ra-muted) !important;
+      font-size: 16px !important;
+      line-height: 1 !important;
+      cursor: pointer;
+    }
+
+    .ra-chip > button.ra-chip-x:active { background: var(--ra-line) !important; }
+
+    .ra-callout {
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .ra-callout.is-warning { background: var(--ra-amber-soft); color: var(--ra-amber); }
+    .ra-callout.is-info { background: var(--ra-surface); color: var(--ra-muted); }
+
+    .ra-count {
+      font-size: 13px;
+      color: var(--ra-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Quiet hours */
+    .ra-times {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .ra-times[hidden] { display: none; }
+
+    .ra-times .homey-form-group { margin: 0; }
+
+    /* Advanced */
+    .ra-advanced summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ra-text);
+    }
+
+    .ra-advanced summary::-webkit-details-marker { display: none; }
+
+    .ra-advanced summary::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-inline-end: 2px solid var(--ra-muted);
+      border-bottom: 2px solid var(--ra-muted);
+      transform: rotate(45deg);
+      transition: transform .2s ease;
+    }
+
+    .ra-advanced[open] summary::after { transform: rotate(-135deg); }
+
+    .ra-advanced-body { margin-top: 12px; }
+
+    .ra-throttle {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .ra-throttle .homey-form-group { margin: 0; }
+
+    .ra-throttle-desc { margin: 0 0 12px; }
+
+    .ra-reset { margin-top: 8px; }
+
+    .ra-unit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ra-unit input,
+    .ra-times input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .ra-unit span {
+      font-size: 13px;
+      color: var(--ra-muted);
+    }
+
+    /* Digits and times keep their reading order on the Hebrew page */
+    input[type='number'], input[type='time'] {
+      direction: ltr;
+      text-align: start;
+    }
+
+    input[type='number']:dir(rtl), input[type='time']:dir(rtl) { text-align: right; }
+
+    .ra-disclaimer {
+      font-size: 12px;
+      color: var(--ra-muted);
+      line-height: 1.5;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .ra-disclaimer a { color: inherit; text-decoration: underline; cursor: pointer; }
+
+    /* Save bar */
+    /* Sticky, not fixed: it stays at the bottom while scrolling but never covers the footer */
+    .ra-savebar {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      margin: 16px -16px 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: var(--homey-background-color, #fff);
+      border-top: 1px solid var(--ra-line);
+    }
+
+    .ra-savebar-msg {
+      font-size: 13px;
+      text-align: center;
+      min-height: 18px;
+      margin-bottom: 8px;
+      color: var(--ra-muted);
+    }
+
+    .ra-savebar-msg.is-success { color: var(--ra-green); }
+    .ra-savebar-msg.is-error { color: var(--ra-red); }
+    .ra-savebar-msg.is-dirty { color: var(--ra-amber); }
+
+    /* Cities dialog */
+    dialog.ra-dialog {
+      width: min(560px, 100vw);
+      max-width: 100vw;
+      height: min(640px, 100vh);
+      max-height: 100vh;
+      padding: 0;
+      border: 0;
+      border-radius: 16px;
+      color: var(--ra-text);
+      background: var(--homey-background-color, #fff);
+    }
+
+    dialog.ra-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+
+    dialog.ra-dialog[open] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ra-dialog-head {
+      padding: 16px 16px 8px;
+      border-bottom: 1px solid var(--ra-line);
+    }
+
+    .ra-dialog-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .ra-dialog-title strong { font-size: 17px; }
+
+    .ra-dialog-title > button.ra-close {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: inline-grid !important;
+      place-items: center;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+      background: var(--ra-surface) !important;
+      color: var(--ra-text) !important;
+      font-size: 20px !important;
+      line-height: 1 !important;
+      cursor: pointer;
+    }
+
+    .ra-dialog-count { margin: 8px 0 0; }
+
+    .ra-city-list {
+      flex: 1;
+      overflow: auto;
+      padding: 4px 16px;
+    }
+
+    .ra-city-list .homey-form-checkbox {
+      display: flex;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--ra-line);
+      margin: 0;
+    }
+
+    .ra-city-empty {
+      padding: 24px 0;
+      text-align: center;
+      color: var(--ra-muted);
       font-size: 14px;
     }
 
-    .city-item:last-child { border-bottom: 0; }
-
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 14px;
-      border-top: 1px solid #e2e8f0;
-      background: #f8fafc;
-      border-bottom-left-radius: 14px;
-      border-bottom-right-radius: 14px;
+    .ra-dialog-foot {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--ra-line);
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h2 class="title" data-i18n="title">Red Alert Settings</h2>
-    <p class="subtitle" data-i18n="subtitle">Homey-style configuration for cities, quiet hours and throttling.</p>
-    <div class="lang-tabs" role="tablist" aria-label="Language selector">
-      <button id="langHe" class="lang-tab active" type="button" aria-pressed="true">✓ עברית</button>
-      <button id="langEn" class="lang-tab" type="button" aria-pressed="false">English</button>
+  <header class="homey-header">
+    <div class="ra-brand">
+      <div class="ra-brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 9v4"></path>
+          <path d="M12 17h.01"></path>
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="homey-title" data-i18n="title">Red Alert Israel</h1>
+        <p class="homey-subtitle" data-i18n="subtitle">Home Front Command alerts for your Flows</p>
+      </div>
     </div>
-    <div class="hint" id="langStatus" style="margin-top:8px;">Selected language: עברית</div>
-  </div>
 
-  <div class="card">
-    <div class="row">
-      <label><input type="checkbox" id="monitoring" /> <span data-i18n="monitoring">Monitoring enabled</span></label>
+    <div class="ra-lang" dir="ltr" role="group" aria-label="Language">
+      <button id="langHe" class="ra-lang-btn" type="button" lang="he" aria-pressed="true"><span class="ra-lang-check" aria-hidden="true">✓</span>עברית</button>
+      <button id="langEn" class="ra-lang-btn" type="button" lang="en" aria-pressed="false"><span class="ra-lang-check" aria-hidden="true">✓</span>English</button>
     </div>
+    <p class="ra-lang-hint" data-i18n="langHint">Language of this page and of alert messages in Flows.</p>
+  </header>
 
-    <div class="row">
-      <label data-i18n="cities">Cities</label>
-      <button id="openCities" class="btn btn-secondary" type="button" data-i18n="chooseCities">Choose cities</button>
-      <div class="pill-wrap" id="cityPills"></div>
-      <div class="hint" data-i18n="citiesHint">City selection is done in a searchable dialog.</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <label data-i18n="quietTitle">Quiet hours (applies to pre-alert only)</label>
-      <div class="grid3">
-        <div>
-          <label for="quietStart" data-i18n="quietStart">Start time (24h)</label>
-          <input id="quietStart" type="time" step="60" value="23:00" />
+  <!-- Monitoring -->
+  <fieldset class="homey-form-fieldset ra-section">
+    <legend class="homey-form-legend" data-i18n="monitoringLegend">Monitoring</legend>
+    <div class="ra-card">
+      <div class="ra-row ra-toggle-row" data-toggle="monitoring">
+        <div class="ra-row-text">
+          <span class="ra-row-title" id="monitoringTitle" data-i18n="monitoring">Receive alerts</span>
+          <span class="ra-row-desc" id="monitoringDesc" data-i18n="monitoringDesc">When off, the app ignores all alerts and your Flows do not start.</span>
         </div>
-        <div>
-          <label for="quietEnd" data-i18n="quietEnd">End time (24h)</label>
-          <input id="quietEnd" type="time" step="60" value="06:00" />
+        <span class="ra-switch">
+          <input id="monitoring" class="ra-switch-input" type="checkbox" role="switch" aria-labelledby="monitoringTitle" aria-describedby="monitoringDesc" />
+          <span class="ra-switch-track" aria-hidden="true"></span>
+        </span>
+      </div>
+      <div id="monitoringStatus" class="ra-status is-on"></div>
+    </div>
+  </fieldset>
+
+  <!-- Cities -->
+  <fieldset class="homey-form-fieldset ra-section">
+    <legend class="homey-form-legend" data-i18n="citiesLegend">Alert areas</legend>
+    <div class="ra-card">
+      <div id="citiesCount" class="ra-count"></div>
+      <div id="cityChips" class="ra-chips"></div>
+      <div id="citiesEmpty" class="ra-callout is-warning" data-i18n="citiesEmpty">No areas selected: alerts anywhere in Israel will start your Flows. Choose the areas you care about.</div>
+      <div class="ra-callout is-info" data-i18n="citiesHint">Large cities are split into several alert areas. Nationwide alerts always count for your areas.</div>
+      <button id="openCities" type="button" class="homey-button-secondary-shadow" data-i18n="chooseCities">Choose areas</button>
+    </div>
+  </fieldset>
+
+  <!-- Quiet hours -->
+  <fieldset class="homey-form-fieldset ra-section">
+    <legend class="homey-form-legend" data-i18n="quietLegend">Quiet hours</legend>
+    <div class="ra-card">
+      <div class="ra-row ra-toggle-row" data-toggle="quietEnabled">
+        <div class="ra-row-text">
+          <span class="ra-row-title" id="quietEnabledTitle" data-i18n="quietEnable">Silence early warnings at night</span>
+          <span class="ra-row-desc" id="quietEnabledDesc" data-i18n="quietDesc">Only early warnings are silenced. Red alerts and all-clear messages always come through.</span>
         </div>
-        <div>
-          <label>&nbsp;</label>
-          <label style="display:flex;align-items:center;gap:6px;margin:0;"><input type="checkbox" id="quietEnabled" /> <span data-i18n="quietEnable">Enable quiet hours</span></label>
+        <span class="ra-switch">
+          <input id="quietEnabled" class="ra-switch-input" type="checkbox" role="switch" aria-labelledby="quietEnabledTitle" aria-describedby="quietEnabledDesc" />
+          <span class="ra-switch-track" aria-hidden="true"></span>
+        </span>
+      </div>
+      <div id="quietTimes" class="ra-times">
+        <div class="homey-form-group">
+          <label class="homey-form-label" for="quietStart" data-i18n="quietStart">From</label>
+          <input class="homey-form-input" id="quietStart" type="time" step="60" value="23:00" />
+        </div>
+        <div class="homey-form-group">
+          <label class="homey-form-label" for="quietEnd" data-i18n="quietEnd">Until</label>
+          <input class="homey-form-input" id="quietEnd" type="time" step="60" value="06:00" />
         </div>
       </div>
     </div>
-  </div>
+  </fieldset>
 
-  <div class="card">
-    <div class="row">
-      <label data-i18n="throttleTitle">Throttle per event type (milliseconds)</label>
-      <div class="grid2">
-        <div>
-          <label for="thPrimary" data-i18n="thPrimary">Primary alert throttle</label>
-          <input id="thPrimary" type="number" min="0" step="1000" />
+  <!-- Advanced -->
+  <div class="ra-section">
+    <details class="ra-card ra-advanced">
+      <summary data-i18n="advanced">Advanced: repeated alerts</summary>
+      <div class="ra-advanced-body">
+        <div class="ra-row-desc ra-throttle-desc" data-i18n="throttleDesc">How long a repeat of the same alert is ignored, so a Flow does not run twice for one alert. Minimum 60 seconds.</div>
+        <div class="ra-throttle">
+          <div class="homey-form-group">
+            <label class="homey-form-label" for="thPrimary" data-i18n="thPrimary">Red alerts</label>
+            <div class="ra-unit"><input class="homey-form-input" id="thPrimary" type="number" min="60" step="10" inputmode="numeric" /><span data-i18n="seconds">sec</span></div>
+          </div>
+          <div class="homey-form-group">
+            <label class="homey-form-label" for="thPreAlert" data-i18n="thPreAlert">Early warnings</label>
+            <div class="ra-unit"><input class="homey-form-input" id="thPreAlert" type="number" min="60" step="10" inputmode="numeric" /><span data-i18n="seconds">sec</span></div>
+          </div>
+          <div class="homey-form-group">
+            <label class="homey-form-label" for="thAllClear" data-i18n="thAllClear">All-clear</label>
+            <div class="ra-unit"><input class="homey-form-input" id="thAllClear" type="number" min="60" step="10" inputmode="numeric" /><span data-i18n="seconds">sec</span></div>
+          </div>
+          <div class="homey-form-group">
+            <label class="homey-form-label" for="thOther" data-i18n="thOther">Other threats</label>
+            <div class="ra-unit"><input class="homey-form-input" id="thOther" type="number" min="60" step="10" inputmode="numeric" /><span data-i18n="seconds">sec</span></div>
+          </div>
         </div>
-        <div>
-          <label for="thPreAlert" data-i18n="thPreAlert">Pre-alert throttle</label>
-          <input id="thPreAlert" type="number" min="0" step="1000" />
-        </div>
-        <div>
-          <label for="thAllClear" data-i18n="thAllClear">All-clear throttle</label>
-          <input id="thAllClear" type="number" min="0" step="1000" />
-        </div>
-        <div>
-          <label for="thOther" data-i18n="thOther">Other threat throttle</label>
-          <input id="thOther" type="number" min="0" step="1000" />
-        </div>
+        <button id="resetThrottle" type="button" class="homey-button-transparent homey-button-small ra-reset" data-i18n="resetDefaults">Restore defaults</button>
       </div>
-      <div class="hint" data-i18n="throttleHint">0 = no throttle. Recommended defaults are pre-filled.</div>
-    </div>
+    </details>
   </div>
 
-  <div class="footer-actions">
-    <button id="save" class="btn btn-primary" data-i18n="save">Save</button>
-    <div id="status"></div>
+  <p class="ra-disclaimer">
+    <span data-i18n="disclaimer">Unofficial community app. It does not replace official alerts: keep the Home Front Command app active.</span><br />
+    <a id="guideLink" data-i18n="guide">User guide and help</a>
+  </p>
+
+  <div class="ra-savebar">
+    <div id="status" class="ra-savebar-msg" role="status" aria-live="polite"></div>
+    <button id="save" type="button" class="homey-button-primary-full" data-i18n="save">Save</button>
   </div>
 
-  <dialog id="citiesDialog">
-    <div class="dialog-head">
-      <strong data-i18n="dialogTitle">Choose Cities</strong>
-      <button type="button" class="btn btn-secondary" id="closeDialogTop" data-i18n="close">Close</button>
+  <dialog id="citiesDialog" class="ra-dialog">
+    <div class="ra-dialog-head">
+      <div class="ra-dialog-title">
+        <strong data-i18n="dialogTitle">Choose areas</strong>
+        <button type="button" class="ra-close" id="closeDialog" aria-label="Close">×</button>
+      </div>
+      <input class="homey-form-input" id="citySearch" type="search" autocomplete="off" />
+      <div id="dialogCount" class="ra-count ra-dialog-count"></div>
     </div>
-    <div class="dialog-body">
-      <label for="citySearch" data-i18n="searchCity">Search city</label>
-      <input id="citySearch" type="text" placeholder="Type city name..." />
-      <div class="city-list" id="cityList"></div>
-    </div>
-    <div class="dialog-actions">
-      <button type="button" class="btn btn-secondary" id="clearCities" data-i18n="clearAll">Clear all</button>
-      <button type="button" class="btn btn-primary" id="applyCities" data-i18n="apply">Apply</button>
+    <div class="ra-city-list" id="cityList"></div>
+    <div class="ra-dialog-foot">
+      <button type="button" class="homey-button-transparent" id="clearCities" data-i18n="clearAll">Clear all</button>
+      <button type="button" class="homey-button-primary-full" id="applyCities" data-i18n="apply">Apply</button>
     </div>
   </dialog>
 
   <script>
-    let allCities = [];
-    let selectedCityIds = [];
-    let draftCityIds = [];
-    let currentLang = 'he';
+    const GUIDE_URL = 'https://github.com/TheBlackBush/homey-apps-support/wiki/Red-Alert-Israel';
+    // The app never ignores repeats for less than a minute, so smaller values are raised to it.
+    const THROTTLE_MIN_MS = 60000;
+    const THROTTLE_DEFAULTS = {
+      primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000,
+    };
+    const THROTTLE_FIELDS = {
+      thPrimary: 'primary', thPreAlert: 'pre-alert', thAllClear: 'all-clear', thOther: 'other',
+    };
 
     const I18N = {
       he: {
-        title: 'הגדרות צבע אדום',
-        subtitle: 'הגדרה בסגנון Homey עבור ערים, שעות שקט ו-throttle.',
-        monitoring: 'ניטור פעיל',
-        cities: 'ערים',
-        chooseCities: 'בחירת ערים',
-        citiesHint: 'בחירת הערים מתבצעת בדיאלוג עם חיפוש.',
-        quietTitle: 'שעות שקטות (חל רק על התראה מקדימה)',
-        quietStart: 'שעת התחלה (24h)',
-        quietEnd: 'שעת סיום (24h)',
-        quietEnable: 'הפעל שעות שקטות',
-        throttleTitle: 'השהיה בין אירועים לפי סוג (מילישניות)',
-        thPrimary: 'השהיה להתראה ראשית',
-        thPreAlert: 'השהיה להתראה מקדימה',
-        thAllClear: 'השהיה לסיום אירוע',
-        thOther: 'השהיה לסוגי איום אחרים',
-        throttleHint: '0 = ללא השהיה. ברירות מחדל כבר מוזנות.',
-        save: 'שמור',
-        dialogTitle: 'בחירת ערים',
-        close: 'סגור',
-        searchCity: 'חיפוש עיר',
-        clearAll: 'נקה הכל',
-        apply: 'החל',
-        noCities: 'לא נבחרו ערים (יתאים לכל הערים).',
-        couldNotLoad: 'לא ניתן לטעון רשימת ערים.',
-        saved: 'נשמר בהצלחה.',
-        saveFailed: 'שמירה נכשלה: '
+        title: 'צבע אדום ישראל',
+        subtitle: 'התרעות פיקוד העורף לתזרימים שלך',
+        langHint: 'שפת הדף הזה ושל הודעות ההתרעה בתזרימים.',
+        monitoringLegend: 'ניטור',
+        monitoring: 'קבלת התרעות',
+        monitoringDesc: 'כשכבוי, האפליקציה מתעלמת מכל ההתרעות והתזרימים לא מופעלים.',
+        statusOn: 'פעיל: מאזין להתרעות',
+        statusOff: 'כבוי: התרעות לא יגיעו ל-Homey',
+        citiesLegend: 'אזורי התרעה',
+        citiesCount: 'נבחרו {n} אזורים',
+        citiesCountOne: 'נבחר אזור אחד',
+        citiesEmpty: 'לא נבחרו אזורים: התרעה בכל מקום בארץ תפעיל את התזרימים שלך. בחרו את האזורים שחשובים לכם.',
+        citiesHint: 'ערים גדולות מחולקות לכמה אזורי התרעה. התרעות לכל הארץ נחשבות תמיד גם לאזורים שלך.',
+        chooseCities: 'בחירת אזורים',
+        removeCity: 'הסרת {name}',
+        quietLegend: 'שעות שקטות',
+        quietEnable: 'השתקת התרעות מקדימות בלילה',
+        quietDesc: 'רק התרעות מקדימות מושתקות. התרעות צבע אדום והודעות סיום אירוע מגיעות תמיד.',
+        quietStart: 'משעה',
+        quietEnd: 'עד שעה',
+        advanced: 'מתקדם: התרעות חוזרות',
+        throttleDesc: 'כמה זמן מתעלמים מחזרה של אותה התרעה, כדי שתזרים לא יופעל פעמיים על אותה התרעה. מינימום 60 שניות.',
+        thPrimary: 'התרעות צבע אדום',
+        thPreAlert: 'התרעות מקדימות',
+        thAllClear: 'סיום אירוע',
+        thOther: 'איומים אחרים',
+        seconds: 'שנ׳',
+        resetDefaults: 'שחזור ברירות מחדל',
+        disclaimer: 'אפליקציה קהילתית לא רשמית. היא אינה מחליפה התרעות רשמיות: השאירו את אפליקציית פיקוד העורף פעילה.',
+        guide: 'מדריך למשתמש ועזרה',
+        save: 'שמירה',
+        dirty: 'יש שינויים שלא נשמרו',
+        saving: 'שומר...',
+        saved: 'נשמר',
+        saveFailed: 'השמירה נכשלה: ',
+        dialogTitle: 'בחירת אזורים',
+        searchCity: 'חיפוש עיר או אזור',
+        dialogCount: '{n} נבחרו',
+        noResults: 'לא נמצאו אזורים',
+        loading: 'טוען אזורים...',
+        clearAll: 'ניקוי',
+        apply: 'אישור',
+        close: 'סגירה',
+        couldNotLoad: 'לא ניתן לטעון את רשימת האזורים. סגרו ופתחו את הדף שוב.',
       },
       en: {
-        title: 'Red Alert Settings',
-        subtitle: 'Homey-style configuration for cities, quiet hours and throttling.',
-        monitoring: 'Monitoring enabled',
-        cities: 'Cities',
-        chooseCities: 'Choose cities',
-        citiesHint: 'City selection is done in a searchable dialog.',
-        quietTitle: 'Quiet hours (applies to pre-alert only)',
-        quietStart: 'Start time (24h)',
-        quietEnd: 'End time (24h)',
-        quietEnable: 'Enable quiet hours',
-        throttleTitle: 'Throttle per event type (milliseconds)',
-        thPrimary: 'Primary alert throttle',
-        thPreAlert: 'Pre-alert throttle',
-        thAllClear: 'All-clear throttle',
-        thOther: 'Other threat throttle',
-        throttleHint: '0 = no throttle. Recommended defaults are pre-filled.',
+        title: 'Red Alert Israel',
+        subtitle: 'Home Front Command alerts for your Flows',
+        langHint: 'Language of this page and of alert messages in Flows.',
+        monitoringLegend: 'Monitoring',
+        monitoring: 'Receive alerts',
+        monitoringDesc: 'When off, the app ignores all alerts and your Flows do not start.',
+        statusOn: 'On: listening for alerts',
+        statusOff: 'Off: alerts will not reach Homey',
+        citiesLegend: 'Alert areas',
+        citiesCount: '{n} areas selected',
+        citiesCountOne: '1 area selected',
+        citiesEmpty: 'No areas selected: alerts anywhere in Israel will start your Flows. Choose the areas you care about.',
+        citiesHint: 'Large cities are split into several alert areas. Nationwide alerts always count for your areas.',
+        chooseCities: 'Choose areas',
+        removeCity: 'Remove {name}',
+        quietLegend: 'Quiet hours',
+        quietEnable: 'Silence early warnings at night',
+        quietDesc: 'Only early warnings are silenced. Red alerts and all-clear messages always come through.',
+        quietStart: 'From',
+        quietEnd: 'Until',
+        advanced: 'Advanced: repeated alerts',
+        throttleDesc: 'How long a repeat of the same alert is ignored, so a Flow does not run twice for one alert. Minimum 60 seconds.',
+        thPrimary: 'Red alerts',
+        thPreAlert: 'Early warnings',
+        thAllClear: 'All-clear',
+        thOther: 'Other threats',
+        seconds: 'sec',
+        resetDefaults: 'Restore defaults',
+        disclaimer: 'Unofficial community app. It does not replace official alerts: keep the Home Front Command app active.',
+        guide: 'User guide and help',
         save: 'Save',
-        dialogTitle: 'Choose Cities',
-        close: 'Close',
-        searchCity: 'Search city',
-        clearAll: 'Clear all',
+        dirty: 'You have unsaved changes',
+        saving: 'Saving...',
+        saved: 'Saved',
+        saveFailed: 'Save failed: ',
+        dialogTitle: 'Choose areas',
+        searchCity: 'Search a city or area',
+        dialogCount: '{n} selected',
+        noResults: 'No areas found',
+        loading: 'Loading areas...',
+        clearAll: 'Clear',
         apply: 'Apply',
-        noCities: 'No cities selected (all cities will match).',
-        couldNotLoad: 'Could not load cities list.',
-        saved: 'Saved.',
-        saveFailed: 'Save failed: '
-      }
+        close: 'Close',
+        couldNotLoad: 'Could not load the list of areas. Close and open this page again.',
+      },
     };
 
-    function t(key) { return I18N[currentLang][key] || key; }
+    let HomeyRef = null;
+    let currentLang = 'he';
+    let allCities = [];
+    let citiesLoaded = false;
+    let citiesFailed = false;
+    let selectedCityIds = [];
+    let draftCityIds = [];
+    let storedThrottle = {};
+    let savedSnapshot = '';
+
+    const $ = (id) => document.getElementById(id);
+
+    function t(key, tokens) {
+      let text = I18N[currentLang][key] || I18N.en[key] || key;
+      Object.entries(tokens || {}).forEach(([k, v]) => { text = text.split(`{${k}}`).join(v); });
+      return text;
+    }
+
+    function cityName(city) {
+      return currentLang === 'en' ? (city.en || city.he || city.name) : (city.he || city.en || city.name);
+    }
+
+    function cityById(id) {
+      return allCities.find((c) => Number(c.id) === Number(id));
+    }
 
     function applyLanguage(lang) {
-      currentLang = lang;
-      const heBtn = document.getElementById('langHe');
-      const enBtn = document.getElementById('langEn');
+      currentLang = lang === 'en' ? 'en' : 'he';
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
 
-      heBtn.classList.toggle('active', lang === 'he');
-      enBtn.classList.toggle('active', lang === 'en');
-      heBtn.setAttribute('aria-pressed', lang === 'he' ? 'true' : 'false');
-      enBtn.setAttribute('aria-pressed', lang === 'en' ? 'true' : 'false');
-      heBtn.textContent = lang === 'he' ? '✓ עברית' : 'עברית';
-      enBtn.textContent = lang === 'en' ? '✓ English' : 'English';
+      $('langHe').setAttribute('aria-pressed', String(currentLang === 'he'));
+      $('langEn').setAttribute('aria-pressed', String(currentLang === 'en'));
 
       document.querySelectorAll('[data-i18n]').forEach((el) => {
-        const k = el.getAttribute('data-i18n');
-        el.textContent = t(k);
+        el.textContent = t(el.getAttribute('data-i18n'));
       });
+      $('citySearch').placeholder = t('searchCity');
+      $('closeDialog').setAttribute('aria-label', t('close'));
 
-      const langStatus = document.getElementById('langStatus');
-      langStatus.textContent = lang === 'he' ? 'השפה שנבחרה: עברית' : 'Selected language: English';
-
-      document.getElementById('citySearch').placeholder = lang === 'he' ? 'הקלד שם עיר...' : 'Type city name...';
-      renderPills();
-      if (document.getElementById('citiesDialog').open) {
-        renderDialogList(document.getElementById('citySearch').value || '');
-      }
+      renderMonitoring();
+      renderCities();
+      if ($('citiesDialog').open) renderDialogList();
+      updateDirty();
     }
 
-    function getSetting(Homey, key, fallback, cb) {
-      Homey.get(key, (err, value) => {
-        if (err || value === null || value === undefined) return cb(fallback);
-        cb(value);
-      });
+    function renderMonitoring() {
+      const on = $('monitoring').checked;
+      const el = $('monitoringStatus');
+      el.className = `ra-status ${on ? 'is-on' : 'is-off'}`;
+      el.textContent = on ? t('statusOn') : t('statusOff');
     }
 
-    function setSetting(Homey, key, value) {
-      return new Promise((resolve, reject) => {
-        Homey.set(key, value, (err) => err ? reject(err) : resolve());
-      });
+    function renderQuiet() {
+      $('quietTimes').hidden = !$('quietEnabled').checked;
     }
 
-    function renderPills() {
-      const wrap = document.getElementById('cityPills');
+    function renderCities() {
+      const wrap = $('cityChips');
       wrap.innerHTML = '';
-      const names = selectedCityIds
-        .map(id => allCities.find(c => Number(c.id) === Number(id)))
-        .filter(Boolean)
-        .map(c => currentLang === 'en' ? (c.en || c.name || c.he) : (c.he || c.name || c.en));
+      const count = selectedCityIds.length;
 
-      if (!names.length) {
-        const empty = document.createElement('span');
-        empty.className = 'hint';
-        empty.textContent = t('noCities');
-        wrap.appendChild(empty);
+      $('citiesEmpty').hidden = count > 0;
+      $('citiesCount').hidden = count === 0;
+      $('citiesCount').textContent = count === 1 ? t('citiesCountOne') : t('citiesCount', { n: count });
+      wrap.hidden = count === 0;
+
+      selectedCityIds.forEach((id) => {
+        const city = cityById(id);
+        const name = city ? cityName(city) : String(id);
+
+        const chip = document.createElement('span');
+        chip.className = 'ra-chip';
+        const label = document.createElement('span');
+        label.textContent = name;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ra-chip-x';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', t('removeCity', { name }));
+        remove.addEventListener('click', () => {
+          selectedCityIds = selectedCityIds.filter((x) => x !== id);
+          renderCities();
+          updateDirty();
+        });
+
+        chip.appendChild(label);
+        chip.appendChild(remove);
+        wrap.appendChild(chip);
+      });
+    }
+
+    function renderDialogList() {
+      const list = $('cityList');
+      list.innerHTML = '';
+      $('dialogCount').textContent = t('dialogCount', { n: draftCityIds.length });
+
+      if (!citiesLoaded) {
+        const msg = document.createElement('div');
+        msg.className = 'ra-city-empty';
+        msg.textContent = citiesFailed ? t('couldNotLoad') : t('loading');
+        list.appendChild(msg);
         return;
       }
 
-      names.forEach(name => {
-        const s = document.createElement('span');
-        s.className = 'pill';
-        s.textContent = name;
-        wrap.appendChild(s);
-      });
-    }
-
-    function renderDialogList(filter = '') {
-      const list = document.getElementById('cityList');
-      const q = String(filter || '').toLowerCase();
-      list.innerHTML = '';
-
-      allCities
-        .filter(c => {
-          const nHe = String(c.he || c.name || '').toLowerCase();
-          const nEn = String(c.en || '').toLowerCase();
-          return !q || nHe.includes(q) || nEn.includes(q);
-        })
+      const q = $('citySearch').value.trim().toLowerCase();
+      const locale = currentLang === 'en' ? 'en' : 'he';
+      const matches = allCities
+        .filter((c) => !q || String(c.he || '').toLowerCase().includes(q) || String(c.en || '').toLowerCase().includes(q))
         .sort((a, b) => {
-          const an = currentLang === 'en' ? (a.en || a.name || a.he) : (a.he || a.name || a.en);
-          const bn = currentLang === 'en' ? (b.en || b.name || b.he) : (b.he || b.name || b.en);
-          return String(an).localeCompare(String(bn), currentLang === 'en' ? 'en' : 'he');
-        })
-        .forEach(c => {
-          const row = document.createElement('label');
-          row.className = 'city-item';
-
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.checked = draftCityIds.includes(Number(c.id));
-          cb.addEventListener('change', () => {
-            const id = Number(c.id);
-            if (cb.checked && !draftCityIds.includes(id)) draftCityIds.push(id);
-            if (!cb.checked) draftCityIds = draftCityIds.filter(x => x !== id);
-          });
-
-          const text = document.createElement('span');
-          text.textContent = currentLang === 'en' ? (c.en || c.name || c.he) : (c.he || c.name || c.en);
-
-          row.appendChild(cb);
-          row.appendChild(text);
-          list.appendChild(row);
+          // Selected areas first, then alphabetical
+          const sa = draftCityIds.includes(Number(a.id)) ? 0 : 1;
+          const sb = draftCityIds.includes(Number(b.id)) ? 0 : 1;
+          return sa - sb || String(cityName(a)).localeCompare(String(cityName(b)), locale);
         });
+
+      if (!matches.length) {
+        const msg = document.createElement('div');
+        msg.className = 'ra-city-empty';
+        msg.textContent = t('noResults');
+        list.appendChild(msg);
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      matches.forEach((c) => {
+        const id = Number(c.id);
+        const row = document.createElement('label');
+        row.className = 'homey-form-checkbox';
+
+        const cb = document.createElement('input');
+        cb.className = 'homey-form-checkbox-input';
+        cb.type = 'checkbox';
+        cb.checked = draftCityIds.includes(id);
+        cb.addEventListener('change', () => {
+          if (cb.checked && !draftCityIds.includes(id)) draftCityIds.push(id);
+          if (!cb.checked) draftCityIds = draftCityIds.filter((x) => x !== id);
+          $('dialogCount').textContent = t('dialogCount', { n: draftCityIds.length });
+        });
+
+        const mark = document.createElement('span');
+        mark.className = 'homey-form-checkbox-checkmark';
+        const text = document.createElement('span');
+        text.className = 'homey-form-checkbox-text';
+        text.textContent = cityName(c);
+
+        row.appendChild(cb);
+        row.appendChild(mark);
+        row.appendChild(text);
+        frag.appendChild(row);
+      });
+      list.appendChild(frag);
     }
 
     function openDialog() {
       draftCityIds = [...selectedCityIds];
-      document.getElementById('citySearch').value = '';
-      renderDialogList('');
-      document.getElementById('citiesDialog').showModal();
+      $('citySearch').value = '';
+      renderDialogList();
+      $('citiesDialog').showModal();
     }
 
-    function closeDialog() {
-      document.getElementById('citiesDialog').close();
+    function readThrottleSeconds(id) {
+      const key = THROTTLE_FIELDS[id];
+      const raw = $(id).value;
+      const seconds = Number(raw);
+      const ms = raw === '' || !Number.isFinite(seconds)
+        ? THROTTLE_DEFAULTS[key]
+        : Math.max(THROTTLE_MIN_MS, Math.round(seconds) * 1000);
+      $(id).value = ms / 1000;
+      return ms;
     }
 
-    function onHomeyReady(Homey) {
-      getSetting(Homey, 'settings_lang', 'he', (lang) => {
-        applyLanguage(lang === 'en' ? 'en' : 'he');
+    function fillThrottle(values) {
+      Object.entries(THROTTLE_FIELDS).forEach(([id, key]) => {
+        const ms = Number(values[key] ?? THROTTLE_DEFAULTS[key]);
+        $(id).value = Math.round((Number.isFinite(ms) ? ms : THROTTLE_DEFAULTS[key]) / 1000);
+      });
+    }
+
+    function snapshot() {
+      return JSON.stringify({
+        lang: currentLang,
+        monitoring: $('monitoring').checked,
+        cities: [...selectedCityIds].sort((a, b) => a - b),
+        quiet: [$('quietEnabled').checked, $('quietStart').value, $('quietEnd').value],
+        throttle: Object.keys(THROTTLE_FIELDS).map((id) => $(id).value),
+      });
+    }
+
+    function setStatus(kind, text) {
+      const el = $('status');
+      el.className = `ra-savebar-msg${kind ? ` is-${kind}` : ''}`;
+      el.textContent = text || '';
+    }
+
+    function updateDirty() {
+      if (!savedSnapshot) return;
+      if (snapshot() !== savedSnapshot) setStatus('dirty', t('dirty'));
+      else if ($('status').classList.contains('is-dirty')) setStatus('', '');
+    }
+
+    function getSetting(key, fallback) {
+      return new Promise((resolve) => {
+        HomeyRef.get(key, (err, value) => resolve(err || value === null || value === undefined ? fallback : value));
+      });
+    }
+
+    function setSetting(key, value) {
+      return new Promise((resolve, reject) => {
+        HomeyRef.set(key, value, (err) => (err ? reject(err) : resolve()));
+      });
+    }
+
+    function toTime(value, fallback) {
+      if (typeof value === 'string' && value.includes(':')) return value;
+      const n = Number(value);
+      return Number.isFinite(n) ? `${String(n).padStart(2, '0')}:00` : fallback;
+    }
+
+    async function save() {
+      const btn = $('save');
+      btn.classList.add('is-loading');
+      btn.disabled = true;
+      setStatus('', t('saving'));
+      try {
+        const throttle = { ...storedThrottle };
+        Object.entries(THROTTLE_FIELDS).forEach(([id, key]) => { throttle[key] = readThrottleSeconds(id); });
+
+        await setSetting('monitoring_enabled', $('monitoring').checked);
+        await setSetting('selected_city_ids', selectedCityIds);
+        await setSetting('quiet_hours', {
+          enabled: $('quietEnabled').checked,
+          start: $('quietStart').value || '23:00',
+          end: $('quietEnd').value || '06:00',
+        });
+        await setSetting('throttle_by_type_ms', throttle);
+        await setSetting('settings_lang', currentLang);
+
+        storedThrottle = throttle;
+        savedSnapshot = snapshot();
+        setStatus('success', `✓ ${t('saved')}`);
+      } catch (e) {
+        setStatus('error', t('saveFailed') + (e && e.message ? e.message : e));
+      } finally {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
+    }
+
+    async function onHomeyReady(Homey) {
+      HomeyRef = Homey;
+
+      const [lang, monitoring, ids, quiet, throttle] = await Promise.all([
+        getSetting('settings_lang', 'he'),
+        getSetting('monitoring_enabled', true),
+        getSetting('selected_city_ids', []),
+        getSetting('quiet_hours', { enabled: false, start: '23:00', end: '06:00' }),
+        getSetting('throttle_by_type_ms', {}),
+      ]);
+
+      $('monitoring').checked = monitoring !== false;
+      selectedCityIds = Array.isArray(ids) ? ids.map(Number).filter((n) => !Number.isNaN(n)) : [];
+      $('quietEnabled').checked = !!quiet.enabled;
+      $('quietStart').value = toTime(quiet.start, '23:00');
+      $('quietEnd').value = toTime(quiet.end, '06:00');
+      storedThrottle = throttle && typeof throttle === 'object' ? throttle : {};
+      fillThrottle(storedThrottle);
+      renderQuiet();
+      applyLanguage(lang);
+      savedSnapshot = snapshot();
+
+      Homey.ready();
+
+      Homey.api('GET', '/cities', null, (err, result) => {
+        if (!err && result && Array.isArray(result.cities)) {
+          allCities = result.cities;
+          citiesLoaded = true;
+        } else {
+          citiesFailed = true;
+        }
+        renderCities();
+        if ($('citiesDialog').open) renderDialogList();
       });
 
-      document.getElementById('langHe').addEventListener('click', () => applyLanguage('he'));
-      document.getElementById('langEn').addEventListener('click', () => applyLanguage('en'));
+      $('langHe').addEventListener('click', () => applyLanguage('he'));
+      $('langEn').addEventListener('click', () => applyLanguage('en'));
 
-      getSetting(Homey, 'monitoring_enabled', true, (monitoring) => {
-        document.getElementById('monitoring').checked = monitoring !== false;
+      $('monitoring').addEventListener('change', () => { renderMonitoring(); updateDirty(); });
+      $('quietEnabled').addEventListener('change', () => { renderQuiet(); updateDirty(); });
+      ['quietStart', 'quietEnd', ...Object.keys(THROTTLE_FIELDS)].forEach((id) => {
+        $(id).addEventListener('input', updateDirty);
       });
 
-      getSetting(Homey, 'selected_city_ids', [], (ids) => {
-        selectedCityIds = Array.isArray(ids) ? ids.map(Number).filter(n => !Number.isNaN(n)) : [];
-
-        Homey.api('GET', '/cities', null, (err, result) => {
-          if (!err && result && Array.isArray(result.cities)) {
-            allCities = result.cities.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), 'he'));
-            renderPills();
-          } else {
-            document.getElementById('status').textContent = t('couldNotLoad');
-          }
+      document.querySelectorAll('.ra-toggle-row').forEach((row) => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.ra-switch')) return;
+          const input = $(row.dataset.toggle);
+          input.checked = !input.checked;
+          input.dispatchEvent(new Event('change'));
         });
       });
 
-      getSetting(Homey, 'quiet_hours', { enabled: false, start: '23:00', end: '06:00' }, (quietHours) => {
-        const startVal = typeof quietHours.start === 'string'
-          ? quietHours.start
-          : `${String(Number(quietHours.start ?? 23)).padStart(2, '0')}:00`;
-        const endVal = typeof quietHours.end === 'string'
-          ? quietHours.end
-          : `${String(Number(quietHours.end ?? 6)).padStart(2, '0')}:00`;
+      $('resetThrottle').addEventListener('click', () => { fillThrottle(THROTTLE_DEFAULTS); updateDirty(); });
 
-        document.getElementById('quietStart').value = startVal;
-        document.getElementById('quietEnd').value = endVal;
-        document.getElementById('quietEnabled').checked = !!quietHours.enabled;
-      });
-
-      getSetting(Homey, 'throttle_by_type_ms', { primary: 120000, 'pre-alert': 180000, 'all-clear': 120000, other: 120000 }, (tval) => {
-        document.getElementById('thPrimary').value = Number(tval.primary ?? 120000);
-        document.getElementById('thPreAlert').value = Number(tval['pre-alert'] ?? 180000);
-        document.getElementById('thAllClear').value = Number(tval['all-clear'] ?? 120000);
-        document.getElementById('thOther').value = Number(tval.other ?? 120000);
-      });
-
-      document.getElementById('openCities').addEventListener('click', openDialog);
-      document.getElementById('closeDialogTop').addEventListener('click', closeDialog);
-
-      document.getElementById('citySearch').addEventListener('input', (e) => {
-        renderDialogList(e.target.value);
-      });
-
-      document.getElementById('clearCities').addEventListener('click', () => {
-        draftCityIds = [];
-        renderDialogList(document.getElementById('citySearch').value);
-      });
-
-      document.getElementById('applyCities').addEventListener('click', () => {
+      $('openCities').addEventListener('click', openDialog);
+      $('closeDialog').addEventListener('click', () => $('citiesDialog').close());
+      $('citySearch').addEventListener('input', renderDialogList);
+      $('clearCities').addEventListener('click', () => { draftCityIds = []; renderDialogList(); });
+      $('applyCities').addEventListener('click', () => {
         selectedCityIds = [...draftCityIds];
-        renderPills();
-        closeDialog();
+        $('citiesDialog').close();
+        renderCities();
+        updateDirty();
       });
 
-      document.getElementById('save').addEventListener('click', async () => {
-        try {
-          await setSetting(Homey, 'monitoring_enabled', document.getElementById('monitoring').checked);
-          await setSetting(Homey, 'selected_city_ids', selectedCityIds);
-          await setSetting(Homey, 'quiet_hours', {
-            enabled: document.getElementById('quietEnabled').checked,
-            start: document.getElementById('quietStart').value || '23:00',
-            end: document.getElementById('quietEnd').value || '06:00',
-          });
-          await setSetting(Homey, 'throttle_by_type_ms', {
-            primary: Number(document.getElementById('thPrimary').value || 120000),
-            'pre-alert': Number(document.getElementById('thPreAlert').value || 180000),
-            'all-clear': Number(document.getElementById('thAllClear').value || 120000),
-            other: Number(document.getElementById('thOther').value || 120000),
-          });
-          await setSetting(Homey, 'settings_lang', currentLang);
-          const statusEl = document.getElementById('status');
-          statusEl.classList.remove('error');
-          statusEl.classList.add('success');
-          statusEl.textContent = t('saved');
-        } catch (e) {
-          const statusEl = document.getElementById('status');
-          statusEl.classList.remove('success');
-          statusEl.classList.add('error');
-          statusEl.textContent = t('saveFailed') + e.message;
-        }
-      });
-
-      Homey.ready();
+      $('guideLink').addEventListener('click', () => Homey.openURL(GUIDE_URL));
+      $('save').addEventListener('click', save);
     }
   </script>
 </body>
